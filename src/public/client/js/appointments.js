@@ -1,117 +1,291 @@
 /* ===========================================================
-   📡 APPOINTMENTS — API CONTRACT
+   CLIENT — APPOINTMENTS (LIST + BOOK)
    -----------------------------------------------------------
-   GET  /api/client/appointments?status=pending|confirmed|completed
-   → { "data":[{ "id":101,"pet":"Buddy","service":"Vaccination","date":"2025-11-20","time":"09:00","status":"Confirmed" }]}
-   POST /api/client/appointments
-   → Body { "petId":1,"service":"Vaccination","date":"2025-11-28","time":"14:30","note":"optional" }
-   → Resp { "id":999,"pet":"Buddy","service":"Vaccination","date":"2025-11-28","time":"14:30","status":"Pending" }
-   DELETE /api/client/appointments/:id
-   → { "success": true }
-   PATCH /api/client/appointments/:id   // (optional reschedule)
-   → Body { "date":"YYYY-MM-DD","time":"HH:mm" }
-   → Resp { "success": true, "appointment":{...} }
+   APIs:
+     GET  /client/appointments/my
+     GET  /client/pets/my
+     POST /client/appointments
    =========================================================== */
 
-(function ensureApi(){
-  if(!window.API) window.API = {};
-  const basePath = '/api/client';
+(function () {
+  const API_MY_APPTS = '/client/appointments/my';
+  const API_MY_PETS  = '/client/pets/my';
+  const API_CREATE   = '/client/appointments';
 
-  if(!API.listAppointments){
-    API.listAppointments = async (params={})=>{
-      return { data:[
-        {id:101,pet:'Buddy',service:'Vaccination',date:'2025-11-20',time:'09:00',status:'Confirmed'},
-        {id:102,pet:'Mochi',service:'Grooming',date:'2025-11-28',time:'14:30',status:'Pending'},
-        {id:103,pet:'Chika',service:'Check-up',date:'2025-09-02',time:'10:00',status:'Completed'}
-      ]};
-      // real: return fetch(`${basePath}/appointments?${new URLSearchParams(params)}`).then(r=>r.json());
-    };
-  }
-  if(!API.createAppointment){
-    API.createAppointment = async payload=>{
-      return { id:Date.now(), pet:'(server maps by petId)', status:'Pending', ...payload };
-      // real: return fetch(`${basePath}/appointments`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}).then(r=>r.json());
-    };
-  }
-  if(!API.cancelAppointment){
-    API.cancelAppointment = async id=>({ success:true });
-    // real: return fetch(`${basePath}/appointments/${id}`, {method:'DELETE'}).then(r=>r.json());
-  }
-  if(!API.listPets){
-    API.listPets = async()=>({ data:[{id:1,name:'Buddy'},{id:2,name:'Mochi'}], pagination:{page:1,pageSize:10,total:2} });
-  }
-})();
+  const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        signal: ctl.signal,
+        ...options
+      });
+      clearTimeout(t);
+      const body = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch (err) {
+      clearTimeout(t);
+      console.error('client appointments fetch error', err);
+      return { ok:false, status:0, body:{ message: err.message } };
+    }
+  };
 
-(function ui(){
-  const tabs = document.querySelectorAll('.tabs button');
-  const wrap = { upcoming: el('apt-upcoming'), past: el('apt-past'), requests: el('apt-requests') };
+  const esc = (s) =>
+    (s ?? '').toString().replace(/[&<>\"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m]));
 
-  tabs.forEach(b=>b.addEventListener('click',()=>{
-    tabs.forEach(x=>{ x.classList.remove('active'); x.setAttribute('aria-selected','false'); });
-    b.classList.add('active'); b.setAttribute('aria-selected','true');
-    render(b.dataset.tab);
-  }));
+  const pad2 = (n) => String(n).padStart(2,'0');
 
-  document.getElementById('openBook').addEventListener('click', openBook);
-  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>el('bookModal').classList.remove('show')));
-  document.getElementById('notifBtn').addEventListener('click', ()=>theToast('No new notifications'));
-  if(location.hash.startsWith('#book')) openBook();
+  const fmtDate = (iso) =>
+    new Date(iso + 'T00:00:00').toLocaleDateString('en-PH', {
+      month:'short', day:'2-digit', year:'numeric'
+    });
 
-  load();
+  // DOM
+  const tableBody   = document.querySelector('#apptTable tbody');
+  const pageInfo    = document.getElementById('apptPageInfo');
+  const prevBtn     = document.getElementById('prevAppt');
+  const nextBtn     = document.getElementById('nextAppt');
+  const statusFilter= document.getElementById('statusFilter');
+  const searchBox   = document.getElementById('apptSearch');
+  const bookBtn     = document.getElementById('bookBtn'); // header button
+  const addApptBtn  = document.getElementById('addApptBtn'); // page button
 
-  async function load(){ render('upcoming'); }
+  const modal       = document.getElementById('apptModal');
+  const modalTitle  = document.getElementById('apptModalTitle');
+  const petSelect   = document.getElementById('aPet');
+  const dateInput   = document.getElementById('aDate');
+  const timeInput   = document.getElementById('aTime');
+  const serviceInput= document.getElementById('aService');
+  const notesInput  = document.getElementById('aNotes');
+  const submitBtn   = document.getElementById('aSubmit');
 
-  async function render(tab){
-    const resp = await API.listAppointments({});
-    const today = new Date().toISOString().slice(0,10);
-    let items = (resp.data||[]).slice();
-    if(tab==='upcoming') items = items.filter(a=>a.date>=today && a.status!=='Completed');
-    if(tab==='past') items = items.filter(a=>a.date<today || a.status==='Completed');
-    if(tab==='requests') items = items.filter(a=>a.status==='Pending');
+  const toast       = document.getElementById('toast');
 
-    Object.values(wrap).forEach(e=>e.classList.add('hidden'));
-    const target = wrap[tab]; target.classList.remove('hidden');
-    target.innerHTML = items.length ? items.map(card).join('') : `<div style='padding:.5rem;color:#6b7280'>No items</div>`;
-  }
+  if (!tableBody) return; // Not on appointments page
 
-  function card(a){
-    return `<div class="item">
-      <div>
-        <span class="badge ${a.status}">${a.status}</span>
-        <strong style="display:block;margin-top:.35rem">${escapeHtml(a.pet)} • ${escapeHtml(a.service)}</strong>
-        <small style="color:#6b7280">${a.date} at ${a.time}</small>
-      </div>
-      <div style="display:flex;gap:.5rem">
-        ${a.status!=='Completed' ? `<button class="btn secondary" data-resched="${a.id}">Reschedule</button>` : ``}
-        <button class="btn ghost" data-cancel="${a.id}">Cancel</button>
-      </div>
-    </div>`;
-  }
+  // State
+  let APPTS = [];
+  let PETS  = [];
+  let search = '';
+  let filterStatus = 'all';
+  let page = 1;
+  const pageSize = 8;
 
-  document.addEventListener('click', async(e)=>{
-    const cid = e.target.getAttribute('data-cancel');
-    if(cid){ await API.cancelAppointment(Number(cid)); theToast('Appointment canceled'); render(currentTab()); }
-    const rid = e.target.getAttribute('data-resched');
-    if(rid){ theToast('Reschedule flow (stub)'); }
+  // Toast helper
+  const showToast = (msg) => {
+    if (!toast) { alert(msg); return; }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 2200);
+  };
+
+  // Modal helpers
+  const openModal = () => {
+    if (!modal) return;
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+  };
+  const closeModal = () => {
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+  };
+  document.querySelectorAll('#apptModal [data-close]').forEach(btn =>
+    btn.addEventListener('click', closeModal)
+  );
+
+  // Table row
+  const rowHTML = (a) => `
+    <tr>
+      <td>${fmtDate(a.date)} ${a.time || ''}</td>
+      <td>${esc(a.petName)}</td>
+      <td>${esc(a.service)}</td>
+      <td>${statusBadge(a.status)}</td>
+      <td>${esc(a.notes || '')}</td>
+    </tr>
+  `;
+
+  const statusBadge = (s) => {
+    const st = (s || '').toString();
+    let cls = '';
+    if (st === 'Pending') cls = 'pending';
+    else if (st === 'Confirmed') cls = 'confirmed';
+    else if (st === 'Completed') cls = 'completed';
+    else if (st === 'Cancelled') cls = 'cancelled';
+    return `<span class="badge ${cls}">${esc(st)}</span>`;
+  };
+
+  const renderTable = () => {
+    const q = (search || '').trim().toLowerCase();
+    const list = APPTS
+      .filter(a => filterStatus === 'all' ? true : a.status === filterStatus)
+      .filter(a => {
+        if (!q) return true;
+        return [a.petName, a.service, a.status].some(v =>
+          String(v || '').toLowerCase().includes(q)
+        );
+      })
+      .sort((a,b)=> (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+
+    const total = list.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (page > totalPages) page = totalPages;
+
+    const start = (page - 1) * pageSize;
+    const items = list.slice(start, start + pageSize);
+
+    tableBody.innerHTML = items.length
+      ? items.map(rowHTML).join('')
+      : `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)"><em>No appointments found.</em></td></tr>`;
+
+    if (pageInfo) {
+      pageInfo.textContent = items.length
+        ? `${start + 1}–${Math.min(start + pageSize, total)} of ${total}`
+        : `0–0 of 0`;
+    }
+
+    if (prevBtn) prevBtn.disabled = page === 1;
+    if (nextBtn) nextBtn.disabled = page === totalPages;
+  };
+
+  // Pagination events
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    if (page > 1) page--;
+    renderTable();
   });
 
-  async function openBook(){
-    const mPet = document.getElementById('mPet');
-    const {data} = await API.listPets({});
-    mPet.innerHTML = '<option>Choose pet…</option>' + data.map(p=>`<option value='${p.id}'>${escapeHtml(p.name)}</option>`).join('');
-    el('bookModal').classList.add('show');
-  }
-  document.getElementById('mSubmit').addEventListener('click', async()=>{
-    const payload = { petId: val('mPet'), service: val('mService'), date: val('mDate'), time: val('mTime'), note: val('mNote') };
-    if(!payload.petId || !payload.date || !payload.time){ theToast('Please complete the form'); return; }
-    await API.createAppointment(payload);
-    theToast('Appointment requested');
-    el('bookModal').classList.remove('show');
-    render('upcoming');
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    page++;
+    renderTable();
   });
 
-  function currentTab(){ return document.querySelector('.tabs button.active')?.dataset.tab || 'upcoming'; }
-  function el(id){ return document.getElementById(id); }
-  function val(id){ return document.getElementById(id).value; }
-  function escapeHtml(s){ return (s??'').toString().replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
+  // Filters
+  if (statusFilter) {
+    statusFilter.addEventListener('change', (e) => {
+      filterStatus = e.target.value || 'all';
+      page = 1;
+      renderTable();
+    });
+  }
+
+  if (searchBox) {
+    searchBox.addEventListener('input', (e) => {
+      search = e.target.value || '';
+      page = 1;
+      renderTable();
+    });
+  }
+
+  // Book buttons
+  const openBooking = () => {
+    if (!petSelect) return;
+    // Reset form
+    modalTitle.textContent = 'Book Appointment';
+    if (PETS.length) {
+      petSelect.innerHTML = PETS.map(p =>
+        `<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.species || '')})</option>`
+      ).join('');
+    } else {
+      petSelect.innerHTML = '<option disabled>No pets found</option>';
+    }
+
+    const todayISO = new Date().toISOString().slice(0,10);
+    dateInput.value = todayISO;
+    timeInput.value = '';
+    serviceInput.value = '';
+    notesInput.value = '';
+
+    openModal();
+  };
+
+  if (bookBtn) bookBtn.addEventListener('click', openBooking);
+  if (addApptBtn) addApptBtn.addEventListener('click', openBooking);
+
+  // Submit booking
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      if (!petSelect.value || !dateInput.value || !timeInput.value) {
+        showToast('Please select pet, date, and time.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+
+      const payload = {
+        petId: petSelect.value,
+        date: dateInput.value,
+        time: timeInput.value,
+        service: (serviceInput.value || '').trim() || 'Check-up',
+        notes: (notesInput.value || '').trim()
+      };
+
+      const { ok, body } = await fetchJSON(API_CREATE, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save';
+
+      if (!ok || !body || body.success === false) {
+        showToast(body?.message || 'Failed to book appointment.');
+        return;
+      }
+
+      const a = body.appointment || null;
+      if (a) {
+        // normalize for table
+        const norm = {
+          id: a.id,
+          petId: a.petId,
+          petName: PETS.find(p => String(p.id) === String(a.petId))?.name || 'Pet',
+          service: a.purpose || a.service || 'Appointment',
+          date: payload.date,
+          time: payload.time,
+          status: 'Pending',
+          notes: payload.notes
+        };
+        APPTS.push(norm);
+      }
+
+      closeModal();
+      showToast('Appointment requested.');
+      renderTable();
+    });
+  }
+
+  // Hydrate: pets + appointments
+  (async function bootstrap() {
+    // Load pets for dropdown
+    const petsRes = await fetchJSON(API_MY_PETS, { method: 'GET' });
+    if (petsRes.ok && petsRes.body && petsRes.body.success !== false) {
+      PETS = Array.isArray(petsRes.body.pets) ? petsRes.body.pets : [];
+    }
+
+    // Load appointments
+    const apRes = await fetchJSON(API_MY_APPTS, { method: 'GET' });
+    if (!apRes.ok || !apRes.body || apRes.body.success === false) {
+      if (tableBody) {
+        tableBody.innerHTML = `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)">
+          <em>Failed to load appointments. ${esc(apRes.body?.message || '')}</em>
+        </td></tr>`;
+      }
+      return;
+    }
+
+    APPTS = Array.isArray(apRes.body.appointments)
+      ? apRes.body.appointments
+      : [];
+
+    renderTable();
+  })();
 })();

@@ -9,7 +9,7 @@
 
     clientRouters.post('/add', addClientConroller);
     clientRouters.put('/get', getClientController);
-    clientRouters.put('/get_all', getAllClientController);
+    clientRouters.get('/get-all', getAllClientController);
     clientRouters.put('/update', updateClientController);
     clientRouters.delete('/delete', deleteClientControler);
 

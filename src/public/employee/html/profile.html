@@ -21,7 +21,7 @@
       <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
       <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
       <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
-      <a class="nav-item" href="/employee/reservation"><span class="icon">📝</span><span>Reservation</span></a>
+      <a class="nav-item" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
       <a class="nav-item active" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
       <div class="nav-spacer"></div>
       <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
@@ -47,79 +47,68 @@
     <section class="view active">
       <h1 class="page-title">Update Profile</h1>
 
-      <div class="grid">
-        <!-- Avatar -->
-        <div class="card">
-          <h2 class="panel-title">Profile Photo</h2>
-          <div class="avatar-wrap">
-            <img id="avatarPreview" class="avatar-lg" alt="Avatar" src="/avatar-placeholder.png"/>
-            <div class="avatar-actions">
-              <input id="avatarFile" type="file" accept="image/*" hidden />
-              <button id="chooseAvatarBtn" class="btn-ghost">Choose Image</button>
-              <button id="uploadAvatarBtn" class="btn-primary">Upload</button>
-              <button id="removeAvatarBtn" class="btn-ghost danger">Remove</button>
-              <div id="avatarNote" class="hint">PNG/JPG up to 2MB.</div>
+      <!-- Status box used by profile.js -->
+      <div id="profileStatus" class="status hidden"></div>
+
+      <!-- One big form for info + security (profile.js uses #profileForm) -->
+      <form id="profileForm">
+        <div class="grid">
+          <!-- Avatar -->
+          <!-- Personal Info -->
+          <div class="card">
+            <h2 class="panel-title">Personal Information</h2>
+            <div class="form-grid">
+              <label>
+                <span>Full Name</span>
+                <!-- name="name" used by profile.js -->
+                <input id="nameInput" name="name" type="text" required placeholder="Your full name"/>
+              </label>
+              <label>
+                <span>Email</span>
+                <!-- name="email" used by profile.js -->
+                <input id="emailInput" name="email" type="email" required placeholder="you@vetlink.cloud" readonly/>
+              </label>
+              <label>
+                <span>Contact No.</span>
+                <!-- name="number" used by profile.js -->
+                <input id="phoneInput" name="number" type="tel" required placeholder="09xx-xxx-xxxx"/>
+              </label>
+
+              <!-- Position/Role is admin-managed; read-only here -->
+              <div class="readonly wide">
+                <span>Position</span>
+                <div id="roleValue" class="ro">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security (password) -->
+          <div class="card">
+            <h2 class="panel-title">Security</h2>
+            <div class="form-grid">
+              <label class="wide">
+                <span>Current Password</span>
+                <input id="curPassInput" name="current_password" type="password" autocomplete="current-password" placeholder="Enter current password"/>
+              </label>
+              <label class="wide">
+                <span>New Password</span>
+                <!-- name="password" used by profile.js; sent only if not empty -->
+                <input id="newPassInput" name="password" type="password" minlength="8" autocomplete="new-password" placeholder="Leave blank to keep current password"/>
+                <div class="hint">Use 8+ characters.</div>
+              </label>
+              <label class="wide">
+                <span>Confirm New Password</span>
+                <input id="confirmPassInput" name="confirm_password" type="password" minlength="8" autocomplete="new-password" placeholder="Re-enter new password"/>
+              </label>
             </div>
           </div>
         </div>
 
-        <!-- Personal Info -->
-        <div class="card">
-          <h2 class="panel-title">Personal Information</h2>
-          <form id="infoForm" class="form-grid">
-            <label>
-              <span>Full Name</span>
-              <input id="nameInput" type="text" required placeholder="Your name"/>
-            </label>
-            <label>
-              <span>Email</span>
-              <input id="emailInput" type="email" required placeholder="you@vetlink.cloud"/>
-            </label>
-            <label>
-              <span>Contact No.</span>
-              <input id="phoneInput" type="tel" required placeholder="09xx-xxx-xxxx"/>
-            </label>
-            <label class="wide">
-              <span>Address</span>
-              <input id="addressInput" type="text" placeholder="Street, City, Province"/>
-            </label>
-
-            <!-- Role is admin-only; not editable here -->
-            <div class="readonly">
-              <span>Role</span>
-              <div id="roleValue" class="ro">— set by Admin —</div>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn-primary">Save Changes</button>
-            </div>
-          </form>
+        <!-- Save button (profile.js uses #profileSaveBtn) -->
+        <div class="form-actions">
+          <button type="submit" id="profileSaveBtn" class="btn-primary">Save Changes</button>
         </div>
-
-        <!-- Security -->
-        <div class="card">
-          <h2 class="panel-title">Security</h2>
-          <form id="passwordForm" class="form-grid">
-            <label>
-              <span>Current Password</span>
-              <input id="curPassInput" type="password" required minlength="6" autocomplete="current-password" />
-            </label>
-            <label>
-              <span>New Password</span>
-              <input id="newPassInput" type="password" required minlength="8" autocomplete="new-password" />
-              <div class="hint">Use 8+ chars with a number & symbol.</div>
-            </label>
-            <label>
-              <span>Confirm New Password</span>
-              <input id="confPassInput" type="password" required minlength="8" autocomplete="new-password" />
-            </label>
-
-            <div class="form-actions">
-              <button type="submit" class="btn-primary">Update Password</button>
-            </div>
-          </form>
-        </div>
-      </div>
+      </form>
 
     </section>
   </div>

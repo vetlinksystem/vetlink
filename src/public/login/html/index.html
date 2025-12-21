@@ -1,54 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VetLink — Sign In</title>
-    <link rel="stylesheet" href="/login/css/styles.css" />
-  </head>
-  <body>
-    <main class="auth">
-      <section class="card">
-        <header class="brand">
-          <img src="./logo.png" alt="VetLink/Doc Benz logo" class="logo" />
-          <h1 class="brand-title">VetLink</h1>
-          <p class="brand-sub">Veterinary Services</p>
-        </header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink • Login</title>
 
-        <h2 class="title">Sign in</h2>
+  <!-- keep your existing stylesheet name -->
+  <link rel="stylesheet" href="/login/css/styles.css"/>
+</head>
+<body>
+  <div class="auth">
+    <div class="card">
 
-        <form id="loginForm" novalidate>
-          <div class="role-switch" role="tablist" aria-label="Choose account type">
-            <button type="button" class="role-btn active" data-role="employee" aria-selected="true">Employee</button>
-            <button type="button" class="role-btn" data-role="client" aria-selected="false">Client</button>
+      <!-- BRAND -->
+      <div class="brand">
+        <!-- If you have a logo image, use it here; else remove the img -->
+        <img class="logo" src="/logo.png" alt="VetLink" onerror="this.style.display='none'"/>
+        <h1 class="brand-title">VetLink</h1>
+        <p class="brand-sub">Secure portal access for clients & staff</p>
+      </div>
+
+      <h2 class="title" id="formTitle">Login</h2>
+
+      <!-- STATUS -->
+      <div class="status" id="authStatus"></div>
+
+      <!-- LOGIN VIEW -->
+      <div id="loginView">
+        <!-- Role switch (login only) -->
+        <div class="role-switch">
+          <button type="button" class="role-btn active" id="loginAsClientBtn">Client</button>
+          <button type="button" class="role-btn" id="loginAsEmployeeBtn">Employee</button>
+        </div>
+
+        <form id="loginForm">
+          <div class="field">
+            <span>Email / Username</span>
+            <input id="loginUsername" type="text" placeholder="you@example.com" required/>
           </div>
 
-          <label class="field">
-            <span>Email</span>
-            <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" />
-          </label>
-
-          <label class="field">
+          <div class="field">
             <span>Password</span>
-            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
-          </label>
+            <input id="loginPassword" type="password" placeholder="••••••••" required/>
+          </div>
 
-          <label class="remember">
-            <input id="remember" type="checkbox" />
-            <span>Remember me on this device</span>
-          </label>
+          <!-- hidden user_type controlled by buttons -->
+          <input type="hidden" id="loginUserType" value="client"/>
 
-          <button id="submitBtn" class="submit" type="submit">Sign In</button>
-
-          <p id="status" class="status" aria-live="polite"></p>
+          <button class="submit" type="submit" id="loginSubmit">Login</button>
         </form>
 
-        <footer class="meta">
-          <small>© <span id="year"></span> VetLink</small>
-        </footer>
-      </section>
-    </main>
+        <div class="meta">
+          New client? <a href="#" id="toRegister">Create an account</a>
+        </div>
+      </div>
 
-    <script src="/login/js/app.js"></script>
-  </body>
+      <!-- REGISTER VIEW (CLIENT ONLY) -->
+      <div id="registerView" style="display:none;">
+        <form id="registerForm">
+          <div class="field">
+            <span>Full Name</span>
+            <input id="regName" type="text" placeholder="Your name" required/>
+          </div>
+
+          <div class="field">
+            <span>Email</span>
+            <input id="regEmail" type="email" placeholder="you@example.com" required/>
+          </div>
+
+          <div class="field">
+            <span>Contact No. (optional)</span>
+            <input id="regNumber" type="tel" placeholder="09xx-xxx-xxxx"/>
+          </div>
+
+          <div class="field">
+            <span>Address (optional)</span>
+            <input id="regAddress" type="text" placeholder="Street, City, Province"/>
+          </div>
+
+          <div class="field">
+            <span>Password</span>
+            <input id="regPassword" type="password" placeholder="••••••••" minlength="6" required/>
+          </div>
+
+          <div class="field">
+            <span>Confirm Password</span>
+            <input id="regConfirm" type="password" placeholder="••••••••" minlength="6" required/>
+          </div>
+
+          <button class="submit" type="submit" id="registerSubmit">Create Account</button>
+        </form>
+
+        <div class="meta">
+          Already have an account? <a href="#" id="toLogin">Back to login</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/login/js/app.js"></script>
+</body>
 </html>

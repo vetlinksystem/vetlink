@@ -1,10 +1,191 @@
-/* Pets page (extends core.css) */
-.badge-yes{ background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
-.badge-no{ background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+/* ===========================================================
+   Client • My Pets
+   -----------------------------------------------------------
+   This page renders "card" tiles (not a table).
+   pets.js expects these classes:
+   - .summary-row .summary-pill
+   - .pets-grid .pet-card .pet-header .pet-avatar .pet-name
+   - .pet-meta .badge.ok / .badge.no
+   =========================================================== */
 
-@media (max-width:720px){
-  #petsTable th:nth-child(6), #petsTable td:nth-child(6),
-  #petsTable th:nth-child(7), #petsTable td:nth-child(7){
-    display:none; /* hide vaccines/last-visit on narrow screens */
-  }
+:root{
+  --card-border: rgba(15, 23, 42, .10);
 }
+
+.summary-row{ align-items:center; }
+
+.summary-pill{
+  display:flex;
+  gap:.45rem;
+  align-items:baseline;
+  padding:.45rem .7rem;
+  border:1px solid var(--card-border);
+  border-radius:999px;
+  background:#fff;
+  box-shadow:0 1px 0 rgba(15, 23, 42, .03);
+}
+.summary-pill strong{ font-size:.95rem; }
+.summary-pill span{ color:var(--muted); font-size:.85rem; }
+
+.pets-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:1rem;
+}
+
+@media (max-width: 1060px){
+  .pets-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px){
+  .pets-grid{ grid-template-columns:1fr; }
+}
+
+.pet-card{
+  background:#fff;
+  border:1px solid var(--card-border);
+  border-radius:16px;
+  padding:1rem;
+  box-shadow:0 10px 18px rgba(15, 23, 42, .04);
+}
+
+.pet-header{
+  display:flex;
+  gap:.8rem;
+  align-items:center;
+  margin-bottom:.85rem;
+}
+
+.pet-avatar{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg, rgba(16,185,129,.22), rgba(59,130,246,.12));
+  border:1px solid rgba(16,185,129,.25);
+  color:#0f172a;
+  font-weight:800;
+}
+
+.pet-name{
+  margin:0;
+  font-size:1.15rem;
+  line-height:1.1;
+}
+
+.pet-sub{
+  margin-top:.25rem;
+  color:var(--muted);
+  font-size:.9rem;
+}
+
+.pet-meta{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:.75rem;
+  margin:0;
+}
+.pet-meta > div{
+  background:rgba(15, 23, 42, .03);
+  border:1px solid rgba(15, 23, 42, .06);
+  border-radius:12px;
+  padding:.6rem .7rem;
+}
+.pet-meta dt{
+  color:var(--muted);
+  font-size:.78rem;
+  margin:0;
+}
+.pet-meta dd{
+  margin:.2rem 0 0;
+  font-weight:600;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:.15rem .55rem;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:700;
+  border:1px solid transparent;
+}
+.badge.ok{ background:#dcfce7; color:#166534; border-color:#bbf7d0; }
+.badge.no{ background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+
+.pet-actions{
+  display:flex;
+  justify-content:flex-start;
+  margin-top:.9rem;
+}
+
+/* Inline expandable details */
+.pet-details{
+  margin-top:.85rem;
+  padding-top:.85rem;
+  border-top:1px dashed rgba(15, 23, 42, .12);
+  display:none;
+}
+.pet-card.expanded .pet-details{ display:block; }
+
+.detail-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:.65rem;
+}
+.detail-item{
+  background:rgba(15, 23, 42, .02);
+  border:1px solid rgba(15, 23, 42, .06);
+  border-radius:12px;
+  padding:.65rem .75rem;
+}
+.detail-item.span-2{ grid-column:span 2; }
+.detail-label{ color:var(--muted); font-size:.78rem; }
+.detail-value{ margin-top:.2rem; font-weight:600; word-break:break-word; }
+
+.js-toggle-details .chev{ display:inline-block; transition:transform .16s ease; }
+.pet-card.expanded .js-toggle-details .chev{ transform:rotate(180deg); }
+
+.btn-ghost{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.35rem .6rem;
+  border-radius:10px;
+  border:1px solid rgba(15, 23, 42, .10);
+  color:var(--text);
+  text-decoration:none;
+  background:transparent;
+}
+.btn-ghost:hover{
+  background:rgba(15, 23, 42, .04);
+}
+
+.muted{ color:var(--muted); }
+.error{ color:#b91c1c; }
+
+/* Modal tweaks (keeps it consistent even if core.css changes) */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15, 23, 42, .38);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:1rem;
+  z-index:50;
+}
+.modal .panel{
+  width:min(720px, 100%);
+  background:#fff;
+  border-radius:18px;
+  border:1px solid rgba(15,23,42,.10);
+  box-shadow:0 30px 60px rgba(0,0,0,.18);
+}
+.modal .panel header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:1rem 1rem .6rem;
+}
+.modal .panel .content{ padding:0 1rem 1rem; }

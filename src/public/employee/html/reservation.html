@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>VetLink — Reservation</title>
+  <title>VetLink — Appointments</title>
   <link rel="stylesheet" href="/employee/css/dashboard.css"/>
   <link rel="stylesheet" href="/employee/css/reservation.css"/>
 </head>
@@ -21,7 +21,7 @@
       <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
       <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
       <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
-      <a class="nav-item active" href="/employee/reservation"><span class="icon">📝</span><span>Reservation</span></a>
+      <a class="nav-item active" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
       <a class="nav-item" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
       <div class="nav-spacer"></div>
       <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
@@ -32,7 +32,7 @@
   <div class="main">
     <header class="topbar">
       <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
-      <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Reservation</span></div>
+      <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Appointments</span></div>
       <div class="account">
         <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
           <span id="accountName">User</span><span class="avatar" aria-hidden="true">🛡️</span>
@@ -46,7 +46,7 @@
 
     <section class="view active reservation">
       <div class="page-head">
-        <h1 class="page-title">Reservations</h1>
+        <h1 class="page-title">Appointments</h1>
         <div class="tools">
           <div class="res-filters" id="filters">
             <button class="pill active" data-status="all">All</button>
@@ -61,7 +61,7 @@
           </div>
 
           <button id="exportCsvBtn" class="btn-ghost">Export CSV</button>
-          <button id="addReservationBtn" class="btn-primary">＋ Add Reservation</button>
+          <button id="addReservationBtn" class="btn-primary">＋ Add Appointment</button>
         </div>
       </div>
 
@@ -76,6 +76,7 @@
               <th>Owner</th>
               <th>Pet</th>
               <th>Status</th>
+              <th>Notes</th>
               <th style="width:280px;">Actions</th>
             </tr>
           </thead>
@@ -86,12 +87,12 @@
   </div>
 </div>
 
-<!-- Add / Edit Reservation Modal -->
+<!-- Add / Edit Appointment Modal -->
 <div id="resModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="resModalTitle">
   <div class="modal-backdrop" data-close-modal></div>
   <div class="modal-card">
     <div class="modal-head">
-      <h2 id="resModalTitle">Add Reservation</h2>
+      <h2 id="resModalTitle">Add Appointment</h2>
       <button class="modal-close" data-close-modal>✕</button>
     </div>
 

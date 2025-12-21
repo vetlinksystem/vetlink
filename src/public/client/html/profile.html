@@ -36,84 +36,103 @@
   <div>
     <header class="top">
       <h3 style="margin:0">Profile</h3>
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
-        <div class="chip">Logged in as <strong>ken@vetlink</strong></div>
+      <div style="display:flex;align-items:center;gap:.5rem"><div class="chip">
+          Logged in as
+          <strong id="accountName" style="margin-left:.35rem">Client</strong>
+        </div>
       </div>
     </header>
 
     <main>
+      <!-- status box used by profile.js -->
+      <div id="profileStatus" class="status hidden"></div>
 
-      <!-- PROFILE CARD -->
-      <div class="profile-wrapper">
-        <div class="card profile-card">
+      <!-- Wrap profile + password in one form so submit updates both -->
+      <form id="profileForm">
+        <!-- PROFILE CARD -->
+        <div class="profile-wrapper">
+          <div class="card profile-card">
 
-          <div class="profile-header">
-            <div class="avatar" id="avatarInitial">K</div>
-            <div>
-              <div class="profile-name" id="displayName">Ken Billones</div>
-              <div class="profile-email" id="displayEmail">ken@vetlink</div>
+            <div class="profile-header">
+              <div class="avatar" id="avatarInitial">K</div>
+              <div>
+                <div class="profile-name" id="displayName">Ken Billones</div>
+                <div class="profile-email" id="displayEmail">ken@vetlink</div>
+              </div>
+            </div>
+
+            <div class="profile-form">
+
+              <div class="field-pair">
+                <div>
+                  <label for="fullName">Full Name</label>
+                  <!-- Use a single Full Name field for consistency with registration -->
+                  <input class="input" id="fullName" name="full_name" autocomplete="name"/>
+                </div>
+              </div>
+
+              <div>
+                <label for="email">Email (read-only)</label>
+                <!-- name="email" used by profile.js -->
+                <input class="input" id="email" name="email" disabled/>
+              </div>
+
+              <div>
+                <label for="phone">Contact No.</label>
+                <!-- name="number" used by profile.js -->
+                <input class="input" id="phone" name="number"/>
+              </div>
+
+              <div>
+                <label for="address">Address</label>
+                <!-- name="address" used by profile.js -->
+                <input class="input" id="address" name="address"/>
+              </div>
+
+              <div class="profile-actions">
+                <button class="btn secondary" id="cancelProfile" type="button">Cancel</button>
+                <!-- profile.js uses #profileSaveBtn and form submit -->
+                <button class="btn" id="profileSaveBtn" type="submit">Save changes</button>
+              </div>
+
             </div>
           </div>
+        </div>
 
-          <div class="profile-form">
+        <!-- CHANGE PASSWORD -->
+        <div class="profile-wrapper">
+          <div class="card profile-card">
 
-            <div class="field-pair">
+            <strong style="font-size:1.1rem">Change Password</strong>
+
+            <div class="profile-form">
+
               <div>
-                <label for="firstName">First Name</label>
-                <input class="input" id="firstName"/>
+                <label for="oldPass">Current Password</label>
+                <input class="input" id="oldPass" type="password"/>
               </div>
+
               <div>
-                <label for="lastName">Last Name</label>
-                <input class="input" id="lastName"/>
+                <label for="newPass">New Password</label>
+                <!-- name="password" used by profile.js -->
+                <input class="input" id="newPass" type="password" name="password"/>
               </div>
-            </div>
 
-            <div>
-              <label for="email">Email (read-only)</label>
-              <input class="input" id="email" disabled/>
-            </div>
+              <div>
+                <label for="confirmPass">Confirm New Password</label>
+                <input class="input" id="confirmPass" type="password"/>
+              </div>
 
-            <div class="profile-actions">
-              <button class="btn secondary" id="cancelProfile">Cancel</button>
-              <button class="btn" id="saveProfile">Save changes</button>
+              <div class="profile-actions">
+                <!-- also submits the same form; profile.js will send "password" if not empty -->
+                <button class="btn" id="savePassword" type="submit">Update Password</button>
+              </div>
+
             </div>
 
           </div>
         </div>
-      </div>
-
-      <!-- CHANGE PASSWORD -->
-      <div class="profile-wrapper">
-        <div class="card profile-card">
-
-          <strong style="font-size:1.1rem">Change Password</strong>
-
-          <div class="profile-form">
-
-            <div>
-              <label for="oldPass">Current Password</label>
-              <input class="input" id="oldPass" type="password"/>
-            </div>
-
-            <div>
-              <label for="newPass">New Password</label>
-              <input class="input" id="newPass" type="password"/>
-            </div>
-
-            <div>
-              <label for="confirmPass">Confirm New Password</label>
-              <input class="input" id="confirmPass" type="password"/>
-            </div>
-
-            <div class="profile-actions">
-              <button class="btn" id="savePassword">Update Password</button>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
+      </form>
 
     </main>
   </div>

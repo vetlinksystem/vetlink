@@ -1,8 +1,12 @@
 (() => {
-  // Guard: must be logged in
-  const authRaw = localStorage.getItem('vetlink_auth') || sessionStorage.getItem('vetlink_auth');
-  const auth = authRaw ? JSON.parse(authRaw) : null;
-  if (!auth || !auth.token) { window.location.href = '/'; return; }
+  // Employee pages are protected server-side using the cookie session.
+  // The old implementation depended on localStorage (vetlink_auth), which
+  // is NOT set by the current /login flow. That caused redirect loops and
+  // made the UI feel "unclickable" because the page kept navigating.
+  //
+  // Here we simply fetch the currently logged-in employee and use that to
+  // populate the account name. If the session is missing/expired, we fall
+  // back to the public login page.
 
   // Elements
   const sidebar = document.getElementById('sidebar');
@@ -14,7 +18,45 @@
   const accountName = document.getElementById('accountName');
   const crumb = document.getElementById('crumb');
 
-  if (accountName) accountName.textContent = auth.name || 'User';
+  const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' },
+        signal: ctl.signal,
+        ...options
+      });
+      clearTimeout(t);
+      const body = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch (err) {
+      clearTimeout(t);
+      return { ok: false, status: 0, body: { message: 'Network error' } };
+    }
+  };
+
+  // Populate logged-in name (non-blocking)
+  (async () => {
+    const { ok, status, body } = await fetchJSON('/employee/profile/me');
+    if (!ok) {
+      // If unauthorized, go back to login.
+      if (status === 401 || status === 403) window.location.href = '/';
+      return;
+    }
+
+    const emp = body?.employee || body?.user || body || {};
+    const fullName = emp.full_name || emp.name || emp.email;
+    if (accountName) accountName.textContent = fullName || 'User';
+
+    // Hide Manage Employees when not admin
+    const isAdmin = !!emp.isAdmin;
+    const manageEmployeesLink = document.querySelector('.nav a.nav-item[href="/employee/employees"]');
+    if (manageEmployeesLink && !isAdmin) {
+      manageEmployeesLink.style.display = 'none';
+    }
+  })();
 
   // Sidebar hide/unhide
   sidebarToggle?.addEventListener('click', () => sidebar.classList.toggle('show'));
@@ -34,8 +76,6 @@
   // Logout
   const doLogout = async () => {
     try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch(_) {}
-    localStorage.removeItem('vetlink_auth');
-    sessionStorage.removeItem('vetlink_auth');
     window.location.href = '/';
   };
   logoutBtn?.addEventListener('click', doLogout);

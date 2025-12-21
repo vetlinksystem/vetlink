@@ -1,148 +1,199 @@
 /* ===========================================================
-   📡 RECORDS — API CONTRACT
+   CLIENT — RECORDS
    -----------------------------------------------------------
-
-   GET /api/client/records?search=&type=
-   → {
-       "data": [
-         { "id":501, "pet":"Buddy","type":"Vaccination Card",
-           "date":"2025-10-02","url":"/uploads/x.pdf" }
-       ]
-     }
-
-   POST /api/client/records
-   FormData: { file, petId, type, note }
-   → { "success": true, "id":999, "url":"/uploads/...pdf" }
-
-   DELETE /api/client/records/:id
-   → { "success": true }
+   API: GET /client/records/my
+   → { success:true, records:[{id,petId,petName,type,date,notes,url}], pets:[{id,name}] }
    =========================================================== */
 
-(function ensureApi(){
-  if(!window.API) window.API = {};
+(function () {
+  const API_MY_RECORDS = '/client/records/my';
 
-  if(!API.listRecords){
-    API.listRecords = async ()=>{
-      return { data:[
-        {id:501,pet:'Buddy',type:'Vaccination Card',date:'2025-10-02',url:'#'},
-        {id:502,pet:'Mochi',type:'Lab Result',date:'2025-09-20',url:'#'},
-      ]};
-    };
-  }
+  const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' },
+        signal: ctl.signal,
+        ...options
+      });
+      clearTimeout(t);
+      const body = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch (err) {
+      clearTimeout(t);
+      console.error('client records fetch error', err);
+      return { ok:false, status:0, body:{ message: err.message } };
+    }
+  };
 
-  if(!API.uploadRecord){
-    API.uploadRecord = async formData=>{
-      return { success:true, id:Date.now(), url:'#' };
-    };
-  }
+  const esc = (s) =>
+    (s ?? '').toString().replace(/[&<>\"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m]));
 
-  if(!API.deleteRecord){
-    API.deleteRecord = async id=>{
-      return { success:true };
-    };
-  }
+  const fmtDate = (iso) =>
+    new Date(iso + 'T00:00:00').toLocaleDateString('en-PH', {
+      month:'short', day:'2-digit', year:'numeric'
+    });
 
-  if(!API.listPets){
-    API.listPets = async()=>({ data:[
-      {id:1,name:'Buddy'},
-      {id:2,name:'Mochi'}
-    ]});
-  }
-})();
+  // DOM
+  const tbody       = document.querySelector('#recordsTable tbody');
+  const pageInfo    = document.getElementById('recordsPageInfo');
+  const prevBtn     = document.getElementById('prevRecords');
+  const nextBtn     = document.getElementById('nextRecords');
+  const searchBox   = document.getElementById('recordSearch');
+  const petFilter   = document.getElementById('filterPet');
+  const typeFilter  = document.getElementById('filterType');
 
+  const toast       = document.getElementById('toast');
 
+  if (!tbody) return;
 
-(function ui(){
+  // State
+  let RECORDS = [];
+  let PETS    = [];
+  let search  = '';
+  let petFilterVal  = '';
+  let typeFilterVal = '';
+  let page   = 1;
+  const pageSize = 10;
 
-  const listEl = document.getElementById('recList');
-  const searchEl = document.getElementById('recSearch');
+  const showToast = (msg) => {
+    if (!toast) { alert(msg); return; }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 2200);
+  };
 
-  document.getElementById('notifBtn').addEventListener('click', ()=>theToast('No new notifications'));
+  const rowHTML = (r) => `
+    <tr>
+      <td>${fmtDate(r.date)}</td>
+      <td>${esc(r.petName)}</td>
+      <td>${esc(r.type)}</td>
+      <td>${esc(r.notes || '')}</td>
+      <td style="text-align:right">
+        ${r.url
+          ? `<a href="${esc(r.url)}" class="btn secondary" target="_blank" rel="noopener">View</a>`
+          : '<span style="color:var(--muted)">No file</span>'}
+      </td>
+    </tr>
+  `;
 
-  searchEl.addEventListener('input', ()=>render());
+  const renderTable = () => {
+    const q = (search || '').trim().toLowerCase();
 
-  document.getElementById('uploadBtn').addEventListener('click', openUploadModal);
-  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', closeUploadModal));
-  document.getElementById('uSubmit').addEventListener('click', uploadRecord);
+    const list = RECORDS
+      .filter(r => !petFilterVal  || String(r.petId) === petFilterVal)
+      .filter(r => !typeFilterVal || r.type === typeFilterVal)
+      .filter(r => {
+        if (!q) return true;
+        return [r.petName, r.type, r.notes].some(v =>
+          String(v || '').toLowerCase().includes(q)
+        );
+      })
+      .sort((a,b)=> (a.date).localeCompare(b.date) * -1); // newest first
 
-  load();
+    const total = list.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (page > totalPages) page = totalPages;
 
-  async function load(){ render(); }
+    const start = (page - 1) * pageSize;
+    const items = list.slice(start, start + pageSize);
 
-  async function render(){
-    const search = searchEl.value.trim().toLowerCase();
-    const resp = await API.listRecords({ search });
+    tbody.innerHTML = items.length
+      ? items.map(rowHTML).join('')
+      : `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)"><em>No records found.</em></td></tr>`;
 
-    let items = resp.data || [];
-    if(search){
-      items = items.filter(r =>
-        r.pet.toLowerCase().includes(search) ||
-        r.type.toLowerCase().includes(search)
-      );
+    if (pageInfo) {
+      pageInfo.textContent = items.length
+        ? `${start + 1}–${Math.min(start + pageSize, total)} of ${total}`
+        : `0–0 of 0`;
     }
 
-    listEl.innerHTML = items.length
-      ? items.map(recordCard).join('')
-      : `<div style="padding:1rem;color:#6b7280">No records found.</div>`;
-  }
+    if (prevBtn) prevBtn.disabled = page === 1;
+    if (nextBtn) nextBtn.disabled = page === totalPages;
+  };
 
-  function recordCard(r){
-    return `
-      <div class="record-card">
-        <div class="chip">${escape(r.pet)}</div>
-        <strong>${escape(r.type)}</strong>
-        <small style="color:#6b7280">${r.date}</small>
-
-        <div class="actions">
-          <a class="btn secondary" href="${r.url}" target="_blank">Download</a>
-          <button class="btn ghost" data-del="${r.id}">Delete</button>
-        </div>
-      </div>
-    `;
-  }
-
-  document.addEventListener('click', async e=>{
-    const id = e.target.getAttribute('data-del');
-    if(id){
-      await API.deleteRecord(Number(id));
-      theToast('Record deleted');
-      render();
+  const syncFilters = () => {
+    if (petFilter) {
+      petFilter.innerHTML = '<option value="">All pets</option>' +
+        PETS.map(p =>
+          `<option value="${esc(p.id)}">${esc(p.name)}</option>`
+        ).join('');
     }
+
+    if (typeFilter) {
+      const types = [...new Set(RECORDS.map(r => r.type).filter(Boolean))]
+        .sort((a,b)=> String(a).localeCompare(String(b)));
+
+      typeFilter.innerHTML = '<option value="">All types</option>' +
+        types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    }
+  };
+
+  // Events
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    if (page > 1) page--;
+    renderTable();
   });
 
-  async function openUploadModal(){
-    // Load pet list
-    const {data} = await API.listPets();
-    const sel = document.getElementById('uPet');
-    sel.innerHTML = '<option>Choose pet…</option>' + data.map(p=>`
-      <option value="${p.id}">${escape(p.name)}</option>
-    `).join('');
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    page++;
+    renderTable();
+  });
 
-    document.getElementById('uploadModal').classList.add('show');
+  if (searchBox) {
+    searchBox.addEventListener('input', (e) => {
+      search = e.target.value || '';
+      page = 1;
+      renderTable();
+    });
   }
 
-  function closeUploadModal(){
-    document.getElementById('uploadModal').classList.remove('show');
+  if (petFilter) {
+    petFilter.addEventListener('change', (e) => {
+      petFilterVal = e.target.value || '';
+      page = 1;
+      renderTable();
+    });
   }
 
-  async function uploadRecord(){
-    const formData = new FormData();
-    formData.append('petId', document.getElementById('uPet').value);
-    formData.append('type', document.getElementById('uType').value);
-    formData.append('file', document.getElementById('uFile').files[0]);
-    formData.append('note', document.getElementById('uNote').value);
+  if (typeFilter) {
+    typeFilter.addEventListener('change', (e) => {
+      typeFilterVal = e.target.value || '';
+      page = 1;
+      renderTable();
+    });
+  }
 
-    if(!formData.get('petId') || !formData.get('file')){
-      theToast('Please complete required fields');
+  // Init
+  (async function bootstrap() {
+    tbody.innerHTML =
+      `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)">
+        <em>Loading records…</em>
+       </td></tr>`;
+
+    const { ok, body } = await fetchJSON(API_MY_RECORDS, { method: 'GET' });
+
+    if (!ok || !body || body.success === false) {
+      tbody.innerHTML =
+        `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)">
+          <em>Failed to load records. ${esc(body?.message || '')}</em>
+         </td></tr>`;
+      showToast('Failed to load records.');
       return;
     }
 
-    await API.uploadRecord(formData);
-    closeUploadModal();
-    theToast('Record uploaded');
-    render();
-  }
+    RECORDS = Array.isArray(body.records) ? body.records : [];
+    PETS    = Array.isArray(body.pets) ? body.pets : [];
 
-  function escape(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m])); }
-
+    syncFilters();
+    renderTable();
+  })();
 })();

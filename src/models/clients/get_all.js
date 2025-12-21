@@ -3,12 +3,8 @@ const utils = require('../../utilities/utils');
 
 const getAllClient = async (req_body) => {
 
-    const {
-        name,
-    } = req_body;
-
     try {
-        const response = await firestoreManager.getAllData('clients' , name);
+        const response = await firestoreManager.getAllData('clients' , {});
         return response;
     } catch (error) {
         throw error;

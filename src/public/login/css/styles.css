@@ -148,3 +148,13 @@ body{
 .status.ok{ color:#065f46; }
 
 .meta{ margin-top: 18px; text-align:center; color: var(--muted); }
+/* Make meta links match the VetLink theme */
+.meta a{
+  color: var(--brand-ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+.meta a:hover{
+  text-decoration: underline;
+  text-decoration-color: rgba(22,163,74,0.35);
+}

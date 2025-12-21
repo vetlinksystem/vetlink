@@ -12,7 +12,10 @@ const employeeRouter        = require('./routers/employees');
 const clientRouter          = require('./routers/clients');
 const appointmentRouter     = require('./routers/appointments');
 const petRouter             = require('./routers/pets');
-
+const breedingRouter        = require('./routers/breeding');
+const notificationsRouter   = require('./routers/notifications');
+const schedulesRouter       = require('./routers/schedules');
+const reservationsRouter = require('./routers/reservations');
 
 // ===== Front-end Routers =====
 const loginRouter           = require('./routers/_front-end/login/login_router');
@@ -41,6 +44,10 @@ app.use('/employees',       authenticateApi, employeeRouter);
 app.use('/clients',         authenticateApi, clientRouter);
 app.use('/appointments',    authenticateApi, appointmentRouter);
 app.use('/pets',            authenticateApi, petRouter);
+app.use('/breeding',        authenticateApi, breedingRouter);
+app.use('/notifications',   authenticateApi, notificationsRouter);
+app.use('/schedules',       authenticateApi, schedulesRouter);
+app.use('/reservations',    authenticateApi, reservationsRouter);
 
 // pages
 app.use('', loginRouter);

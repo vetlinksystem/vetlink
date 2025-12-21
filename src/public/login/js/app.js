@@ -1,118 +1,180 @@
-(() => {
-  const LOGIN_URL = "/login";
+// src/public/login/js/app.js
 
-  const form = document.getElementById("loginForm");
-  const email = document.getElementById("email");
-  const password = document.getElementById("password");
-  const remember = document.getElementById("remember");
-  const statusEl = document.getElementById("status");
-  const year = document.getElementById("year");
-  const submitBtn = document.getElementById("submitBtn");
-  year.textContent = new Date().getFullYear();
+(function () {
+  const $ = (id) => document.getElementById(id);
 
-  let role = "employee";
+  // Views
+  const loginView = $('loginView');
+  const registerView = $('registerView');
 
-  const roleBtns = document.querySelectorAll(".role-btn");
-  roleBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      roleBtns.forEach((b) => {
-        b.classList.remove("active");
-        b.setAttribute("aria-selected", "false");
-      });
-      btn.classList.add("active");
-      btn.setAttribute("aria-selected", "true");
-      role = btn.dataset.role;
-    });
+  // Title + status
+  const formTitle = $('formTitle');
+  const authStatus = $('authStatus');
+
+  // Switch links
+  const toRegister = $('toRegister');
+  const toLogin = $('toLogin');
+
+  // Role buttons
+  const loginAsClientBtn = $('loginAsClientBtn');
+  const loginAsEmployeeBtn = $('loginAsEmployeeBtn');
+  const loginUserType = $('loginUserType');
+
+  // Forms
+  const loginForm = $('loginForm');
+  const registerForm = $('registerForm');
+
+  // Inputs (login)
+  const loginUsername = $('loginUsername');
+  const loginPassword = $('loginPassword');
+
+  // Inputs (register)
+  const regName = $('regName');
+  const regEmail = $('regEmail');
+  const regNumber = $('regNumber');
+  const regAddress = $('regAddress');
+  const regPassword = $('regPassword');
+  const regConfirm = $('regConfirm');
+
+  const setStatus = (msg = '', kind = '') => {
+    if (!authStatus) return;
+    authStatus.textContent = msg;
+    authStatus.classList.remove('error', 'ok');
+    if (kind) authStatus.classList.add(kind);
+  };
+
+  const showLogin = () => {
+    if (loginView) loginView.style.display = '';
+    if (registerView) registerView.style.display = 'none';
+    if (formTitle) formTitle.textContent = 'Login';
+    setStatus('');
+  };
+
+  const showRegister = () => {
+    if (registerView) registerView.style.display = '';
+    if (loginView) loginView.style.display = 'none';
+    if (formTitle) formTitle.textContent = 'Create Account';
+    setStatus('');
+  };
+
+  const setRole = (role) => {
+    if (loginUserType) loginUserType.value = role;
+
+    loginAsClientBtn?.classList.toggle('active', role === 'client');
+    loginAsEmployeeBtn?.classList.toggle('active', role === 'employee');
+  };
+
+  // --- Events: switch views ---
+  toRegister?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showRegister();
   });
 
-  const setStatus = (msg, type = "") => {
-    statusEl.textContent = msg;
-    statusEl.className = "status" + (type ? " " + type : "");
-  };
-
-  const postJSON = async (url, data, timeoutMs = 15000) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(data),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timer);
-      const ct = res.headers.get("content-type") || "";
-      const body = ct.includes("application/json")
-        ? await res.json()
-        : await res.text();
-      return { ok: res.ok, status: res.status, body };
-    } catch (err) {
-      clearTimeout(timer);
-      throw err;
-    }
-  };
-
-  form.addEventListener("submit", async (e) => {
+  toLogin?.addEventListener('click', (e) => {
     e.preventDefault();
+    showLogin();
+  });
 
-    setStatus("Signing in...");
-    submitBtn.disabled = true;
+  // --- Events: role buttons ---
+  loginAsClientBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    setRole('client');
+  });
 
-    const username = email.value.trim();
-    const pwd = password.value;
+  loginAsEmployeeBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    setRole('employee');
+  });
 
-    if (!username || !pwd) {
-      setStatus("Please enter your username and password.", "error");
-      submitBtn.disabled = false;
+  // --- Helper: fetch JSON ---
+  const fetchJSON = async (url, options = {}) => {
+    const res = await fetch(url, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      ...options
+    });
+
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, body };
+  };
+
+  // --- LOGIN submit: POST /login ---
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setStatus('Signing in…');
+
+    const username = (loginUsername?.value || '').trim();
+    const password = (loginPassword?.value || '').trim();
+    const user_type = loginUserType?.value || 'client';
+
+    if (!username || !password) {
+      setStatus('Please enter your email/username and password.', 'error');
       return;
     }
 
     try {
-      const { ok, status, body } = await postJSON(LOGIN_URL, {
-        username,
-        password: pwd,
-        user_type: role,
+      const { ok, body } = await fetchJSON('/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password, user_type })
       });
 
-      if (!ok) {
-        const msg =
-          (body && (body.message || body.error)) || `Login failed (${status})`;
-        setStatus(msg, "error");
-        submitBtn.disabled = false;
+      if (!ok || body?.success === false) {
+        setStatus(body?.message || 'Login failed.', 'error');
         return;
       }
 
-      const payload = typeof body === "string" ? { raw: body } : body;
-
-      setStatus("Login successful! Redirecting...", "ok");
-
-      const authData = {
-        role,
-        token: payload.token,
-        name: payload.name || "",
-        message: payload.message,
-      };
-
-      if (remember.checked) {
-        localStorage.setItem("vetlink_auth", JSON.stringify(authData));
-      } else {
-        sessionStorage.setItem("vetlink_auth", JSON.stringify(authData));
-      }
-
-      const next =
-        payload.redirect || (role === "employee" ? "/dashboard" : "/home");
-      setTimeout(() => (window.location.href = next), 800);
+      setStatus('Login successful.', 'ok');
+      window.location.href = body.redirect || '/';
     } catch (err) {
-      if (err.name === "AbortError") {
-        setStatus("Request timed out. Check your connection.", "error");
-      } else {
-        setStatus("Network error. Please try again.", "error");
-      }
-    } finally {
-      submitBtn.disabled = false;
+      console.error(err);
+      setStatus('Network error during login.', 'error');
     }
   });
+
+  // --- REGISTER submit: POST /register/client ---
+  registerForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setStatus('Creating account…');
+
+    const name = (regName?.value || '').trim();
+    const email = (regEmail?.value || '').trim();
+    const number = (regNumber?.value || '').trim();
+    const address = (regAddress?.value || '').trim();
+    const password = (regPassword?.value || '').trim();
+    const confirm = (regConfirm?.value || '').trim();
+
+    if (!name || !email || !password) {
+      setStatus('Name, email, and password are required.', 'error');
+      return;
+    }
+    if (password !== confirm) {
+      setStatus('Passwords do not match.', 'error');
+      return;
+    }
+
+    try {
+      const { ok, body } = await fetchJSON('/register/client', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password, number, address })
+      });
+
+      if (!ok || body?.success === false) {
+        setStatus(body?.message || 'Registration failed.', 'error');
+        return;
+      }
+
+      setStatus('Account created.', 'ok');
+      window.location.href = body.redirect || '/client/dashboard';
+    } catch (err) {
+      console.error(err);
+      setStatus('Network error during registration.', 'error');
+    }
+  });
+
+  // Init
+  showLogin();
+  setRole('client');
 })();

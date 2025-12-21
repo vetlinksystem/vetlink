@@ -1,19 +1,29 @@
 const deletePetModel = require('../../models/pets/delete');
 
-const deletePetController = async(req, res) => {
-
-    const modelResponse = await  deletePetModel(req.body);
-
+const deletePetsController = async (req, res) => {
     try {
-        if (modelResponse) {
-            return res.send("Pet deleted successfully!")
-        } else {
-            return res.send("Failed to delete Pet");
+        const result = await deletePetModel(req.body);
+        const ok = result && (typeof result === 'object' ? result.success !== false : true);
+
+        if (!ok) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to delete Pet!'
+            });
         }
+
+        return res.json({
+            success: true,
+            message: 'Pet deleted successfully!'
+        });
     } catch (error) {
-        throw error
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Server error while deleting Pet!',
+            error: error.message
+        });
     }
+};
 
-}
-
-module.exports = deletePetController;
+module.exports = deletePetsController;

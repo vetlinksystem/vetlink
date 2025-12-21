@@ -37,16 +37,14 @@
           🔍
           <input
             class="input"
-            id="petSearch"
+            id="searchBox"
             placeholder="Search pets…"
             style="background:transparent;border:none;padding:0"
           />
         </div>
-        <div style="display:flex;align-items:center;gap:.5rem">
-          <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
-          <div class="chip">
+        <div style="display:flex;align-items:center;gap:.5rem"><div class="chip">
             Logged in as
-            <strong style="margin-left:.35rem">ken@vetlink</strong>
+            <strong id="accountName" style="margin-left:.35rem">Client</strong>
           </div>
         </div>
       </header>
@@ -57,46 +55,45 @@
             <h2 style="margin:0">My Pets</h2>
             <small style="color:var(--muted)">Manage profiles, vaccines, and breeding preference.</small>
           </div>
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-            <select class="input" id="speciesFilter" style="width:160px">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+            <!-- Species filter (used by pets.js as #filterSpecies) -->
+            <select class="input" id="filterSpecies" style="width:160px">
               <option value="">All species</option>
-              <option>Dog</option><option>Cat</option><option>Others</option>
+              <option>Dog</option>
+              <option>Cat</option>
+              <option>Others</option>
             </select>
+
+            <!-- Sex filter (new, used by pets.js as #filterSex) -->
+            <select class="input" id="filterSex" style="width:120px">
+              <option value="">All</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+
+            <!-- Breeding filter (checkbox, used by pets.js as #onlyBreedable) -->
+            <label style="display:flex;align-items:center;gap:.35rem;font-size:.85rem">
+              <input type="checkbox" id="onlyBreedable"/>
+              <span>Breeding allowed only</span>
+            </label>
+
+            <!-- Add pet button (UI only for now) -->
             <button class="btn" id="addPetBtn">➕ Add pet</button>
           </div>
         </div>
 
-        <div class="card" style="overflow:hidden;margin-top:.75rem">
-          <div style="overflow:auto">
-            <table id="petsTable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Species</th>
-                  <th>Breed</th>
-                  <th>Age</th>
-                  <th>Breeding</th>
-                  <th>Vaccines</th>
-                  <th>Last Visit</th>
-                  <th style="text-align:right">Actions</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;border-top:1px solid var(--border)">
-            <div id="petsPageInfo" style="color:var(--muted)">0–0 of 0</div>
-            <div style="display:flex;gap:.5rem">
-              <button class="btn ghost" id="prevPets">◀ Prev</button>
-              <button class="btn ghost" id="nextPets">Next ▶</button>
-            </div>
-          </div>
+        <!-- Summary pills row (pets.js: #petsSummary) -->
+        <div id="petsSummary" class="summary-row" style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap"></div>
+
+        <!-- Pets grid (pets.js: #petsGrid) -->
+        <div id="petsGrid" class="pets-grid" style="margin-top:.75rem">
+          <!-- Filled by /client/js/pets.js -->
         </div>
       </main>
     </div>
   </div>
 
-  <!-- Add/Edit Pet Modal -->
+  <!-- Add/Edit Pet Modal (kept for later wiring) -->
   <div class="modal" id="petModal" role="dialog" aria-modal="true">
     <div class="panel">
       <header>
@@ -110,6 +107,13 @@
             <option>Dog</option><option>Cat</option><option>Others</option>
           </select>
           <input class="input" id="pBreed" placeholder="Breed"/>
+
+          <select class="input" id="pSex">
+            <option value="">Sex (optional)</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+
           <input class="input" id="pAge" type="number" min="0" placeholder="Age (yrs)"/>
 
           <label class="breeding col-2" style="grid-column:span 2;display:flex;align-items:center;gap:.6rem">
@@ -135,6 +139,7 @@
   </div>
 
   <div class="toast" id="toast">Saved!</div>
+
   <script src="/client/js/core.js"></script>
   <script src="/client/js/pets.js"></script>
 </body>

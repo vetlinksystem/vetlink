@@ -1,163 +1,142 @@
 /* ===========================================================
-   📡 DASHBOARD — EXPECTED API RESPONSES
+   CLIENT DASHBOARD — REAL API WIRED
    -----------------------------------------------------------
-   1) Appointments
-      GET /api/client/appointments?status=
-      → {
-          "data": [
-            {
-              "id": 101,
-              "pet": "Buddy",
-              "service": "Vaccination",
-              "date": "2025-11-20",   // YYYY-MM-DD
-              "time": "09:00",        // HH:mm (24h)
-              "status": "Pending" | "Confirmed" | "Completed" | "Cancelled"
-            }
-          ]
-        }
-
-   2) Pets
-      GET /api/client/pets?search=&page=1&pageSize=10
-      → {
-          "data": [
-            { "id": 1, "name": "Buddy", ... }
-          ],
-          "pagination": { "page": 1, "pageSize": 10, "total": 2 }
-        }
-
-   3) Records
-      GET /api/client/records
-      → {
-          "data": [
-            { "id": 501, "pet": "Buddy", "type": "Vaccination Card", "date": "2025-10-02", "url": "/files/..." }
-          ]
-        }
+   Backend endpoint:
+     GET /client/dashboard/overview
+     → {
+         success: true,
+         appointments: [
+           { id, pet, service, date:'YYYY-MM-DD', time:'HH:mm', status }
+         ],
+         pets: [
+           { id, name, species, breed }
+         ],
+         records: [
+           { id, pet, type, date:'YYYY-MM-DD', url }
+         ],
+         petsTotal: <number>
+       }
    =========================================================== */
 
-(function ensureApi(){
-  if(!window.API) window.API = {};
-  const basePath = '/api/client';
+(function () {
+  const API_OVERVIEW = '/client/dashboard/overview';
 
-  // Minimal safe mocks; remove once wired to backend.
-  if(!API.listAppointments){
-    API.listAppointments = async (params = {})=>{
-      return {
-        data: [
-          { id:101, pet:'Buddy', service:'Vaccination', date:'2025-11-20', time:'09:00', status:'Confirmed' },
-          { id:102, pet:'Mochi', service:'Grooming',   date:'2025-11-28', time:'14:30', status:'Pending' }
-        ]
-      };
-      // REAL:
-      // const qs = new URLSearchParams(params);
-      // return fetch(`${basePath}/appointments?${qs}`).then(r => r.json());
-    };
-  }
+  const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' },
+        signal: ctl.signal,
+        ...options
+      });
+      clearTimeout(t);
+      const body = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch (err) {
+      clearTimeout(t);
+      console.error('client dashboard fetch error', err);
+      return { ok: false, status: 0, body: { message: err.message } };
+    }
+  };
 
-  if(!API.listPets){
-    API.listPets = async (params = {})=>{
-      return {
-        data: [
-          { id:1, name:'Buddy' },
-          { id:2, name:'Mochi' }
-        ],
-        pagination: { page:1, pageSize:10, total:2 }
-      };
-      // REAL:
-      // const qs = new URLSearchParams(params);
-      // return fetch(`${basePath}/pets?${qs}`).then(r => r.json());
-    };
-  }
-
-  if(!API.listRecords){
-    API.listRecords = async ()=>{
-      return {
-        data: [
-          { id:501, pet:'Buddy', type:'Vaccination Card', date:'2025-10-02', url:'#' },
-          { id:502, pet:'Mochi', type:'Lab Result',       date:'2025-09-20', url:'#' }
-        ]
-      };
-      // REAL:
-      // return fetch(`${basePath}/records`).then(r => r.json());
-    };
-  }
-})();
-
-(async function ui(){
   const statsEl = document.getElementById('stats');
+  if (!statsEl) return;
 
-  // Topbar actions
-  document.getElementById('notifBtn').addEventListener('click', () => theToast('No new notifications'));
-  document.getElementById('bookBtn').addEventListener('click', () => { location.href = '/client/appointments#book'; });
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    // hook to real logout later
-    theToast('Logging out…');
-  });
+  // Topbar actions are handled globally in client/core.js
 
-  // Load dashboard data in parallel
-  const [apts, pets, recs] = await Promise.all([
-    API.listAppointments({}),
-    API.listPets({}),
-    API.listRecords({})
-  ]);
-
-  const today = new Date().toISOString().slice(0, 10);
-
-  const allApts   = apts?.data  || [];
-  const allPets   = pets?.data  || [];
-  const allRecs   = recs?.data  || [];
-  const petsTotal = pets?.pagination?.total ?? allPets.length;
-
-  // 1) Next upcoming appointment
-  const upcoming = allApts
-    .filter(a => a.date >= today && a.status !== 'Completed' && a.status !== 'Cancelled')
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
-
-  // 2) Pending appointments only
-  const pendingCount = allApts.filter(a => a.status === 'Pending').length;
-
-  // 3) Pets count
-  const petsCount = petsTotal;
-
-  // 4) Records count
-  const recordsCount = allRecs.length;
-
-  statsEl.innerHTML = `
-    <div class="card stat">
-      <div class="chip">Upcoming</div>
-      <h3>Next appointment</h3>
-      <div class="value">
-        ${upcoming ? `${esc(upcoming.pet)} • ${esc(upcoming.service)}` : '—'}
+  (async function loadDashboard() {
+    // Simple loading card
+    statsEl.innerHTML = `
+      <div class="card stat">
+        <div class="chip">Loading</div>
+        <h3>Loading dashboard…</h3>
+        <div class="value">…</div>
+        <small>Please wait.</small>
       </div>
-      <small>
-        ${upcoming ? `${upcoming.date} at ${upcoming.time}` : 'No upcoming visits. Book one below.'}
-      </small>
-    </div>
+    `;
 
-    <div class="card stat">
-      <div class="chip">Requests</div>
-      <h3>Pending appointments</h3>
-      <div class="value">${pendingCount}</div>
-      <small>Waiting for clinic confirmation.</small>
-    </div>
+    const { ok, body } = await fetchJSON(API_OVERVIEW, { method: 'GET' });
 
-    <div class="card stat">
-      <div class="chip">Pets</div>
-      <h3>Registered pets</h3>
-      <div class="value">${petsCount}</div>
-      <small>Manage them in <a href="/client/pets">My Pets</a>.</small>
-    </div>
+    if (!ok || !body || body.success === false) {
+      console.warn('Failed to load client dashboard overview', body);
+      statsEl.innerHTML = `
+        <div class="card stat">
+          <div class="chip danger">Error</div>
+          <h3>Unable to load data</h3>
+          <div class="value">!</div>
+          <small>${esc(body?.message || 'Please try refreshing the page.')}</small>
+        </div>
+      `;
+      return;
+    }
 
-    <div class="card stat">
-      <div class="chip">Records</div>
-      <h3>Medical records</h3>
-      <div class="value">${recordsCount}</div>
-      <small>View or download from <a href="/client/records">Records</a>.</small>
-    </div>
-  `;
+    const appointments = Array.isArray(body.appointments) ? body.appointments : [];
+    const pets         = Array.isArray(body.pets) ? body.pets : [];
+    const records      = Array.isArray(body.records) ? body.records : [];
+    const petsTotal    = typeof body.petsTotal === 'number' ? body.petsTotal : pets.length;
 
-  function esc(s){
-    return (s ?? '').toString().replace(/[&<>"']/g, m => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    const today = new Date().toISOString().slice(0, 10);
+
+    // 1) Next upcoming appointment
+    const upcoming = appointments
+      .filter(a => a.date && a.date >= today && a.status !== 'Completed' && a.status !== 'Cancelled')
+      .sort((a, b) => (String(a.date) + String(a.time || '')).localeCompare(String(b.date) + String(b.time || '')))[0];
+
+    // 2) Pending appointments only
+    const pendingCount = appointments.filter(a => a.status === 'Pending').length;
+
+    // 3) Pets count
+    const petsCount = petsTotal;
+
+    // 4) Records count
+    const recordsCount = records.length;
+
+    statsEl.innerHTML = `
+      <div class="card stat">
+        <div class="chip">Upcoming</div>
+        <h3>Next appointment</h3>
+        <div class="value">
+          ${upcoming ? `${esc(upcoming.pet)} • ${esc(upcoming.service)}` : '—'}
+        </div>
+        <small>
+          ${upcoming
+            ? `${upcoming.date}${upcoming.time ? ' at ' + upcoming.time : ''}`
+            : 'No upcoming visits. Book one below.'}
+        </small>
+      </div>
+
+      <div class="card stat">
+        <div class="chip">Requests</div>
+        <h3>Pending appointments</h3>
+        <div class="value">${pendingCount}</div>
+        <small>Waiting for clinic confirmation.</small>
+      </div>
+
+      <div class="card stat">
+        <div class="chip">Pets</div>
+        <h3>Registered pets</h3>
+        <div class="value">${petsCount}</div>
+        <small>Manage them in <a href="/client/pets">My Pets</a>.</small>
+      </div>
+
+      <div class="card stat">
+        <div class="chip">Records</div>
+        <h3>Medical records</h3>
+        <div class="value">${recordsCount}</div>
+        <small>View or download from <a href="/client/records">Records</a>.</small>
+      </div>
+    `;
+  })();
+
+  function esc(s) {
+    return (s ?? '').toString().replace(/[&<>\"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
     }[m]));
   }
 })();

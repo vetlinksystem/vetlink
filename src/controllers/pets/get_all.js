@@ -1,15 +1,13 @@
 const getAllPetModel = require('../../models/pets/get_all');
 
-const getAllPetsController = async(req, res) => {
-
-    const modelResponse = await getAllPetModel(req.body);
-
+const getAllPetsController = async (req, res) => {
     try {
-        return res.send(modelResponse);
+        const pets = await getAllPetModel();
+        return res.send(pets);
     } catch (error) {
-        throw error;
+        console.error(error);
+        return res.status(500).send([]);
     }
-
-}
+};
 
 module.exports = getAllPetsController;

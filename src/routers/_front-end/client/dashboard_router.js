@@ -13,6 +13,13 @@ dashboardRouter.get('/dashboard', ensureAuthPage, ensureTypePage('client'), (req
 });
 
 // ===== APIs =====
+const getClientDashboardOverviewController = require('../../../controllers/client/dashboard/get_overview');
 
+dashboardRouter.get(
+  '/dashboard/overview',
+  authenticateApi,
+  ensureTypeApi('client'),
+  getClientDashboardOverviewController
+);
 
 module.exports = dashboardRouter;

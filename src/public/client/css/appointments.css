@@ -18,7 +18,24 @@
   padding:.75rem; border:1px solid var(--border); border-radius:12px;
   background:#fff; margin:.5rem 0;
 }
-.badge{padding:.25rem .55rem;border-radius:999px;border:1px solid var(--border);font-size:.8rem}
-.badge.Pending{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
-.badge.Confirmed{background:#ecfdf5;border-color:#bbf7d0;color:#166534}
-.badge.Completed{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
+/* Status pill
+   appointments.js renders: <span class="badge pending|confirmed|completed|cancelled">...
+   Keep these styles here so the table looks clean and consistent.
+*/
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:.22rem .65rem;
+  border-radius:999px;
+  border:1px solid transparent;
+  font-size:.78rem;
+  font-weight:600;
+  line-height:1.1;
+  white-space:nowrap;
+}
+
+.badge.pending{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.badge.confirmed{background:#ecfdf5;border-color:#bbf7d0;color:#166534}
+.badge.completed{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
+.badge.cancelled{background:#fef2f2;border-color:#fecaca;color:#991b1b}

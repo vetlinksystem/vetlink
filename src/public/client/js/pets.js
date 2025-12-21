@@ -1,230 +1,448 @@
 /* ===========================================================
-   📡 PETS — API CONTRACT (requests & expected responses)
-   ===========================================================
-   1) GET  /api/client/pets?search=&species=&page=1&pageSize=10
-      Response:
-      {
-        "data": [
-          {
-            "id": 1,
-            "name": "Buddy",
-            "species": "Dog",
-            "breed": "Golden Retriever",
-            "age": 3,
-            "breedingAllowed": true,      // NEW: owner preference
-            "vaccines": ["Rabies","DHPP"],
-            "lastVisit": "2025-10-02"
-          }
-        ],
-        "pagination": { "page":1, "pageSize":10, "total": 12 }
-      }
+   CLIENT — MY PETS (API WIRED)
+   -----------------------------------------------------------
+   API: GET /client/pets/my
+   → { success:true, pets:[{id,name,breed,species,sex,age,breedingAllowed}], total }
 
-   2) POST /api/client/pets
-      Body:
-      {
-        "name":"Buddy",
-        "species":"Dog",
-        "breed":"Golden Retriever",
-        "age":3,
-        "breedingAllowed": true,          // boolean (owner can allow/not allow)
-        "notes":"optional"
-      }
-      Response: 201
-      { "id": 999, "name":"Buddy", "species":"Dog", "breed":"Golden Retriever", "age":3, "breedingAllowed":true, "vaccines":[], "lastVisit":"—" }
+   Modal IDs (from pets.html):
+   - Add button:     #addPetBtn
+   - Modal:          #petModal
+   - Close buttons:  [data-close]
+   - Title:          #petModalTitle
+   - Submit:         #pSubmit
+   - Inputs:         #pName #pSpecies #pBreed #pAge #pBreeding #pNotes
+   =========================================================== */
 
-   3) PATCH /api/client/pets/:id
-      Body: any updatable fields (same keys as POST)
-      Response: 200 { "success": true, "pet": { ...updatedPet } }
+(function () {
+  const API_MY_PETS = '/client/pets/my';
+  const API_ADD_PET = '/client/pets';
 
-   4) DELETE /api/client/pets/:id
-      Response: 200 { "success": true }
-   ----------------------------------------------------------- */
-
-(function ensureApi(){
-  // If core.js hasn't provided these yet, create light mocks
-  if(!window.API) window.API = {};
-  const basePath = '/api/client';
-
-  if(!API.listPets){
-    API.listPets = async ({search='',species='',page=1,pageSize=4}={})=>{
-      // mock data
-      window.__PETS ||= [
-        {id:1,name:'Buddy',species:'Dog',breed:'Golden Retriever',age:3,breedingAllowed:true, vaccines:['Rabies','DHPP'], lastVisit:'2025-10-02'},
-        {id:2,name:'Mochi',species:'Cat',breed:'Scottish Fold',age:2,breedingAllowed:false, vaccines:['FVRCP'], lastVisit:'2025-09-20'},
-        {id:3,name:'Chika',species:'Dog',breed:'Aspin',age:5,breedingAllowed:false, vaccines:['Anti-Rabies'], lastVisit:'2025-08-10'},
-        {id:4,name:'Pochi',species:'Dog',breed:'Shih Tzu',age:1,breedingAllowed:true, vaccines:['DHPP'], lastVisit:'2025-07-01'}
-      ];
-      const list = window.__PETS.filter(p =>
-        (!search || p.name.toLowerCase().includes(search.toLowerCase()) || p.breed.toLowerCase().includes(search.toLowerCase())) &&
-        (!species || p.species===species)
-      );
-      const start=(page-1)*pageSize;
-      return { data:list.slice(start,start+pageSize), pagination:{page,pageSize,total:list.length} };
-      // 🔁 real impl:
-      // return fetch(`${basePath}/pets?${new URLSearchParams({search,species,page,pageSize})}`).then(r=>r.json());
-    };
-  }
-
-  if(!API.createPet){
-    API.createPet = async (payload)=>{
-      const item = { id:Date.now(), vaccines:[], lastVisit:'—', ...payload };
-      window.__PETS.unshift(item);
-      return item;
-      // real:
-      // return fetch(`${basePath}/pets`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}).then(r=>r.json());
-    };
-  }
-
-  if(!API.updatePet){
-    API.updatePet = async (id, payload)=>{
-      const i = window.__PETS.findIndex(p=>p.id===id);
-      if(i>-1) window.__PETS[i] = { ...window.__PETS[i], ...payload };
-      return { success:true, pet: window.__PETS[i] };
-      // real:
-      // return fetch(`${basePath}/pets/${id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}).then(r=>r.json());
-    };
-  }
-
-  if(!API.deletePet){
-    API.deletePet = async (id)=>{
-      window.__PETS = window.__PETS.filter(p=>p.id!==id);
-      return { success:true };
-      // real:
-      // return fetch(`${basePath}/pets/${id}`, {method:'DELETE'}).then(r=>r.json());
-    };
-  }
-})();
-
-(function ui(){
-  const tbody = document.querySelector('#petsTable tbody');
-  const info = document.getElementById('petsPageInfo');
-  const prev = document.getElementById('prevPets');
-  const next = document.getElementById('nextPets');
-  const addBtn = document.getElementById('addPetBtn');
-  const modal = document.getElementById('petModal');
-  const closeBtns = modal.querySelectorAll('[data-close]');
-  const submit = document.getElementById('pSubmit');
-  const title = document.getElementById('petModalTitle');
-
-  const state = { page:1, pageSize:4, search:'', species:'', editId:null };
-
-  // simple toast notifications
-  document.getElementById('notifBtn')?.addEventListener('click', ()=>theToast('No new notifications'));
-
-  // filters / paging
-  document.getElementById('petSearch').addEventListener('input', e=>{ state.search=e.target.value; state.page=1; load(); });
-  document.getElementById('speciesFilter').addEventListener('change', e=>{ state.species=e.target.value; state.page=1; load(); });
-  prev.addEventListener('click', ()=>{ if(state.page>1){ state.page--; load(); }});
-  next.addEventListener('click', ()=>{ state.page++; load(); });
-
-  // modal open/close
-  addBtn.addEventListener('click', ()=>openModalFor());
-  closeBtns.forEach(b=>b.addEventListener('click', closeModal));
-
-  // save pet (create/update)
-  submit.addEventListener('click', async()=>{
-    const payload = collectForm();
-    if(!payload.name){ theToast('Name is required'); return; }
-    if(state.editId){
-      await API.updatePet(state.editId, payload);
-      theToast('Pet updated');
-    }else{
-      await API.createPet(payload);
-      theToast('Pet added');
+  const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' },
+        signal: ctl.signal,
+        ...options
+      });
+      clearTimeout(t);
+      const body = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch (err) {
+      clearTimeout(t);
+      console.error('client pets fetch error', err);
+      return { ok:false, status:0, body:{ message: err.message } };
     }
-    closeModal();
-    load(true);
+  };
+
+  const petsGrid    = document.getElementById('petsGrid');
+  const petsSummary = document.getElementById('petsSummary');
+  const searchBox   = document.getElementById('searchBox');
+  const filterSpecies = document.getElementById('filterSpecies');
+  const filterSex     = document.getElementById('filterSex');
+  const onlyBreedable = document.getElementById('onlyBreedable');
+
+  // Modal elements (based on your pets.html)
+  const addPetBtn = document.getElementById('addPetBtn');
+  const petModal  = document.getElementById('petModal');
+  const petModalTitle = document.getElementById('petModalTitle');
+  const pSubmit   = document.getElementById('pSubmit');
+
+  const pName     = document.getElementById('pName');
+  const pSpecies  = document.getElementById('pSpecies');
+  const pBreed    = document.getElementById('pBreed');
+  const pSex      = document.getElementById('pSex');
+  const pAge      = document.getElementById('pAge');
+  const pBreeding = document.getElementById('pBreeding');
+  const pNotes    = document.getElementById('pNotes');
+
+  const toastEl   = document.getElementById('toast');
+
+  const showToast = (msg) => {
+    if (window.theToast) return window.theToast(msg);
+    if (!toastEl) return alert(msg);
+    toastEl.textContent = msg || 'Saved!';
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 1800);
+  };
+
+  if (!petsGrid) {
+    // Page not present
+    return;
+  }
+
+  let PETS = [];
+  let search = '';
+
+  // modal state
+  let modalMode = 'add';  // 'add' or 'edit'
+  let editingPetId = null;
+
+  const esc = (s) =>
+    (s ?? '').toString().replace(/[&<>\"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m]));
+
+  const distinct = (arr) => [...new Set(arr)].sort((a,b)=> String(a).localeCompare(String(b)));
+
+  const buildCard = (p) => `
+    <article class="pet-card" data-pet-id="${esc(p.id)}">
+      <header class="pet-header">
+        <div class="pet-avatar" aria-hidden="true">
+          <span>${esc((p.name || 'P').charAt(0).toUpperCase())}</span>
+        </div>
+        <div>
+          <h2 class="pet-name">${esc(p.name)}</h2>
+          <div class="pet-sub">
+            ${p.species ? esc(p.species) : 'Pet'} • ${p.breed ? esc(p.breed) : 'No breed set'}
+          </div>
+        </div>
+      </header>
+
+      <dl class="pet-meta">
+        <div>
+          <dt>Sex</dt>
+          <dd>${p.sex ? esc(p.sex) : '—'}</dd>
+        </div>
+        <div>
+          <dt>Age</dt>
+          <dd>${typeof p.age === 'number' ? esc(p.age + ' yr(s)') : '—'}</dd>
+        </div>
+        <div>
+          <dt>Breeding</dt>
+          <dd>
+            ${p.breedingAllowed
+              ? '<span class="badge ok">Allowed</span>'
+              : '<span class="badge no">Not allowed</span>'}
+          </dd>
+        </div>
+      </dl>
+
+      <!-- Inline details (expanded view) -->
+      <section class="pet-details" aria-label="Pet details">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Name</div>
+            <div class="detail-value">${esc(p.name || '—')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Species</div>
+            <div class="detail-value">${esc(p.species || '—')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Breed</div>
+            <div class="detail-value">${esc(p.breed || '—')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Sex</div>
+            <div class="detail-value">${esc(p.sex || '—')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Age</div>
+            <div class="detail-value">${typeof p.age === 'number' ? esc(p.age + ' yr(s)') : '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Breeding</div>
+            <div class="detail-value">
+              ${p.breedingAllowed
+                ? '<span class="badge ok">Allowed</span>'
+                : '<span class="badge no">Not allowed</span>'}
+            </div>
+          </div>
+          <div class="detail-item span-2">
+            <div class="detail-label">Notes</div>
+            <div class="detail-value">${p.notes ? esc(p.notes) : '—'}</div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="pet-actions">
+        <button type="button" class="btn-ghost js-toggle-details" aria-expanded="false">
+          <span class="toggle-text">View details</span>
+          <span class="chev" aria-hidden="true">▾</span>
+        </button>
+      </footer>
+    </article>
+  `;
+
+  const renderSummary = (list) => {
+    if (!petsSummary) return;
+    const total = list.length;
+    const bySpecies = {};
+    list.forEach(p => {
+      const key = p.species || 'Other';
+      bySpecies[key] = (bySpecies[key] || 0) + 1;
+    });
+
+    petsSummary.innerHTML = `
+      <div class="summary-pill">
+        <strong>${total}</strong>
+        <span>total pets</span>
+      </div>
+      ${Object.entries(bySpecies).map(([sp,count])=>`
+        <div class="summary-pill">
+          <strong>${count}</strong>
+          <span>${esc(sp)}</span>
+        </div>
+      `).join('')}
+    `;
+  };
+
+  const renderPets = () => {
+    const speciesVal = filterSpecies ? filterSpecies.value : '';
+    const sexVal     = filterSex ? filterSex.value : '';
+    const onlyBreed  = onlyBreedable ? onlyBreedable.checked : false;
+    const q = (search || '').trim().toLowerCase();
+
+    const list = PETS.filter(p =>
+      (!speciesVal || p.species === speciesVal) &&
+      (!sexVal || p.sex === sexVal) &&
+      (!onlyBreed || p.breedingAllowed) &&
+      (!q || [p.name, p.breed, p.species]
+        .some(v => String(v || '').toLowerCase().includes(q)))
+    );
+
+    renderSummary(list);
+
+    if (!list.length) {
+      petsGrid.innerHTML =
+        `<p class="muted">No pets matched your filters. Try clearing the search or filters.</p>`;
+      return;
+    }
+
+    petsGrid.innerHTML = list.map(buildCard).join('');
+  };
+
+  // -------------------------------
+  // Inline "View details" expand/collapse (no navigation)
+  // -------------------------------
+  const collapseAllCards = (exceptEl = null) => {
+    const cards = petsGrid.querySelectorAll('.pet-card.expanded');
+    cards.forEach(card => {
+      if (exceptEl && card === exceptEl) return;
+      card.classList.remove('expanded');
+      const btn = card.querySelector('.js-toggle-details');
+      if (btn) {
+        btn.setAttribute('aria-expanded', 'false');
+        const t = btn.querySelector('.toggle-text');
+        if (t) t.textContent = 'View details';
+      }
+    });
+  };
+
+  // Event delegation so it still works after re-render
+  petsGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.js-toggle-details');
+    if (!btn) return;
+    e.preventDefault();
+
+    const card = btn.closest('.pet-card');
+    if (!card) return;
+
+    const willExpand = !card.classList.contains('expanded');
+    collapseAllCards(card);
+
+    card.classList.toggle('expanded', willExpand);
+    btn.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+    const t = btn.querySelector('.toggle-text');
+    if (t) t.textContent = willExpand ? 'Hide details' : 'View details';
+
+    // When expanding, ensure it scrolls into view on small screens
+    if (willExpand) {
+      card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
   });
 
-  // table actions
-  tbody.addEventListener('click', async(e)=>{
-    // delete
-    if(e.target.matches('[data-delete]')){
-      await API.deletePet(Number(e.target.dataset.id));
-      theToast('Pet deleted'); load(true);
+  const syncFilters = () => {
+    if (!filterSpecies && !filterSex) return;
+    const species = distinct(PETS.map(p => p.species).filter(Boolean));
+    const sexes   = distinct(PETS.map(p => p.sex).filter(Boolean));
+
+    if (filterSpecies) {
+      filterSpecies.innerHTML = '<option value="">All species</option>' +
+        species.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
     }
-    // edit
-    if(e.target.matches('[data-edit]')){
-      const id = Number(e.target.dataset.id);
-      const p = currentList.find(x=>x.id===id);
-      openModalFor(p);
+    if (filterSex) {
+      filterSex.innerHTML = '<option value="">All</option>' +
+        sexes.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
     }
-    // toggle breeding
-    if(e.target.matches('[data-btoggle]')){
-      const id = Number(e.target.dataset.id);
-      const allowed = e.target.checked;
-      await API.updatePet(id, { breedingAllowed: allowed });
-      theToast(allowed ? 'Breeding allowed' : 'Breeding not allowed');
-      // reflect text badge quickly
-      const badge = e.target.closest('td').querySelector('[data-badge]');
-      if(badge){
-        badge.className = 'chip ' + (allowed?'badge-yes':'badge-no');
-        badge.textContent = allowed ? 'Allowed' : 'Not allowed';
+  };
+
+  // -------------------------------
+  // Modal control (FIX)
+  // -------------------------------
+  const modalCloseBtns = petModal ? petModal.querySelectorAll('[data-close]') : [];
+
+  const openPetModal = (mode = 'add', pet = null) => {
+    if (!petModal) return;
+
+    modalMode = mode;
+    editingPetId = pet ? pet.id : null;
+
+    // Title
+    if (petModalTitle) {
+      petModalTitle.textContent = mode === 'edit' ? 'Edit Pet' : 'Add Pet';
+    }
+
+    // Fill / reset form fields
+    if (pName) pName.value = pet?.name || '';
+    if (pSpecies) pSpecies.value = pet?.species || 'Dog';
+    if (pBreed) pBreed.value = pet?.breed || '';
+    if (pSex) pSex.value = pet?.sex || '';
+    if (pAge) pAge.value = (typeof pet?.age === 'number') ? pet.age : '';
+    if (pBreeding) pBreeding.checked = !!pet?.breedingAllowed;
+    if (pNotes) pNotes.value = pet?.notes || '';
+
+    // Force show regardless of CSS
+    petModal.classList.add('open', 'show', 'active');
+    petModal.style.display = 'flex';
+    petModal.setAttribute('aria-hidden', 'false');
+
+    // esc closes
+    document.addEventListener('keydown', onModalEsc);
+  };
+
+  const closePetModal = () => {
+    if (!petModal) return;
+
+    petModal.classList.remove('open', 'show', 'active');
+    petModal.style.display = 'none';
+    petModal.setAttribute('aria-hidden', 'true');
+
+    document.removeEventListener('keydown', onModalEsc);
+  };
+
+  const onModalEsc = (e) => {
+    if (e.key === 'Escape') closePetModal();
+  };
+
+  // Add pet button -> open modal
+  if (addPetBtn && petModal) {
+    addPetBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openPetModal('add', null);
+    });
+
+    // Close buttons
+    modalCloseBtns.forEach(btn => btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      closePetModal();
+    }));
+
+    // Click backdrop closes (only if clicked outside panel)
+    petModal.addEventListener('click', (e) => {
+      if (e.target === petModal) closePetModal();
+    });
+
+    // Ensure hidden on load
+    petModal.style.display = 'none';
+    petModal.setAttribute('aria-hidden', 'true');
+  }
+
+  // Submit button (currently just local feedback; hook to API when you have it)
+  if (pSubmit) {
+    pSubmit.addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      // Basic validation
+      const name = (pName?.value || '').trim();
+      if (!name) {
+        showToast('Please enter pet name.');
+        pName?.focus();
+        return;
       }
+
+      const payload = {
+        name,
+        species: (pSpecies?.value || '').trim(),
+        breed: (pBreed?.value || '').trim(),
+        sex: (pSex?.value || '').trim(),
+        age: pAge?.value ? Number(pAge.value) : null,
+        breedingAllowed: !!pBreeding?.checked,
+        notes: (pNotes?.value || '').trim()
+      };
+
+      // Backend save
+      if (modalMode !== 'add') {
+        showToast('Edit is not wired yet.');
+        return;
+      }
+
+      pSubmit.disabled = true;
+      pSubmit.textContent = 'Saving…';
+
+      const { ok, body } = await fetchJSON(API_ADD_PET, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      pSubmit.disabled = false;
+      pSubmit.textContent = 'Save';
+
+      if (!ok || !body || body.success === false) {
+        showToast(body?.message || 'Failed to save pet.');
+        return;
+      }
+
+      // Update UI from saved data
+      const savedPet = body.pet || body.data || null;
+      if (savedPet) {
+        PETS.unshift(savedPet);
+      } else {
+        // fallback: re-fetch
+        const refreshed = await fetchJSON(API_MY_PETS, { method: 'GET' });
+        PETS = Array.isArray(refreshed?.body?.pets) ? refreshed.body.pets : PETS;
+      }
+
+      closePetModal();
+      showToast('Pet saved!');
+
+      syncFilters();
+      renderPets();
+    });
+  }
+
+  // -------------------------------
+  // Filters events
+  // -------------------------------
+  if (searchBox) {
+    searchBox.addEventListener('input', e => {
+      search = e.target.value || '';
+      renderPets();
+    });
+  }
+  if (filterSpecies) {
+    filterSpecies.addEventListener('change', renderPets);
+  }
+  if (filterSex) {
+    filterSex.addEventListener('change', renderPets);
+  }
+  if (onlyBreedable) {
+    onlyBreedable.addEventListener('change', renderPets);
+  }
+
+  // Init
+  (async function bootstrap() {
+    petsGrid.innerHTML = '<p class="muted">Loading your pets…</p>';
+
+    const { ok, body } = await fetchJSON(API_MY_PETS, { method: 'GET' });
+
+    if (!ok || !body || body.success === false) {
+      petsGrid.innerHTML =
+        `<p class="error">Failed to load pets. ${esc(body?.message || 'Please refresh the page.')}</p>`;
+      if (petsSummary) petsSummary.innerHTML = '';
+      return;
     }
-  });
 
-  function openModalFor(p){
-    state.editId = p?.id || null;
-    title.textContent = state.editId ? 'Edit Pet' : 'Add Pet';
-    setVal('pName', p?.name || '');
-    setVal('pSpecies', p?.species || 'Dog');
-    setVal('pBreed', p?.breed || '');
-    setVal('pAge', p?.age ?? '');
-    document.getElementById('pBreeding').checked = !!p?.breedingAllowed;
-    setVal('pNotes', p?.notes || '');
-    modal.classList.add('show');
-  }
-  function closeModal(){ modal.classList.remove('show'); }
-  function setVal(id,v){ document.getElementById(id).value = v; }
-  function collectForm(){
-    return {
-      name:     document.getElementById('pName').value.trim(),
-      species:  document.getElementById('pSpecies').value,
-      breed:    document.getElementById('pBreed').value.trim(),
-      age:      Number(document.getElementById('pAge').value || 0),
-      breedingAllowed: document.getElementById('pBreeding').checked,
-      notes:    document.getElementById('pNotes').value.trim()
-    };
-  }
-
-  let currentList = [];
-  async function load(reset){
-    if(reset) state.page=1;
-    const {data, pagination} = await API.listPets({search:state.search,species:state.species,page:state.page,pageSize:state.pageSize});
-    currentList = data;
-    const start=(pagination.page-1)*pagination.pageSize;
-    tbody.innerHTML = data.map(p=>row(p)).join('');
-    info.textContent = `${data.length? start+1:0}–${Math.min(start+data.length, pagination.total)} of ${pagination.total}`;
-  }
-
-  function row(p){
-    const badgeCls = p.breedingAllowed ? 'badge-yes' : 'badge-no';
-    const badgeTxt = p.breedingAllowed ? 'Allowed' : 'Not allowed';
-    return `
-      <tr>
-        <td><strong>${escapeHtml(p.name)}</strong></td>
-        <td>${escapeHtml(p.species)}</td>
-        <td>${escapeHtml(p.breed||'—')}</td>
-        <td>${Number.isFinite(p.age)? p.age+'y':'—'}</td>
-        <td>
-          <span class="chip ${badgeCls}" data-badge>${badgeTxt}</span>
-          <label style="margin-left:.5rem;display:inline-flex;align-items:center;gap:.35rem">
-            <input type="checkbox" ${p.breedingAllowed?'checked':''} data-btoggle data-id="${p.id}"/>
-            <small style="color:#475569">allow</small>
-          </label>
-        </td>
-        <td>${Array.isArray(p.vaccines)? p.vaccines.join(', ') : '—'}</td>
-        <td>${p.lastVisit || '—'}</td>
-        <td style="text-align:right">
-          <a class="btn ghost" href="/client/appointments#book?pet=${encodeURIComponent(p.name)}">❤ Book</a>
-          <button class="btn secondary" data-edit data-id="${p.id}">Edit</button>
-          <button class="btn danger" data-delete data-id="${p.id}">Delete</button>
-        </td>
-      </tr>`;
-  }
-
-  function escapeHtml(s){ return (s??'').toString().replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
-
-  load();
+    PETS = Array.isArray(body.pets) ? body.pets : [];
+    syncFilters();
+    renderPets();
+  })();
 })();

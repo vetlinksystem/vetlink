@@ -8,7 +8,6 @@ const PORT = process.env.PORT || 3000;
  * Credentials:
  * VetlinkSystem@gmail.com
  * VetLinkSystem123
- * 
  */
 
 server.listen(PORT, async () => {

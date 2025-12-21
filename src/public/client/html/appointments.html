@@ -15,10 +15,7 @@
     <aside id="sidebar">
       <div class="brand">
         <div class="logo">🐾</div>
-        <div>
-          <strong>VetLink</strong><br/>
-          <small>Client Portal</small>
-        </div>
+        <div><strong>VetLink</strong><br/><small>Client Portal</small></div>
       </div>
       <nav class="nav">
         <a href="/client/dashboard"    data-page="#dashboard">Dashboard</a>
@@ -38,61 +35,103 @@
       <header class="top">
         <h3 style="margin:0">Appointments</h3>
         <div style="display:flex;align-items:center;gap:.5rem">
-          <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
           <div class="chip">
             Logged in as
-            <strong style="margin-left:.35rem">ken@vetlink</strong>
+            <strong id="accountName" style="margin-left:.35rem">Client</strong>
           </div>
         </div>
       </header>
 
       <main>
-        <!-- ONE ROW: tabs on the left, Book on the right -->
-        <div class="toolbar">
-          <div class="tabs" role="tablist" aria-label="Appointments filters">
-            <button class="active" data-tab="upcoming" role="tab" aria-selected="true">Upcoming</button>
-            <button data-tab="past" role="tab" aria-selected="false">Past</button>
-            <button data-tab="requests" role="tab" aria-selected="false">Requests</button>
+        <div style="display:flex;justify-content:space-between;align-items:end;gap:.75rem;flex-wrap:wrap">
+          <div>
+            <h2 style="margin:0">Appointments</h2>
+            <small style="color:var(--muted)">View your visit history and request new appointments.</small>
           </div>
-          <div class="tools">
-            <button class="btn" id="openBook">📅 Book</button>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+            
+
+            
+            <div class="search" style="min-width:240px">
+              🔍
+              <input
+                class="input"
+                id="apptSearch"
+                placeholder="Search appointments…"
+                style="background:transparent;border:none;padding:0"
+              />
+            </div>
+<select class="input" id="statusFilter" style="width:160px">
+              <option value="all">All statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button class="btn" id="addApptBtn">➕ Book Appointment</button>
           </div>
         </div>
 
-        <div id="apt-upcoming" class="card pad"></div>
-        <div id="apt-past" class="card pad hidden"></div>
-        <div id="apt-requests" class="card pad hidden"></div>
+        <div class="card" style="overflow:hidden;margin-top:.75rem">
+          <div style="overflow:auto">
+            <table id="apptTable">
+              <thead>
+                <tr>
+                  <th>Date &amp; Time</th>
+                  <th>Pet</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;border-top:1px solid var(--border)">
+            <div id="apptPageInfo" style="color:var(--muted)">0–0 of 0</div>
+            <div style="display:flex;gap:.5rem">
+              <button class="btn ghost" id="prevAppt">◀ Prev</button>
+              <button class="btn ghost" id="nextAppt">Next ▶</button>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   </div>
 
-  <!-- Book Modal -->
-  <div class="modal" id="bookModal" role="dialog" aria-modal="true" aria-labelledby="bookTitle">
+  <!-- Book Appointment Modal -->
+  <div class="modal" id="apptModal" role="dialog" aria-modal="true">
     <div class="panel">
       <header>
-        <strong id="bookTitle">Book an appointment</strong>
+        <strong id="apptModalTitle">Book Appointment</strong>
         <button class="btn ghost" data-close>✖</button>
       </header>
       <div class="content">
         <div class="form-grid" style="display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)">
-          <select class="input" id="mPet"><option>Choose pet…</option></select>
-          <select class="input" id="mService">
-            <option>General Check-up</option>
-            <option>Vaccination</option>
-            <option>Grooming</option>
-          </select>
-          <input class="input" id="mDate" type="date"/>
-          <input class="input" id="mTime" type="time"/>
-          <textarea
-            class="input"
-            id="mNote"
-            rows="4"
-            placeholder="Notes (optional)"
-            style="grid-column:span 2"
-          ></textarea>
-          <div style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
+          <label style="grid-column:span 2">
+            <span>Pet</span>
+            <select class="input" id="aPet"></select>
+          </label>
+          <label>
+            <span>Date</span>
+            <input class="input" id="aDate" type="date"/>
+          </label>
+          <label>
+            <span>Time</span>
+            <input class="input" id="aTime" type="time"/>
+          </label>
+          <label style="grid-column:span 2">
+            <span>Service</span>
+            <input class="input" id="aService" placeholder="e.g. General check-up"/>
+          </label>
+          <label style="grid-column:span 2">
+            <span>Notes (optional)</span>
+            <textarea class="input" id="aNotes" rows="3" placeholder="Add any details the clinic should know…"></textarea>
+          </label>
+
+          <div class="col-2" style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
             <button class="btn ghost" data-close>Cancel</button>
-            <button class="btn" id="mSubmit">Confirm Booking</button>
+            <button class="btn" id="aSubmit">Save</button>
           </div>
         </div>
       </div>
@@ -100,6 +139,7 @@
   </div>
 
   <div class="toast" id="toast">Saved!</div>
+
   <script src="/client/js/core.js"></script>
   <script src="/client/js/appointments.js"></script>
 </body>

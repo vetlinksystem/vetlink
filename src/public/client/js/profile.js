@@ -1,133 +1,133 @@
-/* ===========================================================
-   📡 PROFILE API CONTRACT
-   -----------------------------------------------------------
+// CLIENT PROFILE — API-enabled
 
-   GET  /api/client/profile
-   → { id, firstName, lastName, email }
+const API_GET_PROFILE    = '/client/profile/me';
+const API_UPDATE_PROFILE = '/client/profile/me';
 
-   POST /api/client/profile/update
-   Body:
-   { firstName, lastName }
+const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      signal: ctl.signal,
+      ...options
+    });
+    clearTimeout(t);
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body };
+  } catch (err) {
+    clearTimeout(t);
+    console.error('client profile fetch error', err);
+    return { ok:false, status:0, body:{ message: err.message } };
+  }
+};
 
-   POST /api/client/profile/password
-   Body:
-   { oldPassword, newPassword }
+// DOM
+const form          = document.getElementById('profileForm');
+// Use a single Full Name field (name="full_name") for consistency with registration.
+// We still map it to the existing API field "name" to avoid breaking other modules.
+const nameInput     = form ? form.querySelector('[name="full_name"]') : null;
+const emailInput    = form ? form.querySelector('[name="email"]')    : null;
+const numberInput   = form ? form.querySelector('[name="number"]')   : null;
+const addressInput  = form ? form.querySelector('[name="address"]')  : null;
+const passwordInput = form ? form.querySelector('[name="password"]') : null;
 
-   =========================================================== */
+const statusBox     = document.getElementById('profileStatus');
+const saveBtn       = document.getElementById('profileSaveBtn');
+const accountNameEl = document.getElementById('accountName'); // optional, from header chip
 
-(function ensureApi(){
-  if(!window.API) window.API = {};
+// Optional header fields in the profile card
+const displayNameEl  = document.getElementById('displayName');
+const displayEmailEl = document.getElementById('displayEmail');
+const avatarInitialEl = document.getElementById('avatarInitial');
 
-  if(!API.getProfile){
-    API.getProfile = async ()=>{
-      return {
-        id:'me',
-        firstName:'Ken',
-        lastName:'Billones',
-        email:'ken@vetlink'
-      };
-    };
+const setStatus = (msg, type = 'info') => {
+  if (!statusBox) {
+    if (msg) alert(msg);
+    return;
+  }
+  statusBox.textContent = msg || '';
+  statusBox.className = 'status ' + type;
+  if (!msg) statusBox.classList.add('hidden');
+  else statusBox.classList.remove('hidden');
+};
+
+const fillForm = (client) => {
+  if (!form || !client) return;
+  const fullName = client.name || client.full_name || '';
+  if (nameInput)     nameInput.value     = fullName;
+  if (emailInput)    emailInput.value    = client.email   || '';
+  if (numberInput)   numberInput.value   = client.number  || '';
+  if (addressInput)  addressInput.value  = client.address || '';
+  if (passwordInput) passwordInput.value = '';
+
+  if (accountNameEl) {
+    accountNameEl.textContent = fullName || client.email || 'Client';
   }
 
-  if(!API.updateProfile){
-    API.updateProfile = async payload=>{
-      return { success:true, profile:{...payload, email:'ken@vetlink'} };
-    };
+  if (displayNameEl)  displayNameEl.textContent  = fullName || 'Client';
+  if (displayEmailEl) displayEmailEl.textContent = client.email || '';
+  if (avatarInitialEl) {
+    const initial = (fullName || client.email || 'C').trim().charAt(0).toUpperCase();
+    avatarInitialEl.textContent = initial || 'C';
+  }
+};
+
+// Load current profile
+const loadProfile = async () => {
+  setStatus('Loading profile…', 'info');
+
+  const res = await fetchJSON(API_GET_PROFILE, { method: 'GET' });
+  if (!res.ok || !res.body || res.body.success === false) {
+    setStatus(res.body?.message || 'Failed to load profile.', 'error');
+    return;
   }
 
-  if(!API.changePassword){
-    API.changePassword = async payload=>{
-      if(payload.newPassword.length < 6)
-        return { success:false, message:"Password too short" };
+  const client = res.body.client || res.body;
+  fillForm(client);
+  setStatus('');
+};
 
-      return { success:true };
-    };
-  }
-})();
+if (form) {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setStatus('Saving changes…', 'info');
+    if (saveBtn) saveBtn.disabled = true;
 
-(function ui(){
-
-  const f = id => document.getElementById(id);
-
-  const firstName = f('firstName');
-  const lastName  = f('lastName');
-  const email     = f('email');
-  const avatar    = f('avatarInitial');
-
-  const displayName  = f('displayName');
-  const displayEmail = f('displayEmail');
-
-  const oldPass = f('oldPass');
-  const newPass = f('newPass');
-  const confirmPass = f('confirmPass');
-
-  f('notifBtn').addEventListener('click',()=>theToast('No new notifications'));
-  f('cancelProfile').addEventListener('click',loadProfile);
-  f('saveProfile').addEventListener('click',saveProfile);
-  f('savePassword').addEventListener('click',savePassword);
-
-  loadProfile();
-
-  async function loadProfile(){
-    const p = await API.getProfile();
-
-    firstName.value = p.firstName;
-    lastName.value  = p.lastName;
-    email.value     = p.email;
-
-    displayName.textContent  = `${p.firstName} ${p.lastName}`;
-    displayEmail.textContent = p.email;
-
-    avatar.textContent = (p.firstName || p.email).charAt(0).toUpperCase();
-  }
-
-  async function saveProfile(){
     const payload = {
-      firstName:firstName.value.trim(),
-      lastName:lastName.value.trim()
+      // API expects "name"; UI uses "full_name"
+      name:    nameInput    ? nameInput.value.trim()    : undefined,
+      email:   emailInput   ? emailInput.value.trim()   : undefined,
+      number:  numberInput  ? numberInput.value.trim()  : undefined,
+      address: addressInput ? addressInput.value.trim() : undefined
     };
 
-    if(!payload.firstName || !payload.lastName){
-      theToast('Please fill your full name.');
-      return;
+    if (passwordInput && passwordInput.value.trim() !== '') {
+      payload.password = passwordInput.value.trim();
     }
 
-    const res = await API.updateProfile(payload);
-    if(res.success){
-      theToast('Profile updated.');
-      loadProfile();
-    }
-  }
-
-  async function savePassword(){
-    const oldPw = oldPass.value.trim();
-    const newPw = newPass.value.trim();
-    const cPw   = confirmPass.value.trim();
-
-    if(!oldPw || !newPw || !cPw){
-      theToast('Complete all password fields.');
-      return;
-    }
-    if(newPw !== cPw){
-      theToast('Passwords do not match.');
-      return;
-    }
-
-    const res = await API.changePassword({
-      oldPassword: oldPw,
-      newPassword: newPw
+    const res = await fetchJSON(API_UPDATE_PROFILE, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
     });
 
-    if(!res.success){
-      theToast(res.message || 'Failed to update password.');
+    if (saveBtn) saveBtn.disabled = false;
+
+    if (!res.ok || !res.body || res.body.success === false) {
+      setStatus(res.body?.message || 'Failed to update profile.', 'error');
       return;
     }
 
-    theToast('Password changed successfully.');
+    const client = res.body.client || null;
+    if (client) fillForm(client);
 
-    oldPass.value = '';
-    newPass.value = '';
-    confirmPass.value = '';
-  }
+    setStatus('Profile updated successfully.', 'success');
+  });
+}
 
-})();
+// Init
+loadProfile();

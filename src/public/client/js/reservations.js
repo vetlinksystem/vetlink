@@ -60,7 +60,7 @@
 
   document.getElementById('openReserve').addEventListener('click', openReserve);
   document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>el('reserveModal').classList.remove('show')));
-  document.getElementById('notifBtn').addEventListener('click', ()=>theToast('No new notifications'));
+  // Notifications are handled globally in client/core.js
   typeFilter.addEventListener('change', ()=>render(currentTab()));
   statusFilter.addEventListener('change', ()=>render(currentTab()));
 

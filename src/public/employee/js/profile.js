@@ -1,183 +1,147 @@
-// Update Profile page — dummy now; API calls commented and ready.
+// Employee Update Profile — API-enabled
+// Note: backend currently accepts { name, email, number, password, position }
+// We provide a client-like UX for changing password (current/new/confirm) and
+// only send the new password field to the backend.
 
-// ===== API endpoints (enable later) =====
-// const API_ME          = '/me';                 // GET current employee
-// const API_UPDATE_ME   = '/me';                 // PUT { name,email,phone,address }
-// const API_UPDATE_PW   = '/me/password';        // PUT { currentPassword, newPassword }
-// const API_UPDATE_AVA  = '/me/avatar';          // PUT multipart/form-data { file }
+const API_GET_PROFILE = '/employee/profile/me';
+const API_UPDATE_PROFILE = '/employee/profile/me';
 
-// const fetchJSON = async (url, options = {}, timeoutMs=15000) => {
-//   const ctl = new AbortController(); const t=setTimeout(()=>ctl.abort(), timeoutMs);
-//   try {
-//     const res = await fetch(url, { credentials:'include', headers:{ 'Accept':'application/json', ...(options.headers||{}) }, signal:ctl.signal, ...options });
-//     clearTimeout(t);
-//     const body = await res.json().catch(()=> ({}));
-//     return { ok:res.ok, status:res.status, body };
-//   } catch (e) { clearTimeout(t); return { ok:false, status:0, body:{ message:e.message } }; }
-// };
-
-// ===== Dummy profile (remove when enabling API) =====
-let ME = {
-  id: 11,
-  name: "Admin",
-  email: "admin@vetlink.cloud",
-  phone: "0917-000-0000",
-  address: "Tagum City, Davao del Norte",
-  role: "Administrator",       // read-only (admin-managed)
-  avatarUrl: "/avatar-placeholder.png"
+const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      signal: ctl.signal,
+      ...options
+    });
+    clearTimeout(t);
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body };
+  } catch (err) {
+    clearTimeout(t);
+    console.error('profile fetch error', err);
+    return { ok:false, status:0, body:{ message: err.message } };
+  }
 };
 
-// ===== DOM =====
-const nameInput = document.getElementById('nameInput');
-const emailInput = document.getElementById('emailInput');
-const phoneInput = document.getElementById('phoneInput');
-const addressInput = document.getElementById('addressInput');
-const roleValue = document.getElementById('roleValue');
+// DOM
+const form          = document.getElementById('profileForm');
+const nameInput     = form ? form.querySelector('[name="name"]')     : null;
+const emailInput    = form ? form.querySelector('[name="email"]')    : null;
+const numberInput   = form ? form.querySelector('[name="number"]')   : null;
+const roleValue     = document.getElementById('roleValue');
 
-const infoForm = document.getElementById('infoForm');
+// Password fields (client-like)
+const curPassInput     = form ? form.querySelector('[name="current_password"]') : null;
+const newPassInput     = form ? form.querySelector('[name="password"]') : null;
+const confirmPassInput = form ? form.querySelector('[name="confirm_password"]') : null;
+const statusBox     = document.getElementById('profileStatus');
+const saveBtn       = document.getElementById('profileSaveBtn');
 
-const curPassInput = document.getElementById('curPassInput');
-const newPassInput = document.getElementById('newPassInput');
-const confPassInput = document.getElementById('confPassInput');
-const passwordForm = document.getElementById('passwordForm');
-
-const chooseAvatarBtn = document.getElementById('chooseAvatarBtn');
-const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
-const removeAvatarBtn = document.getElementById('removeAvatarBtn');
-const avatarFile = document.getElementById('avatarFile');
-const avatarPreview = document.getElementById('avatarPreview');
-
-// ===== Load profile =====
-const fillForm = () => {
-  nameInput.value = ME.name || '';
-  emailInput.value = ME.email || '';
-  phoneInput.value = ME.phone || '';
-  addressInput.value = ME.address || '';
-  roleValue.textContent = ME.role ? `${ME.role} (read-only)` : '— set by Admin —';
-  avatarPreview.src = ME.avatarUrl || '/avatar-placeholder.png';
-};
-
-const loadMe = async () => {
-  // API MODE:
-  // const { ok, body } = await fetchJSON(API_ME);
-  // if (ok) ME = body;
-  fillForm();
-};
-
-// ===== Save personal info =====
-const onSaveInfo = async (e) => {
-  e.preventDefault();
-  const payload = {
-    name: nameInput.value.trim(),
-    email: emailInput.value.trim(),
-    phone: phoneInput.value.trim(),
-    address: addressInput.value.trim()
-  };
-  if (!payload.name || !payload.email || !payload.phone) return;
-
-  // DUMMY UPDATE
-  ME = { ...ME, ...payload };
-  // API MODE:
-  // const { ok } = await fetchJSON(API_UPDATE_ME, { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-  // if (!ok) return alert('Failed to update profile');
-
-  toast('Profile saved.');
-};
-
-infoForm.addEventListener('submit', onSaveInfo);
-
-// ===== Change password =====
-const onChangePassword = async (e) => {
-  e.preventDefault();
-  const currentPassword = curPassInput.value;
-  const newPassword = newPassInput.value;
-  const confirmPassword = confPassInput.value;
-
-  if (newPassword !== confirmPassword) {
-    alert('New password and confirmation do not match.');
+const setStatus = (msg, type = 'info') => {
+  if (!statusBox) {
+    if (msg) alert(msg);
     return;
   }
-  if (newPassword.length < 8) {
-    alert('Use at least 8 characters.');
+  statusBox.textContent = msg || '';
+  statusBox.className = 'status ' + type;
+  if (!msg) statusBox.classList.add('hidden');
+  else statusBox.classList.remove('hidden');
+};
+
+const fillForm = (emp) => {
+  if (!form || !emp) return;
+  if (nameInput)     nameInput.value     = emp.name     || '';
+  if (emailInput)    emailInput.value    = emp.email    || '';
+  if (numberInput)   numberInput.value   = emp.number   || '';
+  if (roleValue) roleValue.textContent = emp.position || emp.role || '—';
+  if (curPassInput) curPassInput.value = '';
+  if (newPassInput) newPassInput.value = '';
+  if (confirmPassInput) confirmPassInput.value = '';
+};
+
+// Load current profile
+const loadProfile = async () => {
+  setStatus('Loading profile…', 'info');
+
+  const res = await fetchJSON(API_GET_PROFILE, { method: 'GET' });
+  if (!res.ok || !res.body || res.body.success === false) {
+    setStatus(res.body?.message || 'Failed to load profile.', 'error');
     return;
   }
 
-  // DUMMY: pretend success if currentPassword is "admin"
-  if (currentPassword !== 'admin') {
-    alert('Current password is incorrect.');
-    return;
-  }
-
-  // API MODE:
-  // const { ok } = await fetchJSON(API_UPDATE_PW, { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ currentPassword, newPassword }) });
-  // if (!ok) return alert('Failed to update password');
-
-  curPassInput.value = newPassInput.value = confPassInput.value = '';
-  toast('Password updated.');
+  const emp = res.body.employee || res.body;
+  fillForm(emp);
+  setStatus('');
 };
 
-passwordForm.addEventListener('submit', onChangePassword);
+if (form) {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setStatus('Saving changes…', 'info');
+    if (saveBtn) saveBtn.disabled = true;
 
-// ===== Avatar upload/remove =====
-let selectedAvatarFile = null;
+    const payload = {
+      name:     nameInput     ? nameInput.value.trim()     : undefined,
+      // Email is read-only in UI; keep it for safety/backward compatibility
+      email:    emailInput    ? emailInput.value.trim()    : undefined,
+      number:   numberInput   ? numberInput.value.trim()   : undefined,
+    };
 
-chooseAvatarBtn.addEventListener('click', () => avatarFile.click());
+    // Password change validation (client-like)
+    const cur = curPassInput ? curPassInput.value.trim() : '';
+    const np  = newPassInput ? newPassInput.value.trim() : '';
+    const cp  = confirmPassInput ? confirmPassInput.value.trim() : '';
 
-avatarFile.addEventListener('change', (e) => {
-  const f = e.target.files?.[0];
-  if (!f) return;
-  if (f.size > 2 * 1024 * 1024) { alert('Max 2MB.'); avatarFile.value=''; return; }
-  selectedAvatarFile = f;
-  const reader = new FileReader();
-  reader.onload = (ev) => { avatarPreview.src = ev.target.result; };
-  reader.readAsDataURL(f);
-});
+    if (np || cp || cur) {
+      if (!cur) {
+        if (saveBtn) saveBtn.disabled = false;
+        setStatus('Please enter your current password to change it.', 'error');
+        return;
+      }
+      if (!np) {
+        if (saveBtn) saveBtn.disabled = false;
+        setStatus('Please enter a new password.', 'error');
+        return;
+      }
+      if (np.length < 8) {
+        if (saveBtn) saveBtn.disabled = false;
+        setStatus('New password must be at least 8 characters.', 'error');
+        return;
+      }
+      if (np !== cp) {
+        if (saveBtn) saveBtn.disabled = false;
+        setStatus('New password and confirmation do not match.', 'error');
+        return;
+      }
 
-uploadAvatarBtn.addEventListener('click', async () => {
-  if (!selectedAvatarFile) { alert('Choose an image first.'); return; }
+      // Backend currently accepts only `password`.
+      payload.password = np;
+    }
 
-  // DUMMY: persist preview url
-  ME.avatarUrl = avatarPreview.src;
+    const res = await fetchJSON(API_UPDATE_PROFILE, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
 
-  // API MODE:
-  // const fd = new FormData();
-  // fd.append('file', selectedAvatarFile);
-  // const res = await fetch(API_UPDATE_AVA, { method:'PUT', credentials:'include', body: fd });
-  // if (!res.ok) return alert('Failed to upload avatar');
+    if (saveBtn) saveBtn.disabled = false;
 
-  selectedAvatarFile = null;
-  avatarFile.value = '';
-  toast('Avatar updated.');
-});
+    if (!res.ok || !res.body || res.body.success === false) {
+      setStatus(res.body?.message || 'Failed to update profile.', 'error');
+      return;
+    }
 
-removeAvatarBtn.addEventListener('click', async () => {
-  // DUMMY: reset to placeholder
-  ME.avatarUrl = '/avatar-placeholder.png';
+    const emp = res.body.employee || null;
+    if (emp) fillForm(emp);
 
-  // API MODE: you may provide DELETE /me/avatar or PUT with empty file
-  // await fetch(API_UPDATE_AVA, { method:'DELETE', credentials:'include' });
-
-  avatarPreview.src = ME.avatarUrl;
-  toast('Avatar removed.');
-});
-
-// ===== Small toast helper (non-blocking) =====
-const toast = (msg) => {
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.textContent = msg;
-  Object.assign(t.style, {
-    position:'fixed', right:'16px', bottom:'16px', background:'#0f172a', color:'#fff',
-    padding:'10px 12px', borderRadius:'10px', fontSize:'13px', opacity:'0',
-    transition:'opacity .2s ease', zIndex: 9999
+    setStatus('Profile updated successfully.', 'success');
   });
-  document.body.appendChild(t);
-  requestAnimationFrame(()=> t.style.opacity='1');
-  setTimeout(()=> {
-    t.style.opacity='0';
-    t.addEventListener('transitionend', ()=> t.remove(), { once:true });
-  }, 1800);
-};
+}
 
-// ===== Init =====
-loadMe();
+// Init
+loadProfile();
