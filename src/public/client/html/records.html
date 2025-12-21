@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • Records</title>
+
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/records.css" rel="stylesheet"/>
+</head>
+
+<body data-page="#records">
+
+<div id="scrim"></div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="logo">🐾</div>
+      <div><strong>VetLink</strong><br><small>Client Portal</small></div>
+    </div>
+    <nav class="nav">
+      <a href="/client/dashboard"    data-page="#dashboard">Dashboard</a>
+      <a href="/client/pets"         data-page="#pets">My Pets</a>
+      <a href="/client/appointments" data-page="#appointments">Appointments</a>
+      <a href="/client/records"      data-page="#records" class="active">Records</a>
+      <a href="/client/profile"      data-page="#profile">Profile</a>
+
+      <div style="padding:.75rem;margin-top:.75rem">
+        <button class="btn secondary" id="logoutBtn">Log out</button>
+      </div>
+    </nav>
+  </aside>
+
+
+  <!-- MAIN -->
+  <div>
+
+    <!-- HEADER -->
+    <header class="top">
+      <h3 style="margin:0">Medical Records</h3>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
+        <div class="chip">
+          Logged in as
+          <strong style="margin-left:.35rem">ken@vetlink</strong>
+        </div>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="left">
+          <input class="input" id="recSearch" placeholder="Search records…" style="max-width:250px"/>
+        </div>
+        <div class="right">
+          <button class="btn" id="uploadBtn">⬆️ Upload</button>
+          <button class="btn secondary" id="requestBtn">🩺 Request Record</button>
+        </div>
+      </div>
+
+      <div id="recList" class="grid cols-2"></div>
+
+    </main>
+  </div>
+</div>
+
+
+<!-- Upload Modal -->
+<div class="modal" id="uploadModal">
+  <div class="panel">
+    <header>
+      <strong>Upload medical record</strong>
+      <button class="btn ghost" data-close>✖</button>
+    </header>
+    <div class="content">
+      <div class="form-grid" style="grid-template-columns:repeat(2,1fr)">
+        <select class="input" id="uPet">
+          <option>Choose pet…</option>
+        </select>
+        <select class="input" id="uType">
+          <option>Lab Result</option>
+          <option>Vaccination Card</option>
+          <option>Prescription</option>
+          <option>Grooming Report</option>
+        </select>
+        <input class="input" id="uFile" type="file" accept=".pdf,.jpg,.png" style="grid-column:span 2"/>
+        <textarea class="input" id="uNote" placeholder="Notes (optional)" rows="3" style="grid-column:span 2"></textarea>
+        <div style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
+          <button class="btn ghost" data-close>Cancel</button>
+          <button class="btn" id="uSubmit">Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/client/js/core.js"></script>
+<script src="/client/js/records.js"></script>
+
+</body>
+</html>

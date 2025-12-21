@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VetLink — Sign In</title>
+    <link rel="stylesheet" href="/login/css/styles.css" />
+  </head>
+  <body>
+    <main class="auth">
+      <section class="card">
+        <header class="brand">
+          <img src="./logo.png" alt="VetLink/Doc Benz logo" class="logo" />
+          <h1 class="brand-title">VetLink</h1>
+          <p class="brand-sub">Veterinary Services</p>
+        </header>
+
+        <h2 class="title">Sign in</h2>
+
+        <form id="loginForm" novalidate>
+          <div class="role-switch" role="tablist" aria-label="Choose account type">
+            <button type="button" class="role-btn active" data-role="employee" aria-selected="true">Employee</button>
+            <button type="button" class="role-btn" data-role="client" aria-selected="false">Client</button>
+          </div>
+
+          <label class="field">
+            <span>Email</span>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" />
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+          </label>
+
+          <label class="remember">
+            <input id="remember" type="checkbox" />
+            <span>Remember me on this device</span>
+          </label>
+
+          <button id="submitBtn" class="submit" type="submit">Sign In</button>
+
+          <p id="status" class="status" aria-live="polite"></p>
+        </form>
+
+        <footer class="meta">
+          <small>© <span id="year"></span> VetLink</small>
+        </footer>
+      </section>
+    </main>
+
+    <script src="/login/js/app.js"></script>
+  </body>
+</html>

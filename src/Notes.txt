@@ -1,0 +1,92 @@
+NAMING CONVENTION
+Folder - names (plural)
+File - add_name
+API - /add-name
+Variable - addNameModel
+
+!-- Important APIS --!
+POST /login-employee {email, password}
+POST /login-client {email, password}
+
+GET /get-dashboard-details
+
+!-- Front-end --!
+GET /home
+GET /dashboard
+
+!-- EMPLOYEES --!
+id
+name
+email
+number
+password
+position
+isAdmin
+
+POST /add {all}
+PUT /get {id}
+PUT /get-all {name, isAdmin}
+PUT /update {all}
+DELETE /delete {id}
+
+!-- CLIENTS --!
+id
+name
+address
+email
+number
+password
+
+POST /add-client {all}
+PUT /get-client {id}
+PUT /get-all-clients {name}
+PUT /update-client {all}
+DELETE /delete-client {id}
+
+!-- APPOINTMENTS --!
+id
+clientId
+dateTime
+purpose
+
+POST /add-appointment {all}
+PUT /get-appointment {id}
+PUT /get-all-appointments {clientId, dateTime}
+DELETE /delete-appointment {id}
+
+!-- PETS --!
+id
+name
+breed
+species
+sex
+dateOfBirth
+age
+weight
+ownerId
+
+histories[
+    {
+        date,
+        diagnosis,
+        prescriptions[]
+    }
+]
+
+vaccines[
+    {
+        dateOfVaccination,
+        vaccine,
+        dueDate,
+        veterinarian
+    }
+]
+
+POST /add-pet {all}
+PUT /get-pet {id}
+PUT /get-all-pets {name, breed, sex, species}
+PUT /update-pet {all}
+DELETE /delete-pet {id}
+
+PATCH /add-diagnosis {date, diagnosis, prescription}
+PATCH /add-vaccination {dateOfVaccination, vaccine, dueDate, veterinarian}

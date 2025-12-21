@@ -1,0 +1,55 @@
+.stat{
+  padding:1rem;
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+}
+
+.stat h3{
+  margin:.15rem 0 .35rem;
+  font-size:1rem;
+  color:#374151;
+}
+
+.stat .value{
+  font-size:1.8rem;
+  font-weight:800;
+  color:#047857;
+}
+
+.stat small{
+  color:var(--muted);
+}
+
+/* Quick actions bar */
+.quick-actions{
+  margin-top:1.25rem;
+  padding:1rem 1.25rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+
+.quick-actions .qa-text{
+  display:flex;
+  flex-direction:column;
+  gap:.2rem;
+}
+
+.quick-actions .qa-text small{
+  color:var(--muted);
+}
+
+.quick-actions .qa-buttons{
+  display:flex;
+  gap:.5rem;
+  flex-wrap:wrap;
+}
+
+@media(max-width:720px){
+  .quick-actions{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}

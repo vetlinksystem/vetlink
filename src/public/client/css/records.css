@@ -1,0 +1,32 @@
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:1rem 0;
+  flex-wrap:wrap;
+  gap:.75rem;
+}
+
+.toolbar .left,
+.toolbar .right{
+  display:flex;
+  gap:.5rem;
+  flex-wrap:wrap;
+}
+
+.record-card{
+  padding:1rem;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#fff;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+}
+
+.record-card .actions{
+  margin-top:.5rem;
+  display:flex;
+  gap:.5rem;
+}

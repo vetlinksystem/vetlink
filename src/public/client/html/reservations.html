@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • Reservations</title>
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/reservations.css" rel="stylesheet"/>
+</head>
+<body data-page="#reservations">
+  <div id="scrim"></div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="brand"><div class="logo">🐾</div><div><strong>VetLink</strong><br/><small>Client Portal</small></div></div>
+      <nav class="nav">
+        <a href="/client/dashboard">Dashboard</a>
+        <a href="/client/pets">My Pets</a>
+        <a href="/client/appointments">Appointments</a>
+        <a href="/client/reservations" class="active">Reservations</a>
+        <a href="/client/records">Records</a>
+        <a href="/client/billing">Billing</a>
+        <a href="/client/support">Support</a>
+        <a href="/client/profile">Profile</a>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div>
+      <header class="top">
+        <h3 style="margin:0">Reservations</h3>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
+          <div class="chip">Logged in as <strong style="margin-left:.35rem">ken@vetlink</strong></div>
+        </div>
+      </header>
+
+      <main>
+        <!-- One row: tabs + Reserve -->
+        <div class="toolbar">
+          <div class="tabs" role="tablist" aria-label="Reservations filters">
+            <button class="active" data-tab="upcoming" role="tab" aria-selected="true">Upcoming</button>
+            <button data-tab="past" role="tab" aria-selected="false">Past</button>
+            <button data-tab="requests" role="tab" aria-selected="false">Requests</button>
+          </div>
+          <div class="tools">
+            <button class="btn" id="openReserve">🏨 Reserve</button>
+          </div>
+        </div>
+
+        <!-- Optional quick filters -->
+        <div class="subfilters">
+          <select class="input" id="typeFilter" style="max-width:220px">
+            <option value="">All types</option>
+            <option value="Boarding">Boarding</option>
+            <option value="Daycare">Daycare</option>
+            <option value="Grooming">Grooming</option>
+          </select>
+          <select class="input" id="statusFilter" style="max-width:220px">
+            <option value="">All status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Checked-in">Checked-in</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div id="res-upcoming" class="card pad"></div>
+        <div id="res-past" class="card pad hidden"></div>
+        <div id="res-requests" class="card pad hidden"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Reserve Modal -->
+  <div class="modal" id="reserveModal" role="dialog" aria-modal="true" aria-labelledby="reserveTitle">
+    <div class="panel">
+      <header><strong id="reserveTitle">New reservation</strong><button class="btn ghost" data-close>✖</button></header>
+      <div class="content">
+        <div class="form-grid" style="display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)">
+          <select class="input" id="rPet"><option>Choose pet…</option></select>
+          <select class="input" id="rType">
+            <option>Boarding</option><option>Daycare</option><option>Grooming</option>
+          </select>
+          <input class="input" id="rFrom" type="date"/>
+          <input class="input" id="rTo" type="date"/>
+          <textarea class="input" id="rNote" rows="4" placeholder="Notes (optional)" style="grid-column:span 2"></textarea>
+          <div style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
+            <button class="btn ghost" data-close>Cancel</button>
+            <button class="btn" id="rSubmit">Confirm Reservation</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved!</div>
+  <script src="/client/js/core.js"></script>
+  <script src="/client/js/reservations.js"></script>
+</body>
+</html>

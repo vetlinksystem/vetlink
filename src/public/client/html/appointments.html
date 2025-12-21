@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • Appointments</title>
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/appointments.css" rel="stylesheet"/>
+</head>
+<body data-page="#appointments">
+  <div id="scrim"></div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="logo">🐾</div>
+        <div>
+          <strong>VetLink</strong><br/>
+          <small>Client Portal</small>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="/client/dashboard"    data-page="#dashboard">Dashboard</a>
+        <a href="/client/pets"         data-page="#pets">My Pets</a>
+        <a href="/client/appointments" data-page="#appointments" class="active">Appointments</a>
+        <a href="/client/records"      data-page="#records">Records</a>
+        <a href="/client/profile"      data-page="#profile">Profile</a>
+
+        <div style="padding:.75rem;margin-top:.75rem">
+          <button class="btn secondary" id="logoutBtn">Log out</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div>
+      <header class="top">
+        <h3 style="margin:0">Appointments</h3>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
+          <div class="chip">
+            Logged in as
+            <strong style="margin-left:.35rem">ken@vetlink</strong>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <!-- ONE ROW: tabs on the left, Book on the right -->
+        <div class="toolbar">
+          <div class="tabs" role="tablist" aria-label="Appointments filters">
+            <button class="active" data-tab="upcoming" role="tab" aria-selected="true">Upcoming</button>
+            <button data-tab="past" role="tab" aria-selected="false">Past</button>
+            <button data-tab="requests" role="tab" aria-selected="false">Requests</button>
+          </div>
+          <div class="tools">
+            <button class="btn" id="openBook">📅 Book</button>
+          </div>
+        </div>
+
+        <div id="apt-upcoming" class="card pad"></div>
+        <div id="apt-past" class="card pad hidden"></div>
+        <div id="apt-requests" class="card pad hidden"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Book Modal -->
+  <div class="modal" id="bookModal" role="dialog" aria-modal="true" aria-labelledby="bookTitle">
+    <div class="panel">
+      <header>
+        <strong id="bookTitle">Book an appointment</strong>
+        <button class="btn ghost" data-close>✖</button>
+      </header>
+      <div class="content">
+        <div class="form-grid" style="display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)">
+          <select class="input" id="mPet"><option>Choose pet…</option></select>
+          <select class="input" id="mService">
+            <option>General Check-up</option>
+            <option>Vaccination</option>
+            <option>Grooming</option>
+          </select>
+          <input class="input" id="mDate" type="date"/>
+          <input class="input" id="mTime" type="time"/>
+          <textarea
+            class="input"
+            id="mNote"
+            rows="4"
+            placeholder="Notes (optional)"
+            style="grid-column:span 2"
+          ></textarea>
+          <div style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
+            <button class="btn ghost" data-close>Cancel</button>
+            <button class="btn" id="mSubmit">Confirm Booking</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved!</div>
+  <script src="/client/js/core.js"></script>
+  <script src="/client/js/appointments.js"></script>
+</body>
+</html>

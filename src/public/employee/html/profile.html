@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink — Update Profile</title>
+  <link rel="stylesheet" href="/employee/css/dashboard.css"/>
+  <link rel="stylesheet" href="/employee/css/profile.css"/>
+</head>
+<body>
+<div id="app" class="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <img src="/logo.png" class="logo" alt="VetLink"/>
+      <span class="brand-name">VetLink</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytic Dashboard</span></a>
+      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered User</span></a>
+      <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
+      <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+      <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
+      <a class="nav-item" href="/employee/reservation"><span class="icon">📝</span><span>Reservation</span></a>
+      <a class="nav-item active" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
+      <div class="nav-spacer"></div>
+      <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
+      <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Update Profile</span></div>
+      <div class="account">
+        <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
+          <span id="accountName">User</span><span class="avatar" aria-hidden="true">🛡️</span>
+        </button>
+        <div id="accountMenu" class="menu" role="menu">
+          <a href="/employee/profile" role="menuitem">Settings / Profile</a>
+          <a href="#" id="menuLogout" role="menuitem">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="view active">
+      <h1 class="page-title">Update Profile</h1>
+
+      <div class="grid">
+        <!-- Avatar -->
+        <div class="card">
+          <h2 class="panel-title">Profile Photo</h2>
+          <div class="avatar-wrap">
+            <img id="avatarPreview" class="avatar-lg" alt="Avatar" src="/avatar-placeholder.png"/>
+            <div class="avatar-actions">
+              <input id="avatarFile" type="file" accept="image/*" hidden />
+              <button id="chooseAvatarBtn" class="btn-ghost">Choose Image</button>
+              <button id="uploadAvatarBtn" class="btn-primary">Upload</button>
+              <button id="removeAvatarBtn" class="btn-ghost danger">Remove</button>
+              <div id="avatarNote" class="hint">PNG/JPG up to 2MB.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="card">
+          <h2 class="panel-title">Personal Information</h2>
+          <form id="infoForm" class="form-grid">
+            <label>
+              <span>Full Name</span>
+              <input id="nameInput" type="text" required placeholder="Your name"/>
+            </label>
+            <label>
+              <span>Email</span>
+              <input id="emailInput" type="email" required placeholder="you@vetlink.cloud"/>
+            </label>
+            <label>
+              <span>Contact No.</span>
+              <input id="phoneInput" type="tel" required placeholder="09xx-xxx-xxxx"/>
+            </label>
+            <label class="wide">
+              <span>Address</span>
+              <input id="addressInput" type="text" placeholder="Street, City, Province"/>
+            </label>
+
+            <!-- Role is admin-only; not editable here -->
+            <div class="readonly">
+              <span>Role</span>
+              <div id="roleValue" class="ro">— set by Admin —</div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Security -->
+        <div class="card">
+          <h2 class="panel-title">Security</h2>
+          <form id="passwordForm" class="form-grid">
+            <label>
+              <span>Current Password</span>
+              <input id="curPassInput" type="password" required minlength="6" autocomplete="current-password" />
+            </label>
+            <label>
+              <span>New Password</span>
+              <input id="newPassInput" type="password" required minlength="8" autocomplete="new-password" />
+              <div class="hint">Use 8+ chars with a number & symbol.</div>
+            </label>
+            <label>
+              <span>Confirm New Password</span>
+              <input id="confPassInput" type="password" required minlength="8" autocomplete="new-password" />
+            </label>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Update Password</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script src="/employee/js/core.js"></script>
+<script src="/employee/js/profile.js"></script>
+</body>
+</html>

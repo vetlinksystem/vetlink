@@ -1,0 +1,10 @@
+/* Pets page (extends core.css) */
+.badge-yes{ background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+.badge-no{ background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+
+@media (max-width:720px){
+  #petsTable th:nth-child(6), #petsTable td:nth-child(6),
+  #petsTable th:nth-child(7), #petsTable td:nth-child(7){
+    display:none; /* hide vaccines/last-visit on narrow screens */
+  }
+}

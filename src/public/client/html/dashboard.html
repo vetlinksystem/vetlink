@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • Dashboard</title>
+
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/dashboard.css" rel="stylesheet"/>
+</head>
+<body data-page="#dashboard">
+  <div id="scrim"></div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="logo">🐾</div>
+        <div>
+          <strong>VetLink</strong><br/>
+          <small>Client Portal</small>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="/client/dashboard"    data-page="#dashboard"   class="active">Dashboard</a>
+        <a href="/client/pets"         data-page="#pets">My Pets</a>
+        <a href="/client/appointments" data-page="#appointments">Appointments</a>
+        <a href="/client/records"      data-page="#records">Records</a>
+        <a href="/client/profile"      data-page="#profile">Profile</a>
+
+        <div style="padding:.75rem;margin-top:.75rem">
+          <button class="btn secondary" id="logoutBtn">Log out</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <div>
+      <header class="top">
+        <div class="search">
+          🔍
+          <input
+            class="input"
+            id="globalSearch"
+            placeholder="Search pets, appointments, records…"
+            style="background:transparent;border:none;padding:0"
+          />
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
+          <div class="chip">
+            Logged in as
+            <strong style="margin-left:.35rem">ken@vetlink</strong>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <h2 style="margin-top:0">Welcome back, Ken! 🐶</h2>
+        <p style="margin-top:.25rem;color:var(--muted);max-width:520px">
+          Quick snapshot of your pets, upcoming visits, and medical records.
+        </p>
+
+        <!-- STATS GRID -->
+        <div class="grid cols-4" id="stats"></div>
+
+        <!-- QUICK ACTIONS BAR -->
+        <div class="card quick-actions">
+          <div class="qa-text">
+            <strong>Quick actions</strong>
+            <small>Book a new visit or add a pet in just a tap.</small>
+          </div>
+          <div class="qa-buttons">
+            <button class="btn" id="bookBtn">📅 Book appointment</button>
+            <a class="btn secondary" href="/client/pets">➕ Add pet</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <script src="/client/js/core.js"></script>
+  <script src="/client/js/dashboard.js"></script>
+</body>
+</html>

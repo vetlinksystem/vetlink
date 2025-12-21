@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink — Schedule</title>
+  <link rel="stylesheet" href="/employee/css/dashboard.css"/>
+  <link rel="stylesheet" href="/employee/css/schedule.css"/>
+</head>
+<body>
+<div id="app" class="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <img src="/logo.png" class="logo" alt="VetLink"/>
+      <span class="brand-name">VetLink</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytic Dashboard</span></a>
+      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered User</span></a>
+      <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
+      <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+      <a class="nav-item active" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
+      <a class="nav-item" href="/employee/reservation"><span class="icon">📝</span><span>Reservation</span></a>
+      <a class="nav-item" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
+      <div class="nav-spacer"></div>
+      <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
+      <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Schedule</span></div>
+      <div class="account">
+        <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
+          <span id="accountName">User</span>
+          <span class="avatar" aria-hidden="true">🛡️</span>
+        </button>
+        <div id="accountMenu" class="menu" role="menu">
+          <a href="/employee/profile" role="menuitem">Settings / Profile</a>
+          <a href="#" id="menuLogout" role="menuitem">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="view active">
+      <div class="page-head">
+        <h1 class="page-title">Schedule</h1>
+        <div class="cal-controls">
+          <button id="prevBtn" class="btn-ghost" aria-label="Previous month">‹</button>
+          <button id="todayBtn" class="btn-ghost">Today</button>
+          <button id="nextBtn" class="btn-ghost" aria-label="Next month">›</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cal-head">
+          <div id="calMonth" class="cal-month"></div>
+          <div id="calRange" class="cal-range"></div>
+        </div>
+
+        <div class="cal-grid" id="calGrid">
+          <!-- weekday header -->
+          <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div>
+          <div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div>
+          <!-- days render here -->
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Popover (big tooltip) -->
+<div id="popover" class="popover" role="dialog" aria-hidden="true">
+  <div class="popover-card">
+    <div class="popover-head">
+      <div class="popover-title" id="popoverTitle">Schedules</div>
+      <button class="popover-close" aria-label="Close">✕</button>
+    </div>
+    <div class="popover-body" id="popoverBody"></div>
+  </div>
+</div>
+
+<script src="/employee/js/core.js"></script>
+<script src="/employee/js/schedule.js"></script>
+</body>
+</html>

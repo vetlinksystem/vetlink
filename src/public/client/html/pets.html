@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • My Pets</title>
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/pets.css" rel="stylesheet"/>
+</head>
+<body data-page="#pets">
+  <div id="scrim"></div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="logo">🐾</div>
+        <div><strong>VetLink</strong><br/><small>Client Portal</small></div>
+      </div>
+      <nav class="nav">
+        <a href="/client/dashboard"    data-page="#dashboard">Dashboard</a>
+        <a href="/client/pets"         data-page="#pets" class="active">My Pets</a>
+        <a href="/client/appointments" data-page="#appointments">Appointments</a>
+        <a href="/client/records"      data-page="#records">Records</a>
+        <a href="/client/profile"      data-page="#profile">Profile</a>
+
+        <div style="padding:.75rem;margin-top:.75rem">
+          <button class="btn secondary" id="logoutBtn">Log out</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div>
+      <header class="top">
+        <div class="search">
+          🔍
+          <input
+            class="input"
+            id="petSearch"
+            placeholder="Search pets…"
+            style="background:transparent;border:none;padding:0"
+          />
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
+          <div class="chip">
+            Logged in as
+            <strong style="margin-left:.35rem">ken@vetlink</strong>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <div style="display:flex;justify-content:space-between;align-items:end;gap:.75rem;flex-wrap:wrap">
+          <div>
+            <h2 style="margin:0">My Pets</h2>
+            <small style="color:var(--muted)">Manage profiles, vaccines, and breeding preference.</small>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <select class="input" id="speciesFilter" style="width:160px">
+              <option value="">All species</option>
+              <option>Dog</option><option>Cat</option><option>Others</option>
+            </select>
+            <button class="btn" id="addPetBtn">➕ Add pet</button>
+          </div>
+        </div>
+
+        <div class="card" style="overflow:hidden;margin-top:.75rem">
+          <div style="overflow:auto">
+            <table id="petsTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Species</th>
+                  <th>Breed</th>
+                  <th>Age</th>
+                  <th>Breeding</th>
+                  <th>Vaccines</th>
+                  <th>Last Visit</th>
+                  <th style="text-align:right">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;border-top:1px solid var(--border)">
+            <div id="petsPageInfo" style="color:var(--muted)">0–0 of 0</div>
+            <div style="display:flex;gap:.5rem">
+              <button class="btn ghost" id="prevPets">◀ Prev</button>
+              <button class="btn ghost" id="nextPets">Next ▶</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add/Edit Pet Modal -->
+  <div class="modal" id="petModal" role="dialog" aria-modal="true">
+    <div class="panel">
+      <header>
+        <strong id="petModalTitle">Add Pet</strong>
+        <button class="btn ghost" data-close>✖</button>
+      </header>
+      <div class="content">
+        <div class="form-grid" style="display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)">
+          <input class="input" id="pName" placeholder="Name"/>
+          <select class="input" id="pSpecies">
+            <option>Dog</option><option>Cat</option><option>Others</option>
+          </select>
+          <input class="input" id="pBreed" placeholder="Breed"/>
+          <input class="input" id="pAge" type="number" min="0" placeholder="Age (yrs)"/>
+
+          <label class="breeding col-2" style="grid-column:span 2;display:flex;align-items:center;gap:.6rem">
+            <input type="checkbox" id="pBreeding" />
+            <span>Allow this pet for breeding</span>
+          </label>
+
+          <textarea
+            class="input col-2"
+            id="pNotes"
+            placeholder="Notes (optional)"
+            rows="3"
+            style="grid-column:span 2"
+          ></textarea>
+
+          <div class="col-2" style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
+            <button class="btn ghost" data-close>Cancel</button>
+            <button class="btn" id="pSubmit">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved!</div>
+  <script src="/client/js/core.js"></script>
+  <script src="/client/js/pets.js"></script>
+</body>
+</html>

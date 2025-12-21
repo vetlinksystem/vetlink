@@ -1,0 +1,24 @@
+/* Toolbar: tabs + Book aligned on ONE row */
+.toolbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:.75rem; margin:1rem 0 .5rem 0; flex-wrap:wrap;
+}
+.tabs{display:flex; gap:.5rem; flex-wrap:wrap}
+.tabs button{
+  border:1px solid var(--border); background:#fff; border-radius:999px;
+  padding:.5rem 1rem; cursor:pointer;
+}
+.tabs button.active{background:#d1fae5; color:#065f46; border-color:#bbf7d0}
+.tools{display:flex; gap:.5rem}
+
+/* List cards */
+.pad{padding:.75rem}
+.item{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.75rem; border:1px solid var(--border); border-radius:12px;
+  background:#fff; margin:.5rem 0;
+}
+.badge{padding:.25rem .55rem;border-radius:999px;border:1px solid var(--border);font-size:.8rem}
+.badge.Pending{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.badge.Confirmed{background:#ecfdf5;border-color:#bbf7d0;color:#166534}
+.badge.Completed{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}

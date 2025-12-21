@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink — Dashboard</title>
+  <link rel="stylesheet" href="employee/css/dashboard.css"/>
+</head>
+<body>
+  <div id="app" class="layout">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="brand">
+        <img src="./logo.png" class="logo" alt="VetLink"/>
+        <span class="brand-name">VetLink</span>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" href="/employee/dashboard"><span class="icon">📊</span><span>Analytic Dashboard</span></a>
+        <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered User</span></a>
+        <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
+        <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+        <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
+        <a class="nav-item" href="/employee/reservation"><span class="icon">📝</span><span>Reservation</span></a>
+        <a class="nav-item" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
+
+        <div class="nav-spacer"></div>
+        <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <header class="topbar">
+        <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
+        <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Dashboard</span></div>
+        <div class="account">
+          <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
+            <span id="accountName">User</span>
+            <span class="avatar" aria-hidden="true">🛡️</span>
+          </button>
+          <div id="accountMenu" class="menu" role="menu">
+            <a href="/employee/profile" role="menuitem">Settings / Profile</a>
+            <a href="#" id="menuLogout" role="menuitem">Logout</a>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard content (same KPI cards + tables you already have) -->
+      <section class="view active">
+        <h1 class="page-title">Administrator Dashboard</h1>
+
+        <div class="cards cards-flex">
+          <article class="card kpi kpi-lg"><div class="kpi-row"><div class="kpi-icon">👤</div><div class="kpi-body"><div class="kpi-value" id="kpi-users">—</div><div class="kpi-label">Total User Registered</div></div></div></article>
+          <article class="card kpi kpi-lg"><div class="kpi-row"><div class="kpi-icon">🐶</div><div class="kpi-body"><div class="kpi-value" id="kpi-pets">—</div><div class="kpi-label">Total Pet Registered</div></div></div></article>
+          <article class="card kpi kpi-lg"><div class="kpi-row"><div class="kpi-icon">🐾</div><div class="kpi-body"><div class="kpi-value" id="kpi-breeds">—</div><div class="kpi-label">Total Breeds</div></div></div></article>
+          <article class="card kpi kpi-lg success"><div class="kpi-row"><div class="kpi-icon">✅</div><div class="kpi-body"><div class="kpi-value" id="kpi-success">—</div><div class="kpi-label">Total Success Appointments</div></div></div></article>
+          <article class="card kpi kpi-lg warn"><div class="kpi-row"><div class="kpi-icon">⏳</div><div class="kpi-body"><div class="kpi-value" id="kpi-pending">—</div><div class="kpi-label">Total Pending Appointments</div></div></div></article>
+        </div>
+
+        <div class="panels panels-flex">
+          <section class="card panel"><h2 class="panel-title">Recent User Registered</h2><div id="table-users" class="table"></div></section>
+          <section class="card panel"><h2 class="panel-title">Recent Pet Added</h2><div id="table-pets" class="table"></div></section>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="employee/js/core.js"></script>
+  <script src="employee/js/dashboard.js"></script>
+</body>
+</html>

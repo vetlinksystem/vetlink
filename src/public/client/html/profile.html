@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • Profile</title>
+
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/profile.css" rel="stylesheet"/>
+</head>
+<body data-page="#profile">
+<div id="scrim"></div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="logo">🐾</div>
+      <div><strong>VetLink</strong><br><small>Client Portal</small></div>
+    </div>
+    <nav class="nav">
+      <a href="/client/dashboard"    data-page="#dashboard">Dashboard</a>
+      <a href="/client/pets"         data-page="#pets">My Pets</a>
+      <a href="/client/appointments" data-page="#appointments">Appointments</a>
+      <a href="/client/records"      data-page="#records">Records</a>
+      <a href="/client/profile"      data-page="#profile" class="active">Profile</a>
+
+      <div style="padding:.75rem;margin-top:.75rem">
+        <button class="btn secondary" id="logoutBtn">Log out</button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div>
+    <header class="top">
+      <h3 style="margin:0">Profile</h3>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <button class="btn secondary" id="notifBtn">🔔 Notifications</button>
+        <div class="chip">Logged in as <strong>ken@vetlink</strong></div>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- PROFILE CARD -->
+      <div class="profile-wrapper">
+        <div class="card profile-card">
+
+          <div class="profile-header">
+            <div class="avatar" id="avatarInitial">K</div>
+            <div>
+              <div class="profile-name" id="displayName">Ken Billones</div>
+              <div class="profile-email" id="displayEmail">ken@vetlink</div>
+            </div>
+          </div>
+
+          <div class="profile-form">
+
+            <div class="field-pair">
+              <div>
+                <label for="firstName">First Name</label>
+                <input class="input" id="firstName"/>
+              </div>
+              <div>
+                <label for="lastName">Last Name</label>
+                <input class="input" id="lastName"/>
+              </div>
+            </div>
+
+            <div>
+              <label for="email">Email (read-only)</label>
+              <input class="input" id="email" disabled/>
+            </div>
+
+            <div class="profile-actions">
+              <button class="btn secondary" id="cancelProfile">Cancel</button>
+              <button class="btn" id="saveProfile">Save changes</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- CHANGE PASSWORD -->
+      <div class="profile-wrapper">
+        <div class="card profile-card">
+
+          <strong style="font-size:1.1rem">Change Password</strong>
+
+          <div class="profile-form">
+
+            <div>
+              <label for="oldPass">Current Password</label>
+              <input class="input" id="oldPass" type="password"/>
+            </div>
+
+            <div>
+              <label for="newPass">New Password</label>
+              <input class="input" id="newPass" type="password"/>
+            </div>
+
+            <div>
+              <label for="confirmPass">Confirm New Password</label>
+              <input class="input" id="confirmPass" type="password"/>
+            </div>
+
+            <div class="profile-actions">
+              <button class="btn" id="savePassword">Update Password</button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/client/js/core.js"></script>
+<script src="/client/js/profile.js"></script>
+
+</body>
+</html>

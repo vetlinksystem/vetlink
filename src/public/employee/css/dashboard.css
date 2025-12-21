@@ -1,0 +1,122 @@
+:root{
+  --bg:#f6faf7; --panel:#fff; --ink:#0b1f16; --muted:#667085;
+  --brand:#16a34a; --brand-ink:#0f5132; --warn:#f59e0b; --danger:#ef4444;
+  --border:#e5e7eb; --shadow:0 10px 30px rgba(0,0,0,.06);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,Roboto,Arial}
+
+/* ---------- Flex layout for whole app ---------- */
+.layout{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:260px;background:#fff;border-right:1px solid var(--border);padding:16px 12px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 10px 16px}
+.logo{width:28px;height:28px;object-fit:contain}
+.brand-name{font-weight:800;color:var(--brand-ink);letter-spacing:.3px}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid transparent;background:transparent;color:#0f172a;cursor:pointer;text-align:left}
+.nav-item .icon{width:20px;text-align:center;opacity:.9}
+.nav-item:hover{background:#f0fdf4;border-color:#dcfce7}
+.nav-item.active{background:#eafff1;border-color:#a7f3d0}
+.nav-item.danger{color:var(--danger)}
+.nav-spacer{flex:1}
+
+/* Main column */
+.main{display:flex;flex-direction:column;min-width:0;flex:1}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:5}
+.ghost-btn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer}
+.breadcrumbs{color:var(--muted);font-size:13px}
+.breadcrumbs .sep{opacity:.5;margin:0 6px}
+
+.account{position:relative}
+.avatar-btn{display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:#fff;border-radius:20px;padding:6px 10px;cursor:pointer}
+.avatar{font-size:18px}
+.menu{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);display:none;min-width:180px}
+.menu a{display:block;padding:10px 12px;text-decoration:none;color:inherit}
+.menu a:hover{background:#f9fafb}
+.menu.show{display:block}
+
+/* Views */
+.view{display:none;padding:18px}
+.view.active{display:block}
+.page-title{margin:12px 0 14px}
+
+/* ---------- KPI CARDS (Flexbox rows) ---------- */
+.cards-flex{
+  display:flex; flex-wrap:wrap; gap:14px;
+}
+
+/* big cards: target ~3 on first row, 2 on second at desktop */
+.kpi-lg{
+  flex: 1 1 calc(33.333% - 10px);  /* 3 per row */
+  min-width: 280px;
+  max-width: 520px;
+}
+
+.card{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); padding:18px;
+}
+
+.kpi-row{
+  display:flex; align-items:center; gap:16px;
+}
+.kpi-icon{
+  width:64px; height:64px; display:flex; align-items:center; justify-content:center;
+  font-size:34px; border-radius:16px; background:#f0fdf4; border:1px solid #dcfce7; color:#065f46;
+}
+.kpi.success .kpi-icon{ background:#ecfdf5; border-color:#a7f3d0 }
+.kpi.warn .kpi-icon{ background:#fff7ed; border-color:#fed7aa; color:#92400e }
+
+.kpi-body{display:flex;flex-direction:column;gap:4px}
+.kpi-value{font-size:36px;font-weight:800;color:#0f172a;line-height:1}
+.kpi-label{color:var(--muted);font-size:14px}
+
+/* ---------- Panels (tables) ---------- */
+.panels-flex{ display:flex; flex-wrap:wrap; gap:14px; margin-top:14px }
+.panel{ flex:1 1 420px; }
+
+.table{width:100%;overflow:auto}
+.table table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid var(--border);padding:8px 6px;text-align:left;font-size:14px}
+.table th{color:var(--muted);font-weight:600}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .2s ease;z-index:10}
+  .sidebar.show{transform:translateX(0)}
+  .kpi-lg{flex:1 1 calc(50% - 10px)} /* 2 per row on tablets */
+}
+@media (max-width: 540px){
+  .kpi-lg{flex:1 1 100%} /* stack on phones */
+}
+/* NAV ANCHORS: remove underline, keep color, flex layout */
+.nav a.nav-item,
+.nav a.nav-item:link,
+.nav a.nav-item:visited {
+  text-decoration: none;
+  color: inherit;
+  display: flex;           /* keep icon + label aligned */
+  align-items: center;
+  gap: 12px;
+}
+
+/* keep no underline on hover/active, but change bg like buttons */
+.nav a.nav-item:hover,
+.nav a.nav-item:active {
+  text-decoration: none;
+  background: #f0fdf4;
+  border-color: #dcfce7;
+}
+
+/* visible keyboard focus (accessibility) */
+.nav a.nav-item:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  text-decoration: none;
+}
+
+/* optional: ensure icon column width matches buttons */
+.nav .icon { width: 20px; text-align: center; opacity: .9; }

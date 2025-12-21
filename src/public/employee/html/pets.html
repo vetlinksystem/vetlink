@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink — Manage Pets (Breeding)</title>
+  <link rel="stylesheet" href="/employee/css/dashboard.css"/>
+  <link rel="stylesheet" href="/employee/css/pets.css"/>
+</head>
+<body>
+<div id="app" class="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <img src="/logo.png" class="logo" alt="VetLink"/>
+      <span class="brand-name">VetLink</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytic Dashboard</span></a>
+      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered User</span></a>
+      <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
+      <a class="nav-item active" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+      <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
+      <a class="nav-item" href="/employee/reservation"><span class="icon">📝</span><span>Reservation</span></a>
+      <a class="nav-item" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
+      <div class="nav-spacer"></div>
+      <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
+      <div class="breadcrumbs">Home <span class="sep">/</span> <span>Manage Pets</span></div>
+      <div class="account">
+        <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
+          <span id="accountName">User</span><span class="avatar" aria-hidden="true">🛡️</span>
+        </button>
+        <div id="accountMenu" class="menu" role="menu">
+          <a href="/employee/profile" role="menuitem">Settings / Profile</a>
+          <a href="#" id="menuLogout" role="menuitem">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="view active pets">
+      <h1 class="page-title">Manage Pets</h1>
+
+      <!-- FILTERS + PETS TABLE -->
+      <div class="page-head">
+        <div class="tools">
+          <input id="searchBox" class="search" type="search" placeholder="Search pet, breed, owner…"/>
+          <select id="filterSpecies" class="select"><option value="">All species</option></select>
+          <select id="filterBreed" class="select"><option value="">All breeds</option></select>
+          <select id="filterSex" class="select">
+            <option value="">Any sex</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+          <label class="chk">
+            <input id="onlyBreeding" type="checkbox"/> <span>Available for breeding</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card table">
+        <div class="table-head">
+          <div><strong>Pets</strong></div>
+          <div id="petsMeta" class="muted"></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:70px;">ID</th>
+              <th>Name</th>
+              <th>Breed</th>
+              <th>Species</th>
+              <th>Sex</th>
+              <th>Age</th>
+              <th>Owner</th>
+              <th>Breeding</th>
+              <th style="width:160px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="petsTbody"></tbody>
+        </table>
+
+        <!-- Pager -->
+        <div class="table-foot">
+          <div id="petsCount" class="muted"></div>
+          <div class="pager">
+            <button class="btn btn-tool" id="pgFirst" title="First">«</button>
+            <button class="btn btn-tool" id="pgPrev"  title="Prev">‹</button>
+            <span id="pgPages" class="pages"></span>
+            <button class="btn btn-tool" id="pgNext"  title="Next">›</button>
+            <button class="btn btn-tool" id="pgLast"  title="Last">»</button>
+            <select id="pageSize" class="select">
+              <option value="10">10 / page</option>
+              <option value="25">25 / page</option>
+              <option value="50">50 / page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- MATCHMAKING -->
+      <div id="matchSection" class="card">
+        <div class="match-head">
+          <h2 class="panel-title">Breeding Matchmaking</h2>
+          <div class="muted">Suggests compatible pairs: same species & breed, opposite sex, both “Available for breeding”.</div>
+        </div>
+
+        <!-- Strong control bar -->
+        <div class="controlbar">
+          <div class="controlbar-left">
+            <div class="control-title">Pick a pet</div>
+            <select id="matchPetSelect" class="select select--solid"></select>
+          </div>
+          <div class="controlbar-right">
+            <label class="chk">
+              <input id="excludeSameOwner" type="checkbox" checked/>
+              <span>Exclude same owner</span>
+            </label>
+            <button id="refreshMatchesBtn" class="btn btn-tool">Refresh</button>
+          </div>
+        </div>
+
+        <div id="matchSummary" class="match-summary"></div>
+        <div id="matchesWrap" class="matches"></div>
+      </div>
+
+      <!-- BREEDING BOARD -->
+      <div class="card table">
+        <div class="table-head">
+          <div><strong>Breeding Board</strong></div>
+          <div class="filters">
+            <button class="pill active" data-bstatus="all">All</button>
+            <button class="pill" data-bstatus="pending">Pending</button>
+            <button class="pill" data-bstatus="confirmed">Confirmed</button>
+            <button class="pill" data-bstatus="completed">Completed</button>
+            <button class="pill" data-bstatus="cancelled">Cancelled</button>
+            <button class="pill" data-bstatus="declined">Declined</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:70px;">#</th>
+              <th>Pair</th>
+              <th>Owners</th>
+              <th>Species / Breed</th>
+              <th>Requested</th>
+              <th>Status</th>
+              <th style="width:280px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="breedTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Propose Breeding Modal -->
+<div id="proposeModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="proposeTitle">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="proposeTitle">Propose Breeding</h2>
+      <button class="modal-close" data-close-modal>✕</button>
+    </div>
+    <form id="proposeForm" class="modal-body">
+      <input type="hidden" id="pPetA"/>
+      <input type="hidden" id="pPetB"/>
+      <div class="form-grid">
+        <div class="box">
+          <h3>Pet A</h3>
+          <div id="pA"></div>
+        </div>
+        <div class="box">
+          <h3>Pet B</h3>
+          <div id="pB"></div>
+        </div>
+      </div>
+      <label class="wide">
+        <span>Notes to owners (optional)</span>
+        <textarea id="pNotes" rows="3" placeholder="e.g., Suggested timeline, health requirements…"></textarea>
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-cancel" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Send Proposal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/employee/js/core.js"></script>
+<script src="/employee/js/pets.js"></script>
+</body>
+</html>

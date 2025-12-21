@@ -1,0 +1,3 @@
+#petInfo p { margin: 6px 0; }
+#petInfo a { color: inherit; text-decoration: none; }
+#petInfo a:hover { text-decoration: underline; }
