@@ -39,6 +39,18 @@ const API_BREED_LIST   = '/breeding/get-all';
 const API_BREED_CREATE = '/breeding/add';
 const API_BREED_UPDATE = '/breeding/update-status';
 
+// Role-based access:
+// Staff: NO access to breeding-related features
+// Veterinarian/Admin: can view + propose breeding
+const canAccessBreeding = () => {
+  const emp = window.VETLINK_EMPLOYEE || {};
+  if (emp.isAdmin) return true;
+  const pos = String(emp.position || emp.role || '').toLowerCase();
+  return pos.includes('vet');
+};
+
+const canProposeBreeding = () => canAccessBreeding();
+
 // --- small fetch helper ---
 const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
   const ctl = new AbortController();
@@ -164,6 +176,55 @@ const pNotes = document.getElementById('pNotes');
 let search = '';
 let bFilter = 'all';
 
+// ===== UI Guards (Breeding visible only to Vet/Admin) =====
+const matchSectionEl = document.getElementById('matchSection');
+const breedingBoardEl = document.getElementById('breedingBoard');
+
+const applyBreedingUiGuards = () => {
+  const allowed = canAccessBreeding();
+
+  // Hide matchmaking + board + modal for staff
+  if (matchSectionEl) matchSectionEl.style.display = allowed ? '' : 'none';
+  if (breedingBoardEl) breedingBoardEl.style.display = allowed ? '' : 'none';
+  if (proposeModal) proposeModal.style.display = allowed ? '' : 'none';
+
+  // Hide breeding filter controls
+  const onlyBreedingWrap = document.getElementById('onlyBreeding')?.closest('label');
+  if (onlyBreedingWrap) onlyBreedingWrap.style.display = allowed ? '' : 'none';
+};
+
+const waitForEmployeeThenGuard = () => {
+  // core.js sets window.VETLINK_EMPLOYEE asynchronously
+  const maxTries = 40;
+  let tries = 0;
+  const tick = () => {
+    tries++;
+    if (window.VETLINK_EMPLOYEE || tries >= maxTries) {
+      applyBreedingUiGuards();
+
+      // If Vet/Admin, fetch latest breeding records (avoid 403 for staff)
+      if (canAccessBreeding()) {
+        fetchJSON(API_BREED_LIST).then(({ ok, body }) => {
+          if (ok && Array.isArray(body)) {
+            BREED = body;
+          }
+          // Rerender after role is known (adds Match buttons, board)
+          syncFilters();
+          renderPets();
+          renderMatches();
+          renderBoard();
+        });
+      } else {
+        // Staff: rerender to remove Match button
+        renderPets();
+      }
+      return;
+    }
+    setTimeout(tick, 50);
+  };
+  tick();
+};
+
 // ===== API hydrate =====
 const hydrateFromAPI = async () => {
   // Pets
@@ -172,10 +233,12 @@ const hydrateFromAPI = async () => {
     PETS = petsRes.body;
   }
 
-  // Breeding board
-  const breedRes = await fetchJSON(API_BREED_LIST);
-  if (breedRes.ok && Array.isArray(breedRes.body)) {
-    BREED = breedRes.body;
+  // Breeding board (Vet/Admin only)
+  if (canAccessBreeding()) {
+    const breedRes = await fetchJSON(API_BREED_LIST);
+    if (breedRes.ok && Array.isArray(breedRes.body)) {
+      BREED = breedRes.body;
+    }
   }
 };
 
@@ -207,7 +270,7 @@ const petRow = (p) => `
     <td>
       <div class="row-actions">
         <button class="btn btn-view"  data-view="${p.id}">View</button>
-        <button class="btn btn-match" data-match="${p.id}">Match</button>
+        ${canAccessBreeding() ? `<button class="btn btn-match" data-match="${p.id}">Match</button>` : ''}
       </div>
     </td>
   </tr>
@@ -321,12 +384,15 @@ const suggestionCard = (a, b) => `
     </div>
     <div class="pair-actions">
       <button class="btn btn-tool" data-swap="${a.id}|${b.id}">Swap A/B</button>
-      <button class="btn btn-confirm" data-propose="${a.id}|${b.id}">Propose Breeding</button>
+      ${canProposeBreeding()
+        ? `<button class="btn btn-confirm" data-propose="${a.id}|${b.id}">Propose Breeding</button>`
+        : `<button class="btn btn-confirm" disabled title="Only Veterinarian/Admin can propose breeding.">Propose Breeding</button>`}
     </div>
   </div>
 `;
 
 const renderMatches = () => {
+  if (!canAccessBreeding()) return;
   const baseId = matchPetSelect.value || '';
   const base = PETS.find(p=>String(p.id)===String(baseId));
 
@@ -348,12 +414,19 @@ const renderMatches = () => {
   matchesWrap.querySelectorAll('[data-swap]').forEach(btn => {
     btn.addEventListener('click', () => {
       const [aid,bid] = btn.dataset.swap.split('|');
-      openPropose(bid, aid);
+      if (canProposeBreeding()) {
+        openPropose(bid, aid);
+      } else {
+        // Staff: treat "swap" as "view matches for the other pet"
+        matchPetSelect.value = String(bid);
+        renderMatches();
+      }
     });
   });
   matchesWrap.querySelectorAll('[data-propose]').forEach(btn => {
     btn.addEventListener('click', () => {
       const [aid,bid] = btn.dataset.propose.split('|');
+      if (!canProposeBreeding()) return;
       openPropose(aid, bid);
     });
   });
@@ -398,6 +471,7 @@ const breedRow = (r) => {
 };
 
 const renderBoard = () => {
+  if (!canAccessBreeding()) return;
   const list = BREED.filter(r => bFilter==='all' ? true : r.status === bFilter)
                     .sort((a,b)=> String(a.requestedAt).localeCompare(String(b.requestedAt)));
   breedTbody.innerHTML = list.length ? list.map(breedRow).join('') :
@@ -499,6 +573,7 @@ refreshMatchesBtn.addEventListener('click', renderMatches);
 // ===== Init =====
 const bootstrap = async () => {
   await hydrateFromAPI();   // will override dummy data with API data if available
+  waitForEmployeeThenGuard();
   syncFilters();
   renderPets();
   renderMatches();

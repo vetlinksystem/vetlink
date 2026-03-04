@@ -26,6 +26,8 @@ petsRouter.get(
 // API: /client/pets/my
 const getMyPetsController = require('../../../controllers/client/pets/get_my_pets');
 const addClientPetController = require('../../../controllers/client/pets/add_pet');
+const updateClientPetController = require('../../../controllers/client/pets/update_pet');
+const deleteClientPetController = require('../../../controllers/client/pets/delete_pet');
 
 petsRouter.get(
   '/pets/my',
@@ -40,6 +42,22 @@ petsRouter.post(
   authenticateApi,
   ensureTypeApi('client'),
   addClientPetController
+);
+
+// API: PUT /client/pets/:id (update)
+petsRouter.put(
+  '/pets/:id',
+  authenticateApi,
+  ensureTypeApi('client'),
+  updateClientPetController
+);
+
+// API: DELETE /client/pets/:id (delete)
+petsRouter.delete(
+  '/pets/:id',
+  authenticateApi,
+  ensureTypeApi('client'),
+  deleteClientPetController
 );
 
 module.exports = petsRouter;

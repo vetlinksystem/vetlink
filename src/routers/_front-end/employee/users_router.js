@@ -10,6 +10,8 @@ employeeUsersRouter.use(express.static(publicPath));
 // ===== Controllers Import =====
 const getAllUsers = require('../../../controllers/employee/registered_users/get_all_users');
 const getUserDetails = require('../../../controllers/employee/registered_users/get_user_details');
+const updateUser = require('../../../controllers/employee/registered_users/update_user');
+const deleteUser = require('../../../controllers/employee/registered_users/delete_user');
 
 // ===== Users Page =====
 employeeUsersRouter.get('/users', ensureAuthPage, ensureTypePage('employee'), (req, res) => {
@@ -27,5 +29,9 @@ employeeUsersRouter.get('/users/get-all', authenticateApi, ensureTypeApi('employ
 
 // User details API: /employee/users/get?id=...
 employeeUsersRouter.get('/users/get', authenticateApi, ensureTypeApi('employee'), getUserDetails);
+
+// Update / Delete registered users (clients)
+employeeUsersRouter.put('/users/update', authenticateApi, ensureTypeApi('employee'), updateUser);
+employeeUsersRouter.delete('/users/delete', authenticateApi, ensureTypeApi('employee'), deleteUser);
 
 module.exports = employeeUsersRouter;

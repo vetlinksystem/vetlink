@@ -41,7 +41,10 @@
 
           <div class="field">
             <span>Password</span>
-            <input id="loginPassword" type="password" placeholder="••••••••" required/>
+            <div class="pw-wrap">
+              <input id="loginPassword" type="password" placeholder="••••••••" required/>
+              <button type="button" class="pw-toggle" data-toggle="loginPassword" aria-label="Show or hide password" title="Show/Hide">👁️</button>
+            </div>
           </div>
 
           <!-- hidden user_type controlled by buttons -->
@@ -80,12 +83,25 @@
 
           <div class="field">
             <span>Password</span>
-            <input id="regPassword" type="password" placeholder="••••••••" minlength="6" required/>
+            <div class="pw-wrap">
+              <input id="regPassword" type="password" placeholder="••••••••" minlength="6" required/>
+              <button type="button" class="pw-toggle" data-toggle="regPassword" aria-label="Show or hide password" title="Show/Hide">👁️</button>
+            </div>
+            <div class="pw-rules" id="pwRules" aria-live="polite">
+              <div class="rule" data-rule="len"><span class="dot">✗</span> 11 characters</div>
+              <div class="rule" data-rule="upper"><span class="dot">✗</span> One uppercase</div>
+              <div class="rule" data-rule="lower"><span class="dot">✗</span> One lowercase</div>
+              <div class="rule" data-rule="num"><span class="dot">✗</span> One number</div>
+              <div class="rule" data-rule="special"><span class="dot">✗</span> One special character</div>
+            </div>
           </div>
 
           <div class="field">
             <span>Confirm Password</span>
-            <input id="regConfirm" type="password" placeholder="••••••••" minlength="6" required/>
+            <div class="pw-wrap">
+              <input id="regConfirm" type="password" placeholder="••••••••" minlength="6" required/>
+              <button type="button" class="pw-toggle" data-toggle="regConfirm" aria-label="Show or hide password" title="Show/Hide">👁️</button>
+            </div>
           </div>
 
           <button class="submit" type="submit" id="registerSubmit">Create Account</button>

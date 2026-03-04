@@ -44,6 +44,16 @@
     <section class="view active">
       <h1 class="page-title">Registered User</h1>
 
+      <div class="card" style="margin-bottom: .75rem">
+        <div class="users-toolbar">
+          <div class="searchbar" role="search">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input id="userSearch" class="input search-input" placeholder="Search by name, email, contact, address, or ID..."/>
+          </div>
+          <div class="search-tip">Tip: you can search by ID too.</div>
+        </div>
+      </div>
+
       <div class="card table">
         <table id="usersTable">
           <thead>
@@ -61,6 +71,47 @@
         </table>
       </div>
     </section>
+
+    <!-- Edit User Modal -->
+    <div class="modal" id="userEditModal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal-backdrop" data-close></div>
+      <div class="panel panel-md">
+        <header class="modal-header">
+          <strong>Update Registered User</strong>
+          <button class="ghost-btn" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <div class="content">
+          <input type="hidden" id="editUserId"/>
+          <div class="form-grid">
+            <label class="field full">
+              <span>Name</span>
+              <input class="input" id="editUserName"/>
+            </label>
+            <label class="field full">
+              <span>Email</span>
+              <input class="input" id="editUserEmail" type="email"/>
+            </label>
+            <label class="field">
+              <span>Contact No.</span>
+              <input class="input" id="editUserNumber"/>
+            </label>
+            <label class="field">
+              <span>Address</span>
+              <input class="input" id="editUserAddress"/>
+            </label>
+            <label class="field full">
+              <span>New Password (optional)</span>
+              <input class="input" id="editUserPassword" type="password" placeholder="Leave blank to keep current"/>
+              <small class="hint">Leave blank to keep current password.</small>
+            </label>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" type="button" data-close>Cancel</button>
+              <button class="btn btn-primary" id="saveUserBtn" type="button">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

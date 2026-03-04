@@ -149,7 +149,13 @@ const renderList = () => {
       const purpose = (r.purpose || '').toLowerCase();
       return owner.includes(q) || pet.includes(q) || purpose.includes(q);
     })
-    .sort((a,b)=> (a.date + a.time).localeCompare(b.date + b.time));
+    .sort((a,b)=> {
+      const an = parseInt(String(a.id||'').replace(/\D/g,''),10);
+      const bn = parseInt(String(b.id||'').replace(/\D/g,''),10);
+      if (!isNaN(an) && !isNaN(bn) && an != bn) return bn - an;
+      // fallback to date/time desc
+      return String(b.date + (b.time||'')).localeCompare(String(a.date + (a.time||'')));
+    });
 
   tbody.innerHTML = list.length
     ? list.map(rowHTML).join('')
@@ -267,7 +273,13 @@ exportBtn.addEventListener('click', () => {
       const purpose = (r.purpose || '').toLowerCase();
       return owner.includes(q) || pet.includes(q) || purpose.includes(q);
     })
-    .sort((a,b)=> (a.date + a.time).localeCompare(b.date + b.time));
+    .sort((a,b)=> {
+      const an = parseInt(String(a.id||'').replace(/\D/g,''),10);
+      const bn = parseInt(String(b.id||'').replace(/\D/g,''),10);
+      if (!isNaN(an) && !isNaN(bn) && an != bn) return bn - an;
+      // fallback to date/time desc
+      return String(b.date + (b.time||'')).localeCompare(String(a.date + (a.time||'')));
+    });
 
   const csv = toCSV(list);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -316,6 +328,9 @@ function renderMiniCal() {
   miniMonth.textContent = monthLabel(pickerCursor);
   [...miniGrid.querySelectorAll('.day')].forEach(n => n.remove());
 
+  const today = new Date();
+  const todayISO = toISO(today);
+
   const first = new Date(pickerCursor.getFullYear(), pickerCursor.getMonth(), 1);
   const start = new Date(first);
   start.setDate(1 - first.getDay());
@@ -326,11 +341,14 @@ function renderMiniCal() {
 
     const day = document.createElement('div');
     day.className = 'day' + (inMonth ? '' : ' other');
+    // Disallow scheduling in the past
+    if (iso < todayISO) day.classList.add('disabled');
     if (pickedDate && iso === toISO(pickedDate)) day.classList.add('selected');
     if (RES.some(r => r.date === iso)) day.classList.add('marked');
 
     day.textContent = cur.getDate();
     day.addEventListener('click', () => {
+      if (day.classList.contains('disabled')) return;
       pickedDate = new Date(cur); dateInput.value = iso;
       renderMiniCal();
       renderSlots();
@@ -344,6 +362,9 @@ function renderMiniCal() {
 function renderSlots() {
   slotList.innerHTML = '';
   if (!pickedDate) return;
+  const now = new Date();
+  const pickedISO = toISO(pickedDate);
+  const isToday = pickedISO === toISO(now);
   for (let h=8; h<=17; h++){
     for (let m of [0,30]) {
       const t = `${pad2(h)}:${pad2(m)}`;
@@ -351,8 +372,15 @@ function renderSlots() {
       btn.type = 'button';
       btn.className = 'slot';
       btn.textContent = t;
+
+      // Disable times that are already in the past (when selecting today)
+      if (isToday) {
+        const slotTime = new Date(`${pickedISO}T${t}:00`);
+        if (slotTime < now) btn.disabled = true;
+      }
       if (timeInput.value === t) btn.classList.add('selected');
       btn.addEventListener('click', () => {
+        if (btn.disabled) return;
         slotList.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
         btn.classList.add('selected');
         pickedTime = t; timeInput.value = t;
@@ -423,6 +451,13 @@ form.addEventListener('submit', async (e) => {
     petId: petSelect.value,
     notes: (notesInput.value || '').trim()
   };
+
+  // Client-side guard: no past date/time
+  const dt = new Date(`${payload.date}T${payload.time}:00`);
+  if (isNaN(dt) || dt < new Date()) {
+    alert('You cannot schedule an appointment in the past.');
+    return;
+  }
 
   let res;
   if (!fId.value) {

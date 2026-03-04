@@ -186,7 +186,101 @@ window.API = (function(){
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 
+  // Popup modal for reading a notification
+  const notifState = { items: [] };
+  const modal = document.createElement('div');
+  modal.id = 'notifReadModal';
+  modal.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1000;';
+  modal.innerHTML = `
+    <div data-close style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+    <div style="position:relative;max-width:520px;width:92vw;background:#fff;border-radius:18px;padding:1rem 1rem .9rem;border:1px solid var(--border);box-shadow:0 20px 50px rgba(16,24,40,.25)">
+      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start">
+        <div>
+          <div id="nrTitle" style="font-weight:900;font-size:1.05rem">Notification</div>
+          <div id="nrDate" style="color:var(--muted);font-size:.85rem;margin-top:.15rem"></div>
+        </div>
+        <button class="btn ghost" type="button" data-close aria-label="Close">✕</button>
+      </div>
+      <div id="nrBody" style="margin-top:.75rem;color:#344054;white-space:pre-wrap"></div>
+      <div id="nrActions" style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;margin-top:1rem"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const openNotifModal = async (n) => {
+    if (!n) return;
+    const titleEl = modal.querySelector('#nrTitle');
+    const dateEl  = modal.querySelector('#nrDate');
+    const bodyEl  = modal.querySelector('#nrBody');
+    const actEl   = modal.querySelector('#nrActions');
+
+    titleEl.textContent = n.title || 'Notification';
+    dateEl.textContent = (n.createdAt || '').toString().slice(0,10);
+    bodyEl.textContent = n.message || '';
+    actEl.innerHTML = '';
+
+    const close = () => { modal.style.display = 'none'; };
+
+    const markRead = async () => {
+      if (!n.read) {
+        await fetchJSON('/notifications/mark-read', { method:'PUT', body: JSON.stringify({ id: n.id }) });
+      }
+      await refresh();
+    };
+
+    const payload = n.payload || {};
+    const breedingId = payload.breedingId || payload.id || '';
+    const isBreeding = n.type === 'breeding_proposal' && breedingId;
+
+    if (isBreeding) {
+      const approveBtn = document.createElement('button');
+      approveBtn.className = 'btn';
+      approveBtn.type = 'button';
+      approveBtn.textContent = 'Approve';
+      approveBtn.onclick = async () => {
+        const r = await fetchJSON('/breeding/update-status', { method:'PUT', body: JSON.stringify({ id: breedingId, decision:'approve' }) });
+        if (!r.ok || r.body?.success === false) { theToast(r.body?.message || 'Failed to approve.'); return; }
+        theToast('Approved.');
+        await markRead();
+        close();
+      };
+
+      const rejectBtn = document.createElement('button');
+      rejectBtn.className = 'btn secondary';
+      rejectBtn.type = 'button';
+      rejectBtn.textContent = 'Reject';
+      rejectBtn.onclick = async () => {
+        const r = await fetchJSON('/breeding/update-status', { method:'PUT', body: JSON.stringify({ id: breedingId, decision:'reject' }) });
+        if (!r.ok || r.body?.success === false) { theToast(r.body?.message || 'Failed to reject.'); return; }
+        theToast('Rejected.');
+        await markRead();
+        close();
+      };
+      actEl.appendChild(rejectBtn);
+      actEl.appendChild(approveBtn);
+    }
+
+    const markBtn = document.createElement('button');
+    markBtn.className = 'btn ghost';
+    markBtn.type = 'button';
+    markBtn.textContent = 'Mark read';
+    markBtn.onclick = async () => { await markRead(); close(); };
+    actEl.appendChild(markBtn);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn ghost';
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Close';
+    closeBtn.onclick = close;
+    actEl.appendChild(closeBtn);
+
+    modal.style.display = 'flex';
+  };
+
+  modal.querySelectorAll('[data-close]').forEach(x => x.addEventListener('click', () => (modal.style.display = 'none')));
+
   const render = (items) => {
+    notifState.items = Array.isArray(items) ? items : [];
     const unread = items.filter(n => !n.read).length;
     if (unread > 0) {
       countEl.style.display = 'inline-block';
@@ -258,6 +352,18 @@ window.API = (function(){
         if (nid) await fetchJSON('/notifications/mark-read', { method:'PUT', body: JSON.stringify({ id: nid }) });
         theToast('Rejected.');
         await refresh();
+      });
+    });
+
+    // Clicking the notification card opens a popup with the full message
+    menu.querySelectorAll('[data-nid]').forEach(card => {
+      card.addEventListener('click', async (e) => {
+        // Ignore clicks on buttons within the card
+        if (e.target && (e.target.tagName === 'BUTTON' || e.target.closest('button'))) return;
+        const nid = card.getAttribute('data-nid');
+        const n = (notifState.items || []).find(x => String(x.id) === String(nid));
+        menu.style.display = 'none';
+        await openNotifModal(n);
       });
     });
   };

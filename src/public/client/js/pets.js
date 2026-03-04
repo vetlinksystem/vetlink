@@ -16,6 +16,7 @@
 (function () {
   const API_MY_PETS = '/client/pets/my';
   const API_ADD_PET = '/client/pets';
+  const API_PET_BY_ID = (id) => `/client/pets/${encodeURIComponent(id)}`;
 
   const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
     const ctl = new AbortController();
@@ -91,6 +92,61 @@
 
   const distinct = (arr) => [...new Set(arr)].sort((a,b)=> String(a).localeCompare(String(b)));
 
+  // Common breeds (can be expanded anytime)
+  const DOG_BREEDS = [
+    'Aspin','Beagle','Belgian Malinois','Bichon Frise','Border Collie','Boxer','Bulldog','Chihuahua','Chow Chow',
+    'Cocker Spaniel','Dachshund','Doberman Pinscher','French Bulldog','German Shepherd','Golden Retriever','Great Dane',
+    'Husky','Jack Russell Terrier','Labrador Retriever','Lhasa Apso','Maltese','Mini Pinscher','Pomeranian','Poodle',
+    'Pug','Rottweiler','Samoyed','Shih Tzu','Siberian Husky','Staffordshire Bull Terrier','Toy Poodle','Yorkshire Terrier'
+  ];
+
+  const CAT_BREEDS = [
+    'Domestic Shorthair','Domestic Longhair','Persian','Siamese','Maine Coon','Ragdoll','British Shorthair','Bengal',
+    'Sphynx','Scottish Fold','Russian Blue','American Shorthair','Abyssinian','Birman','Himalayan','Norwegian Forest Cat'
+  ];
+
+  // For "Others" species (types)
+  const OTHER_TYPES = [
+    'Rabbit','Hamster','Guinea Pig','Bird','Parrot','Lovebird','Turtle','Fish','Snake','Lizard'
+  ];
+
+  const pBreedOther = document.getElementById('pBreedOther');
+
+  const toggleOtherBreed = () => {
+    if (!pBreedOther) return;
+    const isOther = String(pBreed?.value || '') === 'Other';
+    pBreedOther.style.display = isOther ? '' : 'none';
+    if (!isOther) pBreedOther.value = '';
+  };
+
+  const setBreedOptions = (species) => {
+    if (!pBreed) return;
+    const sp = String(species || '').trim();
+
+    let base = [];
+    if (sp === 'Dog') base = DOG_BREEDS;
+    else if (sp === 'Cat') base = CAT_BREEDS;
+    else if (sp === 'Others') base = OTHER_TYPES;
+
+    // Also include existing breeds in data (in case you already have uncommon ones saved)
+    const existing = distinct(PETS.filter(p => !sp || p.species === sp).map(p => p.breed).filter(Boolean));
+    const breeds = distinct([...(base || []), ...(existing || [])]);
+
+    const current = String(pBreed.value || '');
+    pBreed.innerHTML = `<option value="">Breed</option>` +
+      breeds.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('') +
+      `<option value="Other">Other</option>`;
+
+    // keep selection if still present
+    if (current && [...pBreed.options].some(o => o.value === current)) {
+      pBreed.value = current;
+    } else {
+      pBreed.value = '';
+    }
+
+    toggleOtherBreed();
+  };
+
   const buildCard = (p) => `
     <article class="pet-card" data-pet-id="${esc(p.id)}">
       <header class="pet-header">
@@ -163,6 +219,10 @@
       </section>
 
       <footer class="pet-actions">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button type="button" class="btn js-edit" data-edit="${esc(p.id)}">Edit</button>
+          <button type="button" class="btn secondary js-delete" data-del="${esc(p.id)}">Delete</button>
+        </div>
         <button type="button" class="btn-ghost js-toggle-details" aria-expanded="false">
           <span class="toggle-text">View details</span>
           <span class="chev" aria-hidden="true">▾</span>
@@ -238,6 +298,36 @@
 
   // Event delegation so it still works after re-render
   petsGrid.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('.js-edit');
+    if (editBtn) {
+      e.preventDefault();
+      const id = editBtn.getAttribute('data-edit');
+      const pet = PETS.find(p => String(p.id) === String(id));
+      openPetModal('edit', pet || null);
+      return;
+    }
+
+    const delBtn = e.target.closest('.js-delete');
+    if (delBtn) {
+      e.preventDefault();
+      const id = delBtn.getAttribute('data-del');
+      const pet = PETS.find(p => String(p.id) === String(id));
+      const ok = confirm(`Delete ${pet?.name || 'this pet'}?`);
+      if (!ok) return;
+      (async () => {
+        const { ok: httpOk, body } = await fetchJSON(API_PET_BY_ID(id), { method:'DELETE' });
+        if (!httpOk || body?.success === false) {
+          showToast(body?.message || 'Failed to delete pet.');
+          return;
+        }
+        PETS = PETS.filter(p => String(p.id) !== String(id));
+        syncFilters();
+        renderPets();
+        showToast('Pet deleted.');
+      })();
+      return;
+    }
+
     const btn = e.target.closest('.js-toggle-details');
     if (!btn) return;
     e.preventDefault();
@@ -293,7 +383,20 @@
     // Fill / reset form fields
     if (pName) pName.value = pet?.name || '';
     if (pSpecies) pSpecies.value = pet?.species || 'Dog';
-    if (pBreed) pBreed.value = pet?.breed || '';
+    // Breed dropdown is populated based on species
+    setBreedOptions(pSpecies ? pSpecies.value : '');
+    if (pBreed) {
+      const b = String(pet?.breed || '');
+      const has = [...pBreed.options].some(o => o.value === b);
+      if (b && !has) {
+        pBreed.value = 'Other';
+        if (pBreedOther) pBreedOther.value = b;
+      } else {
+        pBreed.value = b || '';
+        if (pBreedOther) pBreedOther.value = '';
+      }
+      toggleOtherBreed();
+    }
     if (pSex) pSex.value = pet?.sex || '';
     if (pAge) pAge.value = (typeof pet?.age === 'number') ? pet.age : '';
     if (pBreeding) pBreeding.checked = !!pet?.breedingAllowed;
@@ -321,6 +424,16 @@
   const onModalEsc = (e) => {
     if (e.key === 'Escape') closePetModal();
   };
+
+  // When species changes, refresh the breed dropdown list
+  if (pSpecies) {
+    pSpecies.addEventListener('change', () => setBreedOptions(pSpecies.value));
+  }
+
+  // When breed changes, toggle the custom breed field
+  if (pBreed) {
+    pBreed.addEventListener('change', toggleOtherBreed);
+  }
 
   // Add pet button -> open modal
   if (addPetBtn && petModal) {
@@ -357,28 +470,35 @@
         pName?.focus();
         return;
       }
+      const species = (pSpecies?.value || '').trim();
+      let breed = (pBreed?.value || '').trim();
+      if (breed === 'Other') {
+        breed = (pBreedOther?.value || '').trim();
+        if (!breed) {
+          showToast('Please specify the breed.');
+          pBreedOther?.focus();
+          pSubmit.disabled = false;
+          return;
+        }
+      }
 
       const payload = {
         name,
-        species: (pSpecies?.value || '').trim(),
-        breed: (pBreed?.value || '').trim(),
+        species,
+        breed,
         sex: (pSex?.value || '').trim(),
         age: pAge?.value ? Number(pAge.value) : null,
         breedingAllowed: !!pBreeding?.checked,
         notes: (pNotes?.value || '').trim()
       };
 
-      // Backend save
-      if (modalMode !== 'add') {
-        showToast('Edit is not wired yet.');
-        return;
-      }
+      const isEdit = modalMode === 'edit' && editingPetId;
 
       pSubmit.disabled = true;
       pSubmit.textContent = 'Saving…';
 
-      const { ok, body } = await fetchJSON(API_ADD_PET, {
-        method: 'POST',
+      const { ok, body } = await fetchJSON(isEdit ? API_PET_BY_ID(editingPetId) : API_ADD_PET, {
+        method: isEdit ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -394,7 +514,11 @@
       // Update UI from saved data
       const savedPet = body.pet || body.data || null;
       if (savedPet) {
-        PETS.unshift(savedPet);
+        if (isEdit) {
+          PETS = PETS.map(p => (String(p.id) === String(savedPet.id) ? savedPet : p));
+        } else {
+          PETS.unshift(savedPet);
+        }
       } else {
         // fallback: re-fetch
         const refreshed = await fetchJSON(API_MY_PETS, { method: 'GET' });

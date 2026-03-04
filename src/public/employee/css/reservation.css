@@ -75,6 +75,7 @@
 .dow{ text-align:center; font-weight:700; color:#667085; font-size:12px; padding:4px 0; }
 .day{ border:1px solid var(--border); border-radius:10px; min-height:44px; background:#fff; text-align:center; padding:6px 0; cursor:pointer; }
 .day.other{ opacity:.45; }
+.day.disabled{ opacity:.35; cursor:not-allowed; background:#f3f4f6; }
 .day.selected{ border-color:#a7f3d0; box-shadow:0 0 0 2px #dcfce7 inset; }
 .day.marked{ background:#f8fffb; }
 
@@ -82,6 +83,8 @@
 .slots-title{ font-weight:700; margin-bottom:6px; }
 .slot-list{ display:flex; flex-wrap:wrap; gap:6px; }
 .slot{ border:1px solid var(--border); background:#fff; padding:6px 10px; border-radius:999px; cursor:pointer; }
+.slot:disabled{ opacity:.45; cursor:not-allowed; text-decoration:line-through; }
+.slot:disabled{ opacity:.45; cursor:not-allowed; }
 .slot.unavailable{ opacity:.45; text-decoration:line-through; cursor:not-allowed; }
 .slot.selected{ background:#eafff1; border-color:#a7f3d0; }
 

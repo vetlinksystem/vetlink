@@ -228,6 +228,15 @@
         notes: (notesInput.value || '').trim()
       };
 
+      // Client-side guard: no past date/time
+      const dt = new Date(`${payload.date}T${payload.time}:00`);
+      if (isNaN(dt) || dt < new Date()) {
+        showToast('You cannot book an appointment in the past.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save';
+        return;
+      }
+
       const { ok, body } = await fetchJSON(API_CREATE, {
         method: 'POST',
         body: JSON.stringify(payload)

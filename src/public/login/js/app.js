@@ -35,6 +35,60 @@
   const regAddress = $('regAddress');
   const regPassword = $('regPassword');
   const regConfirm = $('regConfirm');
+  const pwRules = $('pwRules');
+  const registerSubmit = $('registerSubmit');
+  const loginSubmit = $('loginSubmit');
+
+  // Password toggle (login/register)
+  document.querySelectorAll('.pw-toggle[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-toggle');
+      const input = document.getElementById(id);
+      if (!input) return;
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      btn.textContent = isPass ? '🙈' : '👁️';
+    });
+  });
+
+  // Password rules (client register)
+  const ruleState = {
+    len: false,
+    upper: false,
+    lower: false,
+    num: false,
+    special: false,
+  };
+
+  const checkPasswordRules = (pw) => {
+    const s = String(pw || '');
+    ruleState.len = s.length >= 11;
+    ruleState.upper = /[A-Z]/.test(s);
+    ruleState.lower = /[a-z]/.test(s);
+    ruleState.num = /[0-9]/.test(s);
+    ruleState.special = /[^A-Za-z0-9]/.test(s);
+    return Object.values(ruleState).every(Boolean);
+  };
+
+  const renderRules = () => {
+    if (!pwRules) return;
+    pwRules.querySelectorAll('.rule').forEach(el => {
+      const key = el.getAttribute('data-rule');
+      const ok = !!ruleState[key];
+      el.classList.remove('ok','bad');
+      el.classList.add(ok ? 'ok' : 'bad');
+      const dot = el.querySelector('.dot');
+      if (dot) dot.textContent = ok ? '✓' : '✗';
+    });
+  };
+
+  const syncRegisterBtn = () => {
+    if (!registerSubmit) return;
+    const pwOk = checkPasswordRules(regPassword?.value || '');
+    renderRules();
+    const confirmOk = (regPassword?.value || '') === (regConfirm?.value || '');
+    registerSubmit.disabled = !(pwOk && confirmOk && (regName?.value||'').trim() && (regEmail?.value||'').trim());
+  };
 
   const setStatus = (msg = '', kind = '') => {
     if (!authStatus) return;
@@ -150,6 +204,10 @@
       setStatus('Name, email, and password are required.', 'error');
       return;
     }
+    if (!checkPasswordRules(password)) {
+      setStatus('Password does not meet the required rules.', 'error');
+      return;
+    }
     if (password !== confirm) {
       setStatus('Passwords do not match.', 'error');
       return;
@@ -177,4 +235,11 @@
   // Init
   showLogin();
   setRole('client');
+
+  // Live rule validation
+  regPassword?.addEventListener('input', syncRegisterBtn);
+  regConfirm?.addEventListener('input', syncRegisterBtn);
+  regName?.addEventListener('input', syncRegisterBtn);
+  regEmail?.addEventListener('input', syncRegisterBtn);
+  syncRegisterBtn();
 })();

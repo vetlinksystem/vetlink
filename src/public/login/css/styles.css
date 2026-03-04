@@ -115,6 +115,38 @@ body{
   box-shadow: 0 0 0 4px var(--ring);
 }
 
+/* Password show/hide + rules */
+.pw-wrap{ position: relative; display:flex; align-items:center; }
+.pw-wrap input{ width:100%; padding-right: 48px; }
+.pw-toggle{
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display:grid;
+  place-items:center;
+}
+.pw-toggle:focus{ outline:none; box-shadow: 0 0 0 4px var(--ring); border-color: var(--brand); }
+.pw-rules{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+.pw-rules .rule{ font-size: 12px; color: var(--muted); display:flex; gap:8px; align-items:center; margin: 4px 0; }
+.pw-rules .dot{ width: 16px; display:inline-block; text-align:center; font-weight: 800; }
+.pw-rules .rule.ok{ color: #065f46; }
+.pw-rules .rule.ok .dot{ color:#16a34a; }
+.pw-rules .rule.bad{ color: #b91c1c; }
+.pw-rules .rule.bad .dot{ color:#e11d48; }
+
 .remember{
   display:flex;
   align-items:center;

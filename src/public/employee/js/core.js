@@ -47,6 +47,8 @@
     }
 
     const emp = body?.employee || body?.user || body || {};
+    // Expose current employee for role-based UI (e.g., breeding permissions)
+    window.VETLINK_EMPLOYEE = emp;
     const fullName = emp.full_name || emp.name || emp.email;
     if (accountName) accountName.textContent = fullName || 'User';
 

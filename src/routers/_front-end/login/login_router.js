@@ -2,6 +2,18 @@ const { signAccess, ensureGuestPage, resolveHome } = require('../../../middlewar
 const path = require('path');
 const express = require('express');
 const firestoreManager = require('../../../fb/firestore_manager');
+const { generateClientId } = require('../../../utilities/idGenerator');
+
+const passwordMeetsRules = (pw) => {
+  const s = String(pw || '');
+  return (
+    s.length >= 11 &&
+    /[A-Z]/.test(s) &&
+    /[a-z]/.test(s) &&
+    /[0-9]/.test(s) &&
+    /[^A-Za-z0-9]/.test(s)
+  );
+};
 
 const loginRouters = express.Router();
 const publicPath = path.resolve(__dirname, '../../../public');
@@ -107,6 +119,13 @@ loginRouters.post('/register/client', async (req, res) => {
       });
     }
 
+    if (!passwordMeetsRules(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must contain at least: 11 characters, one uppercase, one lowercase, one number, and one special character.'
+      });
+    }
+
     // Check existing email
     const existing = await firestoreManager.getAllData('clients', { email });
     if (Array.isArray(existing) && existing.length > 0) {
@@ -116,10 +135,8 @@ loginRouters.post('/register/client', async (req, res) => {
       });
     }
 
-    // Simple short-ish ID like c1001 style (time-based but short)
-    // You can later replace this with your ID generator utility.
-    const suffix = String(Date.now()).slice(-4);
-    const clientId = `c${1000 + Number(suffix)}`;
+    // Sequential, human-friendly IDs (c1001, c1002, ...)
+    const clientId = await generateClientId();
 
     const clientDoc = {
       id: clientId,

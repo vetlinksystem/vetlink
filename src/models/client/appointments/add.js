@@ -3,6 +3,18 @@ const { generateAppointmentId } = require('../../../utilities/idGenerator');
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
+const isPastDateTime = (date, time) => {
+  const dt = new Date(`${date}T${time}:00`);
+  if (isNaN(dt)) return true;
+  return dt < new Date();
+};
+
+const countAppointmentsForDate = async (date) => {
+  const rows = await firestoreManager.getAllData('appointments', { dateTime: date });
+  if (!Array.isArray(rows)) return 0;
+  return rows.filter(r => String(r.dateTime || '').startsWith(date) && String(r.status || '').toLowerCase() !== 'cancelled').length;
+};
+
 const addClientAppointment = async (clientId, body) => {
   if (!clientId) {
     return { success: false, message: 'Missing client id.' };
@@ -18,6 +30,15 @@ const addClientAppointment = async (clientId, body) => {
 
   if (!petId || !date || !time) {
     return { success: false, message: 'Pet, date, and time are required.' };
+  }
+
+  if (isPastDateTime(date, time)) {
+    return { success: false, message: 'You cannot book an appointment in the past.' };
+  }
+
+  const bookedCount = await countAppointmentsForDate(date);
+  if (bookedCount >= 5) {
+    return { success: false, message: 'This day is fully booked (max 5 appointments). Please choose another date.' };
   }
 
   // Use sequential, human-friendly IDs (a1001, a1002, ...)
