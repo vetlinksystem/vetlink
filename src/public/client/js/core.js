@@ -157,7 +157,7 @@ window.API = (function(){
       🔔
       <span id="notifCount" style="display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#e11d48;color:#fff;font-size:12px;line-height:18px;text-align:center;">0</span>
     </button>
-    <div id="notifMenu" class="card" style="display:none;position:absolute;right:0;top:42px;z-index:50;min-width:320px;max-width:360px;padding:.5rem;box-shadow:0 12px 30px rgba(16,24,40,.18)"></div>
+    <div id="notifMenu" class="card" style="display:none;position:absolute;right:0;top:42px;z-index:50;min-width:320px;max-width:360px;padding:.5rem;box-shadow:0 12px 30px rgba(16,24,40,.18);max-height:420px;overflow-y:auto;"></div>
   `;
   right.prepend(wrap);
 

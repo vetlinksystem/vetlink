@@ -52,6 +52,7 @@ const createAppointment = async (body = {}) => {
     purpose: purpose || 'Appointment',
     notes: notes || '',
     status: status || 'Pending',
+    scheduleChanged: false,
     createdAt: new Date().toISOString()
   };
 

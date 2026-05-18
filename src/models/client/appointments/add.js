@@ -54,6 +54,7 @@ const addClientAppointment = async (clientId, body) => {
     purpose: service || 'Appointment',
     notes: notes || '',
     status: 'Pending',
+    scheduleChanged: false,
     createdAt: new Date().toISOString()
   };
 

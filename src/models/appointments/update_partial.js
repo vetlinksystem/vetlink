@@ -25,6 +25,11 @@ const updateAppointmentPartial = async (id, patch = {}) => {
     }
   }
 
+  // Flag if the date/time was changed by the clinic.
+  if (data.dateTime !== undefined && String(data.dateTime) !== String(before?.dateTime || '')) {
+    data.scheduleChanged = true;
+  }
+
   if (Object.keys(data).length <= 1) {
     return { success: false, message: 'No fields to update.' };
   }
@@ -62,8 +67,42 @@ const updateAppointmentPartial = async (id, patch = {}) => {
           });
         }
       }
+
+      if (clientId && data.scheduleChanged) {
+        const petId = after?.petId || before?.petId;
+        const petDoc = petId ? await firestoreManager.getData('pets', petId) : null;
+        const petName = petDoc?.name || 'your pet';
+
+        const fmtDT = (dt) => {
+          if (!dt) return 'unknown';
+          const [datePart, timePart] = String(dt).split('T');
+          if (!datePart) return dt;
+          const [y, m, d] = datePart.split('-');
+          const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          const monthName = months[parseInt(m, 10) - 1] || m;
+          let timeStr = '';
+          if (timePart) {
+            const [h, min] = timePart.split(':');
+            const hour = parseInt(h, 10);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            timeStr = ` at ${hour12}:${min} ${ampm}`;
+          }
+          return `${monthName} ${parseInt(d, 10)}, ${y}${timeStr}`;
+        };
+
+        const oldDT = fmtDT(before?.dateTime);
+        const newDT = fmtDT(after?.dateTime);
+
+        await addNotification({
+          clientId: String(clientId),
+          type: 'appointment_schedule_changed',
+          title: 'Appointment Rescheduled',
+          message: `Your appointment for ${petName} has been rescheduled from ${oldDT} to ${newDT}.`,
+          payload: { appointmentId: after?.id || null, newDateTime: after?.dateTime || null }
+        });
+      }
     } catch (notifyErr) {
-      // Notifications should never block the main update.
       console.warn('appointments/update_partial notification warning:', notifyErr?.message || notifyErr);
     }
 
