@@ -21,4 +21,28 @@ managePetsRouter.get('/pet', ensureAuthPage, ensureTypePage('employee'), (req, r
 const getPetDetails = require('../../../controllers/employee/pets/get_pet_details');
 managePetsRouter.get('/pets/get', authenticateApi, ensureTypeApi('employee'), getPetDetails);
 
+// ===== Medical records (employee scope) =====
+// NOTE: pet PHOTO upload is intentionally client-only; employees can only
+// view the photo and manage medical records.
+const getPetRecordsController = require('../../../controllers/employee/records/get_pet_records');
+const addRecordController = require('../../../controllers/employee/records/add_record');
+const { uploadRecordFile } = require('../../../middlewares/upload');
+
+// GET /employee/pets/:id/records
+managePetsRouter.get(
+  '/pets/:id/records',
+  authenticateApi,
+  ensureTypeApi('employee'),
+  getPetRecordsController
+);
+
+// POST /employee/pets/:id/records  (multipart; text fields + optional "file")
+managePetsRouter.post(
+  '/pets/:id/records',
+  authenticateApi,
+  ensureTypeApi('employee'),
+  uploadRecordFile,
+  addRecordController
+);
+
 module.exports = managePetsRouter;

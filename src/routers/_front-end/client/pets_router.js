@@ -28,6 +28,8 @@ const getMyPetsController = require('../../../controllers/client/pets/get_my_pet
 const addClientPetController = require('../../../controllers/client/pets/add_pet');
 const updateClientPetController = require('../../../controllers/client/pets/update_pet');
 const deleteClientPetController = require('../../../controllers/client/pets/delete_pet');
+const uploadPetImageController = require('../../../controllers/client/pets/upload_pet_image');
+const { uploadImage } = require('../../../middlewares/upload');
 
 petsRouter.get(
   '/pets/my',
@@ -58,6 +60,15 @@ petsRouter.delete(
   authenticateApi,
   ensureTypeApi('client'),
   deleteClientPetController
+);
+
+// API: POST /client/pets/:id/image (multipart, field "image")
+petsRouter.post(
+  '/pets/:id/image',
+  authenticateApi,
+  ensureTypeApi('client'),
+  uploadImage,
+  uploadPetImageController
 );
 
 module.exports = petsRouter;

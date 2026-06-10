@@ -77,6 +77,41 @@
   let PETS = [];
   let search = '';
 
+  // ----- Pet photo upload (client-only) -----
+  let pendingPhotoId = null;
+  const photoInput = document.createElement('input');
+  photoInput.type = 'file';
+  photoInput.accept = 'image/*';
+  photoInput.style.display = 'none';
+  document.body.appendChild(photoInput);
+
+  photoInput.addEventListener('change', async () => {
+    const file = photoInput.files && photoInput.files[0];
+    const petId = pendingPhotoId;
+    photoInput.value = '';
+    pendingPhotoId = null;
+    if (!file || !petId) return;
+
+    showToast('Uploading photo…');
+    const fd = new FormData();
+    fd.append('image', file);
+
+    const { ok, body } = await fetchJSON(
+      `/client/pets/${encodeURIComponent(petId)}/image`,
+      { method: 'POST', body: fd },
+      30000
+    );
+
+    if (ok && body && body.success && body.imageUrl) {
+      const pet = PETS.find(p => String(p.id) === String(petId));
+      if (pet) pet.imageUrl = body.imageUrl;
+      renderPets();
+      showToast('Photo updated!');
+    } else {
+      showToast(body?.message || 'Upload failed.');
+    }
+  });
+
   // modal state
   let modalMode = 'add';  // 'add' or 'edit'
   let editingPetId = null;
@@ -151,7 +186,9 @@
     <article class="pet-card" data-pet-id="${esc(p.id)}">
       <header class="pet-header">
         <div class="pet-avatar" aria-hidden="true">
-          <span>${esc((p.name || 'P').charAt(0).toUpperCase())}</span>
+          ${p.imageUrl
+            ? `<img src="${esc(p.imageUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>`
+            : `<span>${esc((p.name || 'P').charAt(0).toUpperCase())}</span>`}
         </div>
         <div>
           <h2 class="pet-name">${esc(p.name)}</h2>
@@ -221,6 +258,7 @@
       <footer class="pet-actions">
         <div style="display:flex;gap:.5rem;flex-wrap:wrap">
           <button type="button" class="btn js-edit" data-edit="${esc(p.id)}">Edit</button>
+          <button type="button" class="btn secondary js-photo" data-photo="${esc(p.id)}">${p.imageUrl ? 'Change photo' : 'Add photo'}</button>
           <button type="button" class="btn secondary js-delete" data-del="${esc(p.id)}">Delete</button>
         </div>
         <button type="button" class="btn-ghost js-toggle-details" aria-expanded="false">
@@ -304,6 +342,14 @@
       const id = editBtn.getAttribute('data-edit');
       const pet = PETS.find(p => String(p.id) === String(id));
       openPetModal('edit', pet || null);
+      return;
+    }
+
+    const photoBtn = e.target.closest('.js-photo');
+    if (photoBtn) {
+      e.preventDefault();
+      pendingPhotoId = photoBtn.getAttribute('data-photo');
+      photoInput.click();
       return;
     }
 

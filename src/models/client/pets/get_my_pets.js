@@ -24,7 +24,8 @@ const getMyPets = async (clientId) => {
         species: p.species || '',
         sex: p.sex || '',
         age: p.age || null,
-        breedingAllowed: breedingFlag
+        breedingAllowed: breedingFlag,
+        imageUrl: p.imageUrl || null
       };
     });
 

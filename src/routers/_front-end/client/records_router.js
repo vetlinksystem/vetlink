@@ -24,12 +24,23 @@ recordsRouter.get(
 
 // API: /client/records/my
 const getMyRecordsController = require('../../../controllers/client/records/get_my_records');
+const addRecordController = require('../../../controllers/client/records/add_record');
+const { uploadRecordFile } = require('../../../middlewares/upload');
 
 recordsRouter.get(
   '/records/my',
   authenticateApi,
   ensureTypeApi('client'),
   getMyRecordsController
+);
+
+// API: POST /client/records (multipart; text fields + optional "file")
+recordsRouter.post(
+  '/records',
+  authenticateApi,
+  ensureTypeApi('client'),
+  uploadRecordFile,
+  addRecordController
 );
 
 module.exports = recordsRouter;

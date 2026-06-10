@@ -59,6 +59,11 @@ const generateNotificationId = async () => {
   return await generateIdWithPrefix('n', 'notifications');
 };
 
+// Medical records (r1001, r1002, ...)
+const generateRecordId = async () => {
+  return await generateIdWithPrefix('r', 'records');
+};
+
 module.exports = {
   getNextCounter,
   generatePetId,
@@ -67,4 +72,5 @@ module.exports = {
   generateClientId,
   generateAppointmentId,
   generateNotificationId,
+  generateRecordId,
 };

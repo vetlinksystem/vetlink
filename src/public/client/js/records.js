@@ -71,17 +71,26 @@
     setTimeout(()=> toast.classList.remove('show'), 2200);
   };
 
+  const isImageUrl = (u) => /\.(jpe?g|png|webp|gif|heic)(\?|$)/i.test(u || '');
+
+  const fileCell = (url) => {
+    if (!url) return '<span style="color:var(--muted)">No file</span>';
+    if (isImageUrl(url)) {
+      return `<a href="${esc(url)}" target="_blank" rel="noopener" title="Open image">
+        <img src="${esc(url)}" alt="record"
+             style="height:42px;width:42px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"/>
+      </a>`;
+    }
+    return `<a href="${esc(url)}" class="btn secondary" target="_blank" rel="noopener">View file</a>`;
+  };
+
   const rowHTML = (r) => `
     <tr>
       <td>${fmtDate(r.date)}</td>
       <td>${esc(r.petName)}</td>
       <td>${esc(r.type)}</td>
       <td>${esc(r.notes || '')}</td>
-      <td style="text-align:right">
-        ${r.url
-          ? `<a href="${esc(r.url)}" class="btn secondary" target="_blank" rel="noopener">View</a>`
-          : '<span style="color:var(--muted)">No file</span>'}
-      </td>
+      <td style="text-align:right">${fileCell(r.url)}</td>
     </tr>
   `;
 
@@ -172,8 +181,81 @@
     });
   }
 
-  // Init
-  (async function bootstrap() {
+  // ===== Add Record modal =====
+  const API_RECORDS   = '/client/records';
+  const modal         = document.getElementById('recordModal');
+  const addBtn        = document.getElementById('addRecordBtn');
+  const closeBtn      = document.getElementById('recordModalClose');
+  const cancelBtn     = document.getElementById('recordCancel');
+  const recordForm    = document.getElementById('recordForm');
+  const recPet        = document.getElementById('recPet');
+  const recType       = document.getElementById('recType');
+  const recDate       = document.getElementById('recDate');
+  const recNotes      = document.getElementById('recNotes');
+  const recFile       = document.getElementById('recFile');
+  const recordSubmit  = document.getElementById('recordSubmit');
+
+  const openModal = () => {
+    if (!modal) return;
+    // Populate pet dropdown from loaded pets.
+    if (recPet) {
+      recPet.innerHTML = PETS.length
+        ? PETS.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')
+        : '<option value="">No pets — add a pet first</option>';
+    }
+    if (recDate && !recDate.value) {
+      recDate.value = new Date().toISOString().slice(0, 10);
+    }
+    modal.style.display = 'flex';
+  };
+
+  const closeModal = () => {
+    if (modal) modal.style.display = 'none';
+    if (recordForm) recordForm.reset();
+  };
+
+  if (addBtn)    addBtn.addEventListener('click', openModal);
+  if (closeBtn)  closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  if (recordForm) {
+    recordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const petId = recPet ? recPet.value : '';
+      if (!petId) { showToast('Please select a pet.'); return; }
+
+      const fd = new FormData();
+      fd.append('petId', petId);
+      fd.append('type', recType ? recType.value.trim() : '');
+      fd.append('date', recDate ? recDate.value : '');
+      fd.append('notes', recNotes ? recNotes.value.trim() : '');
+      if (recFile && recFile.files && recFile.files[0]) {
+        fd.append('file', recFile.files[0]);
+      }
+
+      recordSubmit.disabled = true;
+      recordSubmit.textContent = 'Saving…';
+
+      // NOTE: no Content-Type header — the browser sets the multipart boundary.
+      const { ok, body } = await fetchJSON(API_RECORDS, { method: 'POST', body: fd }, 30000);
+
+      recordSubmit.disabled = false;
+      recordSubmit.textContent = 'Save record';
+
+      if (!ok || !body || body.success === false) {
+        showToast(body?.message || 'Failed to save record.');
+        return;
+      }
+
+      closeModal();
+      showToast('Record saved!');
+      await loadRecords();
+    });
+  }
+
+  // ===== Init / reload =====
+  async function loadRecords() {
     tbody.innerHTML =
       `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)">
         <em>Loading records…</em>
@@ -195,5 +277,7 @@
 
     syncFilters();
     renderTable();
-  })();
+  }
+
+  loadRecords();
 })();

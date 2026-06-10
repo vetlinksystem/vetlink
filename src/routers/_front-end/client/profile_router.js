@@ -25,6 +25,8 @@ profileRouter.get(
 // APIs
 const getClientSelfController    = require('../../../controllers/client/profile/get_self');
 const updateClientSelfController = require('../../../controllers/client/profile/update_self');
+const uploadAvatarController     = require('../../../controllers/client/profile/upload_avatar');
+const { uploadImage }            = require('../../../middlewares/upload');
 
 // GET /client/profile/me
 profileRouter.get(
@@ -40,6 +42,15 @@ profileRouter.put(
   authenticateApi,
   ensureTypeApi('client'),
   updateClientSelfController
+);
+
+// POST /client/profile/me/image (multipart, field "image")
+profileRouter.post(
+  '/profile/me/image',
+  authenticateApi,
+  ensureTypeApi('client'),
+  uploadImage,
+  uploadAvatarController
 );
 
 module.exports = profileRouter;
