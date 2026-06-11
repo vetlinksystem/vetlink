@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • Messages</title>
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/chats.css" rel="stylesheet"/>
+</head>
+<body data-page="#chats">
+  <div id="scrim"></div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="logo">🐾</div>
+        <div><strong>VetLink</strong><br/><small>Client Portal</small></div>
+      </div>
+      <nav class="nav">
+        <a href="/client/dashboard"    data-page="#dashboard">Dashboard</a>
+        <a href="/client/pets"         data-page="#pets">My Pets</a>
+        <a href="/client/breeding"     data-page="#breeding">Breeding</a>
+        <a href="/client/chats"        data-page="#chats" class="active">Messages</a>
+        <a href="/client/appointments" data-page="#appointments">Appointments</a>
+        <a href="/client/records"      data-page="#records">Records</a>
+        <a href="/client/profile"      data-page="#profile">Profile</a>
+
+        <div style="padding:.75rem;margin-top:.75rem">
+          <button class="btn secondary" id="logoutBtn">Log out</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div>
+      <header class="top">
+        <div>
+          <h2 style="margin:0;font-size:1.1rem">Messages</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem"><div class="chip">
+            Logged in as
+            <strong id="accountName" style="margin-left:.35rem">Client</strong>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <div class="chat-layout card">
+          <!-- Conversation list -->
+          <div class="chat-list" id="chatListPane">
+            <div class="chat-list-head">
+              <strong>Chats</strong>
+              <small class="muted">Talk with other pet owners</small>
+            </div>
+            <div id="chatList">
+              <p class="muted" style="padding:1rem">Loading…</p>
+            </div>
+          </div>
+
+          <!-- Thread -->
+          <div class="chat-thread" id="chatThreadPane">
+            <div class="thread-head" id="threadHead" style="display:none">
+              <button class="btn ghost back-btn" id="backToList">←</button>
+              <span class="thread-avatar" id="threadAvatar">👤</span>
+              <div style="flex:1;min-width:0">
+                <div id="threadName" style="font-weight:800">—</div>
+                <small class="muted" id="threadSub"></small>
+              </div>
+              <button class="btn" id="proposeFromChat" title="Propose breeding to this owner">💞 Propose breeding</button>
+            </div>
+
+            <div class="thread-body" id="threadBody">
+              <div class="thread-empty" id="threadEmpty">
+                <div style="font-size:2.5rem">💬</div>
+                <p class="muted">Pick a chat on the left,<br/>or start one from the <a href="/client/breeding">Breeding</a> page.</p>
+              </div>
+            </div>
+
+            <div class="thread-composer" id="threadComposer" style="display:none">
+              <input class="input" id="composerInput" placeholder="Type a message…" maxlength="2000"/>
+              <button class="btn" id="composerSend">Send</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Propose-from-chat modal -->
+  <div class="modal" id="chatProposeModal" role="dialog" aria-modal="true">
+    <div class="panel" style="max-width:520px">
+      <header>
+        <strong>Propose breeding</strong>
+        <button class="btn ghost" data-close>✖</button>
+      </header>
+      <div class="content">
+        <label style="font-size:.85rem;font-weight:700">Your pet</label>
+        <select class="input" id="cpMyPet" style="margin:.3rem 0 .8rem"></select>
+        <label style="font-size:.85rem;font-weight:700">Their pet</label>
+        <select class="input" id="cpTheirPet" style="margin:.3rem 0 .8rem"></select>
+        <small class="muted" id="cpHint"></small>
+        <textarea class="input" id="cpMessage" rows="2" placeholder="Optional message…" style="margin-top:.6rem"></textarea>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn ghost" data-close>Cancel</button>
+          <button class="btn" id="cpSubmit">Send proposal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <script src="/client/js/core.js"></script>
+  <script src="/client/js/chats.js"></script>
+</body>
+</html>

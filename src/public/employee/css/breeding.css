@@ -1,0 +1,85 @@
+/* Employee — Breeding approvals page (self-contained bx- styles) */
+
+.bx-sub{color:#6b7280;margin:.25rem 0 1rem}
+.bx-muted{color:#6b7280}
+
+.bx-summary{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
+.bx-pill{
+  background:#fff;border:1px solid #e5e7eb;border-radius:12px;
+  padding:.6rem 1rem;display:flex;align-items:center;gap:.5rem;
+  box-shadow:0 4px 12px rgba(15,23,42,.05);
+}
+.bx-pill strong{font-size:1.15rem}
+.bx-pill span{color:#6b7280;font-size:.85rem}
+
+.bx-card{
+  background:#fff;border:1px solid #e5e7eb;border-radius:14px;
+  box-shadow:0 6px 18px rgba(15,23,42,.06);overflow:hidden;
+}
+.bx-card-head{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.9rem 1.1rem;border-bottom:1px solid #e5e7eb;
+}
+.bx-count{
+  min-width:22px;padding:0 7px;border-radius:999px;background:#f59e0b;color:#fff;
+  font-size:.8rem;line-height:22px;text-align:center;font-weight:700;
+}
+.bx-select{
+  border:1px solid #e5e7eb;border-radius:10px;padding:.45rem .7rem;background:#fff;outline:none;
+}
+
+/* Approval cards */
+.bx-approval-list{padding:1rem;display:grid;gap:1rem}
+.bx-req{
+  border:1px solid #e5e7eb;border-radius:12px;padding:1rem;
+  display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;
+  background:#fffdf5;
+}
+.bx-pair{display:flex;align-items:center;gap:.9rem}
+.bx-pet{text-align:center}
+.bx-pet .ph{
+  width:64px;height:64px;border-radius:50%;overflow:hidden;background:#ecfdf5;
+  display:grid;place-items:center;font-size:1.5rem;margin:0 auto;
+}
+.bx-pet .ph img{width:100%;height:100%;object-fit:cover}
+.bx-pet .nm{font-weight:800;margin-top:.3rem;font-size:.95rem}
+.bx-pet .sb{color:#6b7280;font-size:.78rem}
+.bx-heart{font-size:1.4rem}
+.bx-req-info{flex:1;min-width:220px}
+.bx-req-info .line{font-size:.88rem;color:#374151;margin:.15rem 0}
+.bx-req-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+
+.bx-btn{
+  border:none;border-radius:10px;padding:.55rem 1rem;font-weight:700;cursor:pointer;
+  font-size:.88rem;
+}
+.bx-btn.approve{background:#059669;color:#fff}
+.bx-btn.approve:hover{background:#047857}
+.bx-btn.reject{background:#fee2e2;color:#991b1b}
+.bx-btn.reject:hover{background:#fecaca}
+
+/* Status badges */
+.bx-status{display:inline-block;padding:.22rem .6rem;border-radius:999px;font-size:.76rem;font-weight:700}
+.bx-status.pending{background:#fef3c7;color:#92400e}
+.bx-status.accepted{background:#dbeafe;color:#1e40af}
+.bx-status.approved{background:#d1fae5;color:#065f46}
+.bx-status.rejected{background:#fee2e2;color:#991b1b}
+.bx-status.cancelled{background:#e5e7eb;color:#374151}
+
+/* Table */
+.bx-table-wrap{overflow-x:auto}
+.bx-table{width:100%;border-collapse:collapse}
+.bx-table th{
+  text-align:left;padding:.8rem .9rem;font-size:.8rem;color:#6b7280;
+  border-bottom:1px solid #e5e7eb;background:#f9fafb;white-space:nowrap;
+}
+.bx-table td{padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;font-size:.88rem;vertical-align:middle}
+.bx-table tr:hover td{background:#f8fafc}
+
+/* Toast */
+.bx-toast{
+  position:fixed;bottom:18px;right:18px;background:#065f46;color:#ecfdf5;
+  padding:.85rem 1rem;border-radius:12px;display:none;z-index:60;
+  box-shadow:0 8px 24px rgba(15,23,42,.18);
+}
+.bx-toast.show{display:block}

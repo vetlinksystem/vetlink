@@ -1,5 +1,10 @@
 // src/models/breeding/update_status.js
+// Legacy endpoint kept for older app builds (PUT /breeding/update-status).
+// - Client-proposed records (proposedBy === 'client') are routed through the
+//   new respond flow (accept → "accepted", waiting for clinic approval).
+// - Old clinic-proposed records keep the original dual-approval behavior.
 const firestoreManager = require('../../fb/firestore_manager');
+const respondToProposal = require('../client/breeding/respond');
 
 const updateStatus = async (req_body) => {
 
@@ -17,8 +22,7 @@ const updateStatus = async (req_body) => {
     }
 
     // Get existing record
-    const list = await firestoreManager.getAllData('breeding', { id });
-    const record = list && list[0];
+    const record = await firestoreManager.getData('breeding', String(id));
 
     if (!record) {
         return {
@@ -27,6 +31,12 @@ const updateStatus = async (req_body) => {
         };
     }
 
+    // New flow: proposals made by clients
+    if (record.proposedBy === 'client') {
+        return await respondToProposal(ownerId, { id, decision });
+    }
+
+    // ===== Legacy flow (clinic-proposed records) =====
     let { ownerAId, ownerBId, ownerAApproved, ownerBApproved } = record;
 
     ownerAApproved = !!ownerAApproved;
@@ -34,11 +44,8 @@ const updateStatus = async (req_body) => {
 
     let status = record.status || 'pending';
 
-    // Handle decisions
     if (decision === 'reject') {
         status = 'rejected';
-        // Optionally you could track who rejected:
-        // record.rejectedBy = ownerId;
         const patch = {
             id,
             status

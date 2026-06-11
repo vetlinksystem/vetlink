@@ -27,6 +27,7 @@ const empScheduleRouter     = require('./routers/_front-end/employee/schedule_ro
 const empReservationRouter  = require('./routers/_front-end/employee/reservation_router');
 const empProfileRouter      = require('./routers/_front-end/employee/profile_router');
 const empManagePetsRouter   = require('./routers/_front-end/employee/pets_router');
+const empBreedingRouter     = require('./routers/_front-end/employee/breeding_router');
 
 const cliDashboardRouter    = require('./routers/_front-end/client/dashboard_router');
 const cliPetsRouter         = require('./routers/_front-end/client/pets_router');
@@ -34,6 +35,9 @@ const cliAppointmentsRouter = require('./routers/_front-end/client/appointments_
 const cliReservationsRouter = require('./routers/_front-end/client/reservations_router');
 const cliRecordsRouter      = require('./routers/_front-end/client/records_router');
 const cliProfileRouter      = require('./routers/_front-end/client/profile_router');
+const cliNotificationsRouter = require('./routers/_front-end/client/notifications_router');
+const cliBreedingRouter     = require('./routers/_front-end/client/breeding_router');
+const cliChatsRouter        = require('./routers/_front-end/client/chats_router');
 
 // ===== Middlewares =====
 const { authenticateApi }   = require('./middlewares/auth');
@@ -59,13 +63,17 @@ app.use('/employee', empScheduleRouter);
 app.use('/employee', empReservationRouter);
 app.use('/employee', empProfileRouter);
 app.use('/employee', empManagePetsRouter);
+app.use('/employee', empBreedingRouter);
 
-app.use('/client', cliDashboardRouter); 
+app.use('/client', cliDashboardRouter);
 app.use('/client', cliPetsRouter);
 app.use('/client', cliAppointmentsRouter);
 app.use('/client', cliReservationsRouter);
 app.use('/client', cliRecordsRouter);
 app.use('/client', cliProfileRouter);
+app.use('/client', cliNotificationsRouter);
+app.use('/client', cliBreedingRouter);
+app.use('/client', cliChatsRouter);
 
 const errorHandler          = require('./middlewares/error-handler');
 app.use(errorHandler);

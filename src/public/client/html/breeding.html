@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client • Breeding</title>
+  <link href="/client/css/core.css" rel="stylesheet"/>
+  <link href="/client/css/breeding.css" rel="stylesheet"/>
+</head>
+<body data-page="#breeding">
+  <div id="scrim"></div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="logo">🐾</div>
+        <div><strong>VetLink</strong><br/><small>Client Portal</small></div>
+      </div>
+      <nav class="nav">
+        <a href="/client/dashboard"    data-page="#dashboard">Dashboard</a>
+        <a href="/client/pets"         data-page="#pets">My Pets</a>
+        <a href="/client/breeding"     data-page="#breeding" class="active">Breeding</a>
+        <a href="/client/chats"        data-page="#chats">Messages</a>
+        <a href="/client/appointments" data-page="#appointments">Appointments</a>
+        <a href="/client/records"      data-page="#records">Records</a>
+        <a href="/client/profile"      data-page="#profile">Profile</a>
+
+        <div style="padding:.75rem;margin-top:.75rem">
+          <button class="btn secondary" id="logoutBtn">Log out</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div>
+      <header class="top">
+        <div>
+          <h2 style="margin:0;font-size:1.1rem">Breeding</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem"><div class="chip">
+            Logged in as
+            <strong id="accountName" style="margin-left:.35rem">Client</strong>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <div style="display:flex;justify-content:space-between;align-items:end;gap:.75rem;flex-wrap:wrap">
+          <div>
+            <h2 style="margin:0">Find a breeding partner</h2>
+            <small style="color:var(--muted)">Pick one of your pets, browse matches, chat with owners, and propose breeding. The clinic gives the final approval.</small>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" style="margin-top:1rem">
+          <button class="tab active" data-tab="match" id="tabMatch">💞 Find a match</button>
+          <button class="tab" data-tab="proposals" id="tabProposals">
+            📋 My proposals <span id="proposalsBadge" class="tab-badge" style="display:none">0</span>
+          </button>
+        </div>
+
+        <!-- FIND A MATCH -->
+        <section id="matchPane">
+          <div class="card" style="padding:1rem;margin-top:1rem">
+            <strong>Your pet</strong>
+            <small style="color:var(--muted);display:block;margin-top:.15rem">
+              Only pets marked "allowed for breeding" with a known sex can look for a partner.
+            </small>
+            <div id="myPetChips" class="pet-chips"></div>
+          </div>
+
+          <div id="candidatesWrap" style="margin-top:1rem">
+            <p class="muted" id="candidatesHint">Select one of your pets above to see available partners.</p>
+            <div id="candidatesGrid" class="cand-grid"></div>
+          </div>
+        </section>
+
+        <!-- MY PROPOSALS -->
+        <section id="proposalsPane" style="display:none">
+          <div id="proposalsList" style="margin-top:1rem">
+            <p class="muted">Loading…</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Propose modal -->
+  <div class="modal" id="proposeModal" role="dialog" aria-modal="true">
+    <div class="panel" style="max-width:520px">
+      <header>
+        <strong>Propose breeding</strong>
+        <button class="btn ghost" data-close>✖</button>
+      </header>
+      <div class="content">
+        <div id="proposePair" class="propose-pair"></div>
+        <textarea class="input" id="proposeMessage" rows="3" placeholder="Optional message to the owner…" style="margin-top:1rem"></textarea>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn ghost" data-close>Cancel</button>
+          <button class="btn" id="proposeSubmit">Send proposal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <script src="/client/js/core.js"></script>
+  <script src="/client/js/breeding.js"></script>
+</body>
+</html>

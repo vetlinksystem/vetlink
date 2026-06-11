@@ -231,6 +231,20 @@ window.API = (function(){
     const payload = n.payload || {};
     const breedingId = payload.breedingId || payload.id || '';
     const isBreeding = n.type === 'breeding_proposal' && breedingId;
+    const conversationId = payload.conversationId || '';
+    const isChat = n.type === 'chat_message' && conversationId;
+
+    if (isChat) {
+      const openChatBtn = document.createElement('button');
+      openChatBtn.className = 'btn';
+      openChatBtn.type = 'button';
+      openChatBtn.textContent = 'Open chat';
+      openChatBtn.onclick = async () => {
+        await markRead();
+        window.location.href = `/client/chats?c=${encodeURIComponent(conversationId)}`;
+      };
+      actEl.appendChild(openChatBtn);
+    }
 
     if (isBreeding) {
       const approveBtn = document.createElement('button');
@@ -298,6 +312,8 @@ window.API = (function(){
       const payload = n.payload || {};
       const breedingId = payload.breedingId || payload.id || '';
       const isBreeding = n.type === 'breeding_proposal' && breedingId;
+      const conversationId = payload.conversationId || '';
+      const isChat = n.type === 'chat_message' && conversationId;
       return `
         <div data-nid="${esc(n.id)}" style="padding:.65rem .6rem;border-radius:12px;border:1px solid var(--border);margin:.5rem 0;background:${n.read ? 'transparent' : 'rgba(59,130,246,.06)'}">
           <div style="display:flex;justify-content:space-between;gap:.5rem">
@@ -307,9 +323,13 @@ window.API = (function(){
           <div style="margin-top:.35rem;color:#344054;font-size:.92rem">${esc(n.message || '')}</div>
           ${isBreeding ? `
             <div style="display:flex;gap:.5rem;margin-top:.55rem;flex-wrap:wrap">
-              <button class="btn" data-approve="${esc(breedingId)}">Approve</button>
-              <button class="btn secondary" data-reject="${esc(breedingId)}">Reject</button>
+              <button class="btn" data-approve="${esc(breedingId)}">Accept</button>
+              <button class="btn secondary" data-reject="${esc(breedingId)}">Decline</button>
               ${n.read ? '' : `<button class="btn ghost" data-markread="${esc(n.id)}">Mark read</button>`}
+            </div>
+          ` : isChat ? `
+            <div style="display:flex;gap:.5rem;margin-top:.55rem;flex-wrap:wrap">
+              <button class="btn" data-openchat="${esc(conversationId)}" data-notif="${esc(n.id)}">Open chat</button>
             </div>
           ` : (n.read ? '' : `<div style="margin-top:.55rem"><button class="btn ghost" data-markread="${esc(n.id)}">Mark read</button></div>`)}
         </div>
@@ -317,6 +337,14 @@ window.API = (function(){
     }).join('');
 
     // Wire actions
+    menu.querySelectorAll('[data-openchat]').forEach(b => {
+      b.addEventListener('click', async () => {
+        const cid = b.getAttribute('data-openchat');
+        const nid = b.getAttribute('data-notif');
+        if (nid) await fetchJSON('/notifications/mark-read', { method:'PUT', body: JSON.stringify({ id: nid }) });
+        window.location.href = `/client/chats?c=${encodeURIComponent(cid)}`;
+      });
+    });
     menu.querySelectorAll('[data-markread]').forEach(b => {
       b.addEventListener('click', async () => {
         const id = b.getAttribute('data-markread');

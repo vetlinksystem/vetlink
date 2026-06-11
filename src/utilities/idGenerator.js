@@ -64,6 +64,16 @@ const generateRecordId = async () => {
   return await generateIdWithPrefix('r', 'records');
 };
 
+// Chat conversations (cv1001, cv1002, ...)
+const generateConversationId = async () => {
+  return await generateIdWithPrefix('cv', 'conversations');
+};
+
+// Chat messages (m1001, m1002, ...)
+const generateMessageId = async () => {
+  return await generateIdWithPrefix('m', 'messages');
+};
+
 module.exports = {
   getNextCounter,
   generatePetId,
@@ -73,4 +83,6 @@ module.exports = {
   generateAppointmentId,
   generateNotificationId,
   generateRecordId,
+  generateConversationId,
+  generateMessageId,
 };
