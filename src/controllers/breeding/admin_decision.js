@@ -16,7 +16,9 @@ const adminDecisionController = async (req, res) => {
             success: true,
             message: result.status === 'approved'
                 ? `Breeding approved. Both pets are now reserved.${result.cancelledOthers ? ` ${result.cancelledOthers} competing proposal(s) were cancelled.` : ''}`
-                : 'Breeding rejected.',
+                : result.status === 'completed'
+                    ? 'Breeding marked as completed. Both pets are available for breeding again.'
+                    : 'Breeding rejected.',
             id: result.id,
             status: result.status,
             cancelledOthers: result.cancelledOthers || 0

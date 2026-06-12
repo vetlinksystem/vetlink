@@ -57,6 +57,8 @@
 .bx-btn.approve:hover{background:#047857}
 .bx-btn.reject{background:#fee2e2;color:#991b1b}
 .bx-btn.reject:hover{background:#fecaca}
+.bx-btn.complete{background:#ede9fe;color:#5b21b6}
+.bx-btn.complete:hover{background:#ddd6fe}
 
 /* Status badges */
 .bx-status{display:inline-block;padding:.22rem .6rem;border-radius:999px;font-size:.76rem;font-weight:700}
@@ -65,6 +67,7 @@
 .bx-status.approved{background:#d1fae5;color:#065f46}
 .bx-status.rejected{background:#fee2e2;color:#991b1b}
 .bx-status.cancelled{background:#e5e7eb;color:#374151}
+.bx-status.completed{background:#ede9fe;color:#5b21b6}
 
 /* Table */
 .bx-table-wrap{overflow-x:auto}

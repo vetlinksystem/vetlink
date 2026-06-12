@@ -5,6 +5,7 @@
 // - Old clinic-proposed records keep the original dual-approval behavior.
 const firestoreManager = require('../../fb/firestore_manager');
 const respondToProposal = require('../client/breeding/respond');
+const { now, getPet, notifyAdmins } = require('./service');
 
 const updateStatus = async (req_body) => {
 
@@ -71,9 +72,10 @@ const updateStatus = async (req_body) => {
             };
         }
 
-        // Only approved if BOTH say yes
+        // Both owners agreed → waiting for clinic approval (admins decide on
+        // the employee Breeding page, same as client-proposed records).
         if (ownerAApproved && ownerBApproved) {
-            status = 'approved';
+            status = 'accepted';
         } else {
             status = 'pending';
         }
@@ -82,10 +84,24 @@ const updateStatus = async (req_body) => {
             id,
             ownerAApproved,
             ownerBApproved,
-            status
+            status,
+            respondedAt: now()
         };
 
         const response = await firestoreManager.updatePartialData('breeding', patch);
+
+        if (response && status === 'accepted') {
+            const [petA, petB] = await Promise.all([
+                getPet(record.petAId), getPet(record.petBId)
+            ]);
+            const pairLabel = `${petA?.name || record.petAId} × ${petB?.name || record.petBId}`;
+            notifyAdmins({
+                type: 'breeding_review',
+                title: 'Breeding pair needs approval',
+                message: `Both owners agreed on breeding ${pairLabel}. Review it on the Breeding page.`,
+                payload: { breedingRef: id }
+            }).catch(() => {});
+        }
 
         return {
             success: !!response,

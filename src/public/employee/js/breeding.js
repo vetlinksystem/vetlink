@@ -46,7 +46,8 @@
   const STATUS_TEXT = {
     pending: 'Waiting on owner',
     accepted: 'Needs approval',
-    approved: 'Approved',
+    approved: 'Approved (ongoing)',
+    completed: 'Completed',
     rejected: 'Rejected',
     cancelled: 'Cancelled'
   };
@@ -57,7 +58,8 @@
       <div class="bx-pill"><strong>${RECORDS.length}</strong><span>total requests</span></div>
       <div class="bx-pill"><strong>${count('accepted')}</strong><span>need approval</span></div>
       <div class="bx-pill"><strong>${count('pending')}</strong><span>waiting on owners</span></div>
-      <div class="bx-pill"><strong>${count('approved')}</strong><span>approved</span></div>
+      <div class="bx-pill"><strong>${count('approved')}</strong><span>ongoing</span></div>
+      <div class="bx-pill"><strong>${count('completed')}</strong><span>completed</span></div>
     `;
   };
 
@@ -124,22 +126,28 @@
         <td>
           ${String(r.status) === 'accepted'
             ? `<button class="bx-btn approve" data-approve="${esc(r.id)}">Approve</button>`
-            : ''}
+            : String(r.status) === 'approved'
+              ? `<button class="bx-btn complete" data-complete="${esc(r.id)}">Mark completed</button>`
+              : ''}
         </td>
       </tr>
     `).join('');
 
     tableBody.querySelectorAll('[data-approve]').forEach(b =>
       b.addEventListener('click', () => decide(b.getAttribute('data-approve'), 'approve')));
+    tableBody.querySelectorAll('[data-complete]').forEach(b =>
+      b.addEventListener('click', () => decide(b.getAttribute('data-complete'), 'complete')));
   };
 
   const decide = async (id, decision) => {
     let notes = '';
+    const r = RECORDS.find(x => String(x.id) === String(id));
+    const pair = r ? `${r.petA?.name || r.petAId} × ${r.petB?.name || r.petBId}` : id;
     if (decision === 'reject') {
       notes = prompt('Reason for rejecting (optional, shown to both owners):') || '';
+    } else if (decision === 'complete') {
+      if (!confirm(`Mark breeding ${pair} as completed?\nBoth pets will become available for breeding again.`)) return;
     } else {
-      const r = RECORDS.find(x => String(x.id) === String(id));
-      const pair = r ? `${r.petA?.name || r.petAId} × ${r.petB?.name || r.petBId}` : id;
       if (!confirm(`Approve breeding ${pair}?\nBoth pets will be reserved and hidden from the match list, and other open proposals for them will be cancelled.`)) return;
     }
 

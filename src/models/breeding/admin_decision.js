@@ -3,6 +3,7 @@
 // that both owners already agreed on.
 // Approve → record "approved", both pets become unavailable for breeding,
 // every other open proposal involving either pet is auto-cancelled.
+// Complete → record "completed", both pets become available for breeding again.
 const firestoreManager = require('../../fb/firestore_manager');
 const addNotification = require('../notifications/add');
 const {
@@ -23,7 +24,8 @@ module.exports = async function adminDecision(employee, req_body) {
 
     const approve = String(decision).toLowerCase() === 'approve';
     const reject = String(decision).toLowerCase() === 'reject';
-    if (!approve && !reject) {
+    const complete = String(decision).toLowerCase() === 'complete';
+    if (!approve && !reject && !complete) {
         return { success: false, message: 'Unknown decision value.' };
     }
 
@@ -32,6 +34,9 @@ module.exports = async function adminDecision(employee, req_body) {
     }
     if (reject && !['pending', 'accepted'].includes(String(record.status))) {
         return { success: false, message: `This record is already ${record.status}.` };
+    }
+    if (complete && String(record.status) !== 'approved') {
+        return { success: false, message: 'Only approved breedings can be marked as completed.' };
     }
 
     const [petA, petB] = await Promise.all([getPet(record.petAId), getPet(record.petBId)]);
@@ -70,6 +75,45 @@ module.exports = async function adminDecision(employee, req_body) {
         );
 
         return { success: true, id: record.id, status: 'rejected' };
+    }
+
+    if (complete) {
+        const ok = await firestoreManager.updatePartialData('breeding', {
+            id: record.id,
+            status: 'completed',
+            completedBy: employee?.id || '',
+            completedAt: now()
+        });
+        if (!ok) return { success: false, message: 'Failed to update record.' };
+
+        // Free both pets — "completed" no longer counts as an active match,
+        // so they reappear as breeding candidates.
+        for (const pid of [record.petAId, record.petBId]) {
+            if (!pid) continue;
+            firestoreManager.updatePartialData('pets', {
+                id: String(pid),
+                breedingMatchId: null,
+                breedingMatchedAt: null
+            }).catch(() => {});
+        }
+
+        for (const ownerId of owners) {
+            addNotification({
+                clientId: ownerId,
+                type: 'breeding_update',
+                title: 'Breeding completed 🎉',
+                message: `The clinic marked the breeding ${pairLabel} as completed. Your pet is now available for breeding again.`,
+                payload: { breedingRef: record.id }
+            }).catch(() => {});
+        }
+
+        await systemMessageBetween(
+            record.ownerAId, record.ownerBId,
+            `The clinic marked the breeding ${pairLabel} as completed. Both pets are available for breeding again.`,
+            { breedingRef: record.id }
+        );
+
+        return { success: true, id: record.id, status: 'completed' };
     }
 
     // Approve

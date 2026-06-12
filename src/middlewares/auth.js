@@ -2,10 +2,12 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const signAccess = (user) => {
+    // Some old docs have stray whitespace in id/name fields; a token id like
+    // "e0001\n" breaks every doc-key lookup downstream, so trim defensively.
     const payload = {
-        id: user.id,
+        id: String(user.id ?? '').trim(),
         type: user.type,
-        name: user.name
+        name: String(user.name ?? '').trim()
     };
     return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '1h' });
 }
