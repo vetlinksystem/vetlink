@@ -1,14 +1,15 @@
 /* VetLink minimal login styles */
 :root{
-  --bg:#f7faf7;
+  /* Vetlink warm beige palette — mirrors the Android app colors.xml */
+  --bg:#F4EFE7;
   --card:#ffffff;
-  --text:#0b1f16;
-  --muted:#6b7280;
-  --brand:#16a34a;      /* green inspired by VetLink */
-  --brand-ink:#0f5132;  /* deeper green */
-  --accent:#e11d48;     /* pinkish-red accent (stethoscope/heart hint) */
-  --ring: rgba(22,163,74,0.28);
-  --shadow: 0 10px 30px rgba(0,0,0,.08);
+  --text:#2B2620;
+  --muted:#9A8F7E;
+  --brand:#C8A06A;      /* camel / tan — VetLink primary */
+  --brand-ink:#8C6E44;  /* deep tan */
+  --accent:#C0563B;     /* warm terracotta accent (stethoscope/heart hint) */
+  --ring: rgba(200,160,106,0.30);
+  --shadow: 0 10px 30px rgba(43,38,32,.08);
 }
 
 * { box-sizing: border-box; }
@@ -17,8 +18,8 @@ body{
   margin:0;
   font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
-  background: radial-gradient(1000px 600px at 10% -10%, #d1fae5 0, transparent 50%),
-              radial-gradient(800px 600px at 110% 10%, #fee2e2 0, transparent 50%),
+  background: radial-gradient(1000px 600px at 10% -10%, #EBDCC4 0, transparent 50%),
+              radial-gradient(800px 600px at 110% 10%, #F0E7D8 0, transparent 50%),
               var(--bg);
 }
 
@@ -71,10 +72,10 @@ body{
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  background: #f0fdf4;
+  background: #F4EBDC;
   padding: 6px;
   border-radius: 12px;
-  border: 1px solid #dcfce7;
+  border: 1px solid #E8DECF;
   margin-bottom: 12px;
 }
 .role-btn{
@@ -89,8 +90,8 @@ body{
 }
 .role-btn.active{
   background: var(--card);
-  box-shadow: 0 1px 0 rgba(16,185,129,.15), 0 6px 18px rgba(16,185,129,.12);
-  color:#065f46;
+  box-shadow: 0 1px 0 rgba(140,110,68,.15), 0 6px 18px rgba(140,110,68,.12);
+  color:var(--brand-ink);
 }
 
 .field{
@@ -142,10 +143,10 @@ body{
 }
 .pw-rules .rule{ font-size: 12px; color: var(--muted); display:flex; gap:8px; align-items:center; margin: 4px 0; }
 .pw-rules .dot{ width: 16px; display:inline-block; text-align:center; font-weight: 800; }
-.pw-rules .rule.ok{ color: #065f46; }
-.pw-rules .rule.ok .dot{ color:#16a34a; }
+.pw-rules .rule.ok{ color: #2F6B48; }
+.pw-rules .rule.ok .dot{ color:#4E9A6B; }
 .pw-rules .rule.bad{ color: #b91c1c; }
-.pw-rules .rule.bad .dot{ color:#e11d48; }
+.pw-rules .rule.bad .dot{ color:var(--accent); }
 
 .remember{
   display:flex;
@@ -162,7 +163,7 @@ body{
   border-radius: 12px;
   border: 0;
   font-weight: 700;
-  background: linear-gradient(180deg, var(--brand), #0ea34a);
+  background: linear-gradient(180deg, var(--brand), var(--brand-ink));
   color: #fff;
   cursor: pointer;
   transition: transform .04s ease;
@@ -177,7 +178,7 @@ body{
   margin: 8px 2px 0;
 }
 .status.error{ color:#b91c1c; }
-.status.ok{ color:#065f46; }
+.status.ok{ color:#2F6B48; }
 
 .meta{ margin-top: 18px; text-align:center; color: var(--muted); }
 /* Make meta links match the VetLink theme */
@@ -188,5 +189,5 @@ body{
 }
 .meta a:hover{
   text-decoration: underline;
-  text-decoration-color: rgba(22,163,74,0.35);
+  text-decoration-color: rgba(200,160,106,0.40);
 }

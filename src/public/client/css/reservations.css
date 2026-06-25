@@ -5,7 +5,7 @@
 }
 .tabs{display:flex; gap:.5rem; flex-wrap:wrap}
 .tabs button{border:1px solid var(--border); background:#fff; border-radius:999px; padding:.5rem 1rem; cursor:pointer}
-.tabs button.active{background:#d1fae5; color:#065f46; border-color:#bbf7d0}
+.tabs button.active{background:var(--container); color:var(--brand-ink); border-color:var(--brand)}
 .tools{display:flex; gap:.5rem}
 
 /* Subfilters row */
@@ -20,7 +20,7 @@
 }
 .badge{padding:.25rem .55rem;border-radius:999px;border:1px solid var(--border);font-size:.8rem}
 .badge.Pending{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
-.badge.Approved{background:#ecfdf5;border-color:#bbf7d0;color:#166534}
+.badge.Approved{background:#E4F0E8;border-color:#C3DECB;color:#2F6B48}
 .badge.Checked-in{background:#e0f2fe;border-color:#bae6fd;color:#075985}
 .badge.Completed{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
 .badge.Cancelled{background:#fee2e2;border-color:#fecaca;color:#991b1b}

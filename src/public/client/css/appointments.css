@@ -8,7 +8,7 @@
   border:1px solid var(--border); background:#fff; border-radius:999px;
   padding:.5rem 1rem; cursor:pointer;
 }
-.tabs button.active{background:#d1fae5; color:#065f46; border-color:#bbf7d0}
+.tabs button.active{background:var(--container); color:var(--brand-ink); border-color:var(--brand)}
 .tools{display:flex; gap:.5rem}
 
 /* List cards */
@@ -36,6 +36,6 @@
 }
 
 .badge.pending{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
-.badge.confirmed{background:#ecfdf5;border-color:#bbf7d0;color:#166534}
+.badge.confirmed{background:#E4F0E8;border-color:#C3DECB;color:#2F6B48}
 .badge.completed{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
 .badge.cancelled{background:#fef2f2;border-color:#fecaca;color:#991b1b}

@@ -12,7 +12,7 @@
 .tab.active{color:var(--brand);border-bottom-color:var(--brand)}
 .tab-badge{
   display:inline-block;min-width:18px;padding:0 5px;margin-left:.25rem;
-  border-radius:999px;background:#e11d48;color:#fff;font-size:.75rem;line-height:18px;text-align:center;
+  border-radius:999px;background:var(--danger);color:#fff;font-size:.75rem;line-height:18px;text-align:center;
 }
 
 /* My pet selector chips */
@@ -27,31 +27,33 @@
   background:var(--chip);font-size:.8rem;
 }
 .pet-chip .avatar img{width:100%;height:100%;object-fit:cover}
-.pet-chip.selected{border-color:var(--brand);background:var(--chip);color:#065f46}
+.pet-chip.selected{border-color:var(--brand);background:var(--container);color:var(--brand-ink)}
 .pet-chip.disabled{opacity:.55;cursor:not-allowed}
 
-/* Candidate cards */
-.cand-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+/* Candidate cards — mirrors the Android item_candidate_card (28dp rounded, photo-forward) */
+.cand-grid{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
 .cand-card{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
+  background:var(--card);border:1px solid var(--border);border-radius:24px;
+  box-shadow:0 10px 26px rgba(43,38,32,.07);overflow:hidden;display:flex;flex-direction:column;
+  transition:transform .12s ease, box-shadow .2s ease;
 }
-.cand-photo{height:160px;background:linear-gradient(160deg,#d1fae5,#ecfdf5);display:grid;place-items:center;font-size:3rem;color:#065f46}
+.cand-card:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(43,38,32,.12)}
+.cand-photo{height:190px;background:linear-gradient(160deg,#EBDCC4,#F4EBDC);display:grid;place-items:center;font-size:3.4rem;color:var(--brand)}
 .cand-photo img{width:100%;height:100%;object-fit:cover}
-.cand-body{padding: .85rem .95rem;display:flex;flex-direction:column;gap:.45rem;flex:1}
-.cand-name{font-weight:800;font-size:1.05rem;margin:0}
-.cand-sub{color:var(--muted);font-size:.85rem}
-.cand-meta{display:flex;gap:.4rem;flex-wrap:wrap}
+.cand-body{padding:1rem 1.05rem .4rem;display:flex;flex-direction:column;gap:.4rem;flex:1}
+.cand-name{font-weight:800;font-size:1.3rem;margin:0;color:var(--text);line-height:1.15}
+.cand-sub{color:var(--muted);font-size:.88rem}
+.cand-meta{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.1rem}
 .cand-meta .chip{font-size:.75rem}
-.cand-owner{display:flex;align-items:center;gap:.4rem;color:#344054;font-size:.85rem;margin-top:.15rem}
-.cand-actions{display:flex;gap:.5rem;padding: 0 .95rem .9rem;flex-wrap:wrap}
-.cand-actions .btn{flex:1;justify-content:center;padding:.55rem .6rem;font-size:.88rem}
+.cand-owner{display:flex;align-items:center;gap:.4rem;color:var(--brand-ink);font-size:.86rem;font-weight:600;margin-top:.15rem}
+.cand-actions{display:flex;gap:.6rem;padding:.85rem 1.05rem 1.05rem;flex-wrap:wrap}
+.cand-actions .btn{flex:1;justify-content:center;padding:.6rem .6rem;font-size:.9rem;border-radius:16px;box-shadow:none}
 
 /* status pill on cards / proposals */
 .status-pill{display:inline-block;padding:.25rem .6rem;border-radius:999px;font-size:.78rem;font-weight:700}
 .status-pill.pending{background:#fef3c7;color:#92400e}
 .status-pill.accepted{background:#dbeafe;color:#1e40af}
-.status-pill.approved{background:#d1fae5;color:#065f46}
+.status-pill.approved{background:#E4F0E8;color:#2F6B48}
 .status-pill.rejected{background:#fee2e2;color:#991b1b}
 .status-pill.cancelled{background:#e5e7eb;color:#374151}
 

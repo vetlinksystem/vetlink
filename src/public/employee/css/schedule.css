@@ -24,9 +24,9 @@
 .cal-day:hover{ background:#f9fafb; }
 .cal-day.other{ opacity:.4; }
 .cal-day .num{ font-weight:700; }
-.cal-day.today{ border-color:#a7f3d0; box-shadow:0 0 0 2px #dcfce7 inset; }
+.cal-day.today{ border-color:var(--brand); box-shadow:0 0 0 2px var(--container) inset; }
 .cal-day .markers{ margin-top:auto; display:flex; flex-wrap:wrap; gap:4px; }
-.marker{ width:8px; height:8px; border-radius:999px; background:#16a34a; box-shadow:0 0 0 2px #eafff1; }
+.marker{ width:8px; height:8px; border-radius:999px; background:var(--brand); box-shadow:0 0 0 2px var(--container); }
 .marker.warn{ background:#f59e0b; }
 .marker.danger{ background:#ef4444; }
 .marker.gray{ background:#94a3b8; }

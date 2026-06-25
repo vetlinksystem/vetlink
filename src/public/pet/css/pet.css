@@ -35,7 +35,7 @@
 .rec-field input:focus{
   outline:none;
   border-color:var(--brand);
-  box-shadow:0 0 0 3px rgba(22,163,74,.15);
+  box-shadow:0 0 0 3px rgba(200,160,106,.22);
 }
 .rec-field--notes{ flex:1; }
 .rec-field--notes input{ min-width:220px; width:100%; }
@@ -53,7 +53,7 @@
   cursor:pointer;
   transition:background .15s ease;
 }
-.rec-add-btn:hover{ background:#15803d; }
+.rec-add-btn:hover{ background:var(--brand-ink); }
 .rec-add-btn:disabled{ opacity:.6; cursor:default; }
 
 .rec-table th, .rec-table td{ vertical-align:middle; }
