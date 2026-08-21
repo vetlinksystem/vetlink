@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>VetLink — Dashboard</title>
+  <title>VetLink — Analytics</title>
   <link rel="icon" type="image/png" href="/logo.png"/>
   <link rel="stylesheet" href="employee/css/dashboard.css"/>
 </head>
@@ -17,10 +17,14 @@
       </div>
 
       <nav class="nav">
-        <a class="nav-item active" href="/employee/dashboard"><span class="icon">📊</span><span>Analytic Dashboard</span></a>
-        <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered User</span></a>
+        <a class="nav-item active" href="/employee/dashboard"><span class="icon">📊</span><span>Analytics</span></a>
+        <a class="nav-item" href="/employee/reports"><span class="icon">📈</span><span>Reports</span></a>
+        <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered Customer</span></a>
         <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
         <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+        <a class="nav-item" href="/employee/pet-records"><span class="icon">📋</span><span>Pet Records</span></a>
+        <a class="nav-item" href="/employee/records"><span class="icon">🩺</span><span>Medical Records</span></a>
+        <a class="nav-item" href="/employee/messages"><span class="icon">💬</span><span>Messages</span></a>
       <a class="nav-item" href="/employee/breeding"><span class="icon">💞</span><span>Breeding</span></a>
         <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
       <a class="nav-item" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
@@ -50,7 +54,7 @@
 
       <!-- Dashboard content (same KPI cards + tables you already have) -->
       <section class="view active">
-        <h1 class="page-title">Administrator Dashboard</h1>
+        <h1 class="page-title">Analytics Overview</h1>
 
         <div class="cards cards-flex">
           <article class="card kpi kpi-lg"><div class="kpi-row"><div class="kpi-icon">👤</div><div class="kpi-body"><div class="kpi-value" id="kpi-users">—</div><div class="kpi-label">Total User Registered</div></div></div></article>

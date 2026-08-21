@@ -24,7 +24,7 @@ module.exports = async function sendMessage(clientId, conversationId, req_body) 
         return { success: false, message: 'Failed to send message.' };
     }
 
-    sendMessageNotification(conversation, String(clientId), text, result.unread).catch(() => {});
+    sendMessageNotification(conversation, String(clientId), text, result.unread).catch(err => console.warn('chat notification failed:', err?.message || err));
 
     return { success: true, message: result.message };
 };

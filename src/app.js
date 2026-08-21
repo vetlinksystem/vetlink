@@ -16,6 +16,7 @@ const breedingRouter        = require('./routers/breeding');
 const notificationsRouter   = require('./routers/notifications');
 const schedulesRouter       = require('./routers/schedules');
 const reservationsRouter = require('./routers/reservations');
+const catalogsRouter        = require('./routers/catalogs');
 
 // ===== Front-end Routers =====
 const loginRouter           = require('./routers/_front-end/login/login_router');
@@ -28,6 +29,9 @@ const empReservationRouter  = require('./routers/_front-end/employee/reservation
 const empProfileRouter      = require('./routers/_front-end/employee/profile_router');
 const empManagePetsRouter   = require('./routers/_front-end/employee/pets_router');
 const empBreedingRouter     = require('./routers/_front-end/employee/breeding_router');
+const empRecordsRouter      = require('./routers/_front-end/employee/records_router');
+const empReportsRouter      = require('./routers/_front-end/employee/reports_router');
+const empChatsRouter        = require('./routers/_front-end/employee/chats_router');
 
 const cliDashboardRouter    = require('./routers/_front-end/client/dashboard_router');
 const cliPetsRouter         = require('./routers/_front-end/client/pets_router');
@@ -52,6 +56,8 @@ app.use('/breeding',        authenticateApi, breedingRouter);
 app.use('/notifications',   authenticateApi, notificationsRouter);
 app.use('/schedules',       authenticateApi, schedulesRouter);
 app.use('/reservations',    authenticateApi, reservationsRouter);
+// Read-only reference data (breeds/species/sizes, medical vocabularies, breeding rules)
+app.use('/catalogs',        authenticateApi, catalogsRouter);
 
 // pages
 app.use('', loginRouter);
@@ -64,6 +70,9 @@ app.use('/employee', empReservationRouter);
 app.use('/employee', empProfileRouter);
 app.use('/employee', empManagePetsRouter);
 app.use('/employee', empBreedingRouter);
+app.use('/employee', empRecordsRouter);
+app.use('/employee', empReportsRouter);
+app.use('/employee', empChatsRouter);
 
 app.use('/client', cliDashboardRouter);
 app.use('/client', cliPetsRouter);

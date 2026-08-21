@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -17,10 +17,14 @@
       <span class="brand-name">VetLink</span>
     </div>
     <nav class="nav">
-      <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytic Dashboard</span></a>
-      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered User</span></a>
+      <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytics</span></a>
+        <a class="nav-item" href="/employee/reports"><span class="icon">📈</span><span>Reports</span></a>
+      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered Customer</span></a>
       <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
       <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+      <a class="nav-item" href="/employee/pet-records"><span class="icon">📋</span><span>Pet Records</span></a>
+      <a class="nav-item" href="/employee/records"><span class="icon">🩺</span><span>Medical Records</span></a>
+      <a class="nav-item" href="/employee/messages"><span class="icon">💬</span><span>Messages</span></a>
       <a class="nav-item" href="/employee/breeding"><span class="icon">💞</span><span>Breeding</span></a>
       <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
       <a class="nav-item active" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
@@ -78,8 +82,9 @@
               <th>Owner</th>
               <th>Pet</th>
               <th>Status</th>
-              <th>Notes</th>
-              <th style="width:280px;">Actions</th>
+              <th>Payment</th>
+              <th>Notes / Reason</th>
+              <th style="width:320px;">Actions</th>
             </tr>
           </thead>
           <tbody id="resTbody"></tbody>
@@ -126,6 +131,13 @@
             <span>Notes (optional)</span>
             <textarea id="notesInput" rows="2" placeholder="Additional info…"></textarea>
           </label>
+          <label>
+            <span>Payment Method</span>
+            <select id="paymentMethodInput" disabled>
+              <option value="over_the_counter" selected>Over the counter (at the clinic)</option>
+            </select>
+            <small class="hint">Payment is settled at the clinic. No online payment is processed.</small>
+          </label>
         </div>
 
         <div class="form-col">
@@ -161,6 +173,56 @@
         <button type="submit" class="btn-primary" id="saveBtn">Save</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Reason Modal — a reason is mandatory when the clinic cancels or reschedules -->
+<div id="reasonModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="reasonModalTitle">
+  <div class="modal-backdrop" data-close-reason></div>
+  <div class="modal-card modal-card--sm">
+    <div class="modal-head">
+      <h2 id="reasonModalTitle">Reason required</h2>
+      <button class="modal-close" data-close-reason>✕</button>
+    </div>
+
+    <div class="modal-body">
+      <input type="hidden" id="reasonApptId"/>
+      <input type="hidden" id="reasonAction"/>
+
+      <p id="reasonIntro" class="reason-intro"></p>
+
+      <label>
+        <span>Reason type</span>
+        <select id="reasonTypeInput">
+          <option value="cancelled">Cancelled</option>
+          <option value="rescheduled">Rescheduled</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Reason <b class="req">*</b></span>
+        <select id="reasonPresetInput">
+          <option value="">Choose a common reason…</option>
+          <option value="Veterinarian unavailable at the requested time.">Veterinarian unavailable</option>
+          <option value="The requested slot is already fully booked.">Slot fully booked</option>
+          <option value="Clinic emergency — schedule had to be adjusted.">Clinic emergency</option>
+          <option value="Requested by the pet owner.">Requested by the owner</option>
+          <option value="Pet is not fit for the procedure at this time.">Pet not fit for procedure</option>
+          <option value="__custom">Other (type below)…</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Details</span>
+        <textarea id="reasonTextInput" rows="3" placeholder="Explain the reason — this is sent to the client."></textarea>
+        <small class="hint">The client is notified with this reason.</small>
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" data-close-reason>Back</button>
+      <button type="button" class="btn-primary" id="reasonConfirmBtn">Confirm &amp; notify client</button>
+    </div>
   </div>
 </div>
 

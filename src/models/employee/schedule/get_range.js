@@ -53,7 +53,14 @@ const normalizeDateTime = (dateTime) => {
   return null;
 };
 
-const getScheduleRange = async ({ from, to }) => {
+// Statuses that belong on the clinic calendar.
+// A request is NOT a scheduled visit: it only appears once a veterinarian confirms it.
+// Cancelled / declined / rejected appointments are never shown — they used to linger
+// on the calendar after being cancelled.
+const CALENDAR_STATUSES = ['confirmed', 'completed'];
+const HIDDEN_STATUSES = ['cancelled', 'canceled', 'declined', 'rejected'];
+
+const getScheduleRange = async ({ from, to, includePending, includeCancelled } = {}) => {
   const fromDate = from ? new Date(from + 'T00:00:00') : null;
   const toDate   = to ? new Date(to + 'T23:59:59') : null;
 
@@ -90,10 +97,22 @@ const getScheduleRange = async ({ from, to }) => {
     const client = a.clientId ? clientMap.get(a.clientId) : null;
     const pet    = a.petId ? petMap.get(a.petId) : null;
 
-    const statusRaw = (a.status || '').toLowerCase();
+    const statusRaw = (a.status || '').toLowerCase().trim();
+
+    // --- Calendar visibility rules ---
+    // Cancelled/declined appointments are dropped entirely (opt back in with includeCancelled).
+    if (HIDDEN_STATUSES.includes(statusRaw) && !includeCancelled) return;
+    // Pending requests stay on the Appointments queue, not the schedule, until the
+    // veterinarian confirms them (opt back in with includePending).
+    if (statusRaw === 'pending' && !includePending) return;
+    // Anything else unrecognised is treated as not-yet-scheduled.
+    if (!CALENDAR_STATUSES.includes(statusRaw)
+        && !(statusRaw === 'pending' && includePending)
+        && !(HIDDEN_STATUSES.includes(statusRaw) && includeCancelled)) return;
+
     let status = 'ok';
     if (statusRaw === 'pending') status = 'warn';
-    else if (['cancelled','canceled','declined'].includes(statusRaw)) status = 'cancel';
+    else if (HIDDEN_STATUSES.includes(statusRaw)) status = 'cancel';
 
     items.push({
       id: a.id,
@@ -105,7 +124,10 @@ const getScheduleRange = async ({ from, to }) => {
       ownerName: client?.name || client?.fullName || (a.clientId ? `Client #${a.clientId}` : ''),
       petId: a.petId || pet?.id || null,
       petName: pet?.name || a.petName || '',
-      status
+      status,
+      statusLabel: a.status || '',
+      reasonType: a.reasonType || '',
+      statusReason: a.statusReason || ''
     });
   });
 

@@ -12,6 +12,9 @@ const listAppointmentsController = require('../controllers/appointments/list');
 const createAppointmentController = require('../controllers/appointments/create');
 const updateAppointmentPartialController = require('../controllers/appointments/update_partial');
 
+// Staff may add/edit appointments; only a veterinarian may confirm/cancel/complete.
+const appointmentWriteAccess = require('../middlewares/appointment_action_access');
+
 
 appointmentRouters.post('/add', addAppointmentController);
 appointmentRouters.put('/get', getAppointmentController);
@@ -25,7 +28,8 @@ appointmentRouters.get('/', listAppointmentsController);
 // POST /appointments
 appointmentRouters.post('/', createAppointmentController);
 // PUT /appointments/:id  (partial update: status/notes/dateTime/etc.)
-appointmentRouters.put('/:id', updateAppointmentPartialController);
+// A status change requires the veterinarian permission; other edits allow staff too.
+appointmentRouters.put('/:id', appointmentWriteAccess, updateAppointmentPartialController);
 
 
 module.exports = appointmentRouters;

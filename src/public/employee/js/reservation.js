@@ -47,8 +47,8 @@ const fmtDate = (iso) =>
 const pad2 = n => String(n).padStart(2,'0');
 
 const toCSV = (rows) => {
-  if (!rows.length) return 'id,date,time,purpose,owner,pet,status,notes';
-  const header = 'id,date,time,purpose,owner,pet,status,notes';
+  const header = 'id,date,time,purpose,owner,pet,status,payment,reason_type,reason,notes';
+  if (!rows.length) return header;
   const lines = rows.map(r => {
     const owner = byId(CLIENTS, r.ownerId)?.name || `#${r.ownerId}`;
     const pet   = byId(PETS, r.petId)?.name || `#${r.petId}`;
@@ -64,6 +64,9 @@ const toCSV = (rows) => {
       esc(owner),
       esc(pet),
       esc(r.status),
+      esc(r.paymentStatus || 'unpaid'),
+      esc(r.reasonType || ''),
+      esc(r.statusReason || ''),
       esc(r.notes)
     ].join(',');
   });
@@ -102,23 +105,49 @@ let pickedDate   = null; // Date object
 let pickedTime   = null; // "HH:MM"
 
 // ===== Render List Table =====
+// Staff may add/edit appointments but not take action on them (confirm/cancel/complete);
+// only a veterinarian can. core.js publishes the permission list from the server, which
+// enforces the same rule, so this only decides which buttons to draw.
+const canAct = () => !!(window.vetlinkCan && window.vetlinkCan('appointments.act'));
+
 const statusBadge = (s) =>
   `<span class="badge ${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
+
+// Payment is over-the-counter only; the clinic marks it paid on site.
+const paymentBadge = (r) => {
+  const paid = String(r.paymentStatus || 'unpaid').toLowerCase() === 'paid';
+  return `<span class="badge ${paid ? 'completed' : 'pending'}" title="Over the counter">${paid ? 'Paid' : 'Unpaid'}</span>`;
+};
+
+// Show the clinic's cancel/reschedule reason next to the notes so staff can see why.
+const reasonCell = (r) => {
+  const notes = r.notes ? `<div>${r.notes}</div>` : '';
+  if (!r.statusReason) return notes;
+  const label = r.reasonType === 'rescheduled' ? 'Rescheduled' : 'Cancelled';
+  return `${notes}<div class="reason-note"><b>${label}:</b> ${r.statusReason}</div>`;
+};
 
 const rowHTML = r => {
   const owner = byId(CLIENTS, r.ownerId)?.name || `#${r.ownerId}`;
   const pet   = byId(PETS, r.petId)?.name || `#${r.petId}`;
 
-  const actions =
+  const isPaid = String(r.paymentStatus || 'unpaid').toLowerCase() === 'paid';
+  const payBtn = (r.status === 'confirmed' || r.status === 'completed') && !isPaid
+    ? `<button class="btn btn--complete" data-act="markpaid" data-id="${r.id}">Mark Paid</button>`
+    : '';
+  const editBtn = `<button class="btn btn--edit" data-act="edit" data-id="${r.id}">Edit</button>`;
+
+  // Confirm / Cancel / Complete are veterinarian-only actions.
+  const actBtns = !canAct() ? '' :
     r.status === 'pending'
       ? `<button class="btn btn--confirm" data-act="confirm" data-id="${r.id}">Confirm</button>
-         <button class="btn btn--cancel"  data-act="cancel"  data-id="${r.id}">Cancel</button>
-         <button class="btn btn--edit"    data-act="edit"    data-id="${r.id}">Edit</button>`
+         <button class="btn btn--cancel"  data-act="cancel"  data-id="${r.id}">Cancel</button>`
     : r.status === 'confirmed'
       ? `<button class="btn btn--complete" data-act="complete" data-id="${r.id}">Complete</button>
-         <button class="btn btn--cancel"   data-act="cancel"   data-id="${r.id}">Cancel</button>
-         <button class="btn btn--edit"     data-act="edit"     data-id="${r.id}">Edit</button>`
-      : `<button class="btn btn--edit" data-act="edit" data-id="${r.id}">Edit</button>`;
+         <button class="btn btn--cancel"   data-act="cancel"   data-id="${r.id}">Cancel</button>`
+      : '';
+
+  const actions = `${actBtns} ${editBtn} ${payBtn}`.trim();
 
   return `
     <tr>
@@ -129,7 +158,8 @@ const rowHTML = r => {
       <td>${owner}</td>
       <td>${pet}</td>
       <td>${statusBadge(r.status)}</td>
-      <td>${r.notes || ''}</td>
+      <td>${paymentBadge(r)}</td>
+      <td>${reasonCell(r)}</td>
       <td class="actions">
         ${actions}
       </td>
@@ -159,7 +189,7 @@ const renderList = () => {
 
   tbody.innerHTML = list.length
     ? list.map(rowHTML).join('')
-    : `<tr><td colspan="9" style="padding:12px;color:#667085"><em>No appointments.</em></td></tr>`;
+    : `<tr><td colspan="10" style="padding:12px;color:#667085"><em>No appointments.</em></td></tr>`;
 };
 
 // ===== Row actions (confirm / complete / cancel / edit) =====
@@ -207,15 +237,19 @@ const normalizeReservation = (raw) => {
     ownerId: raw.ownerId || raw.clientId,
     petId: raw.petId,
     notes: raw.notes || '',
-    status: ['pending','confirmed','completed','cancelled'].includes(status) ? status : 'pending'
+    status: ['pending','confirmed','completed','cancelled'].includes(status) ? status : 'pending',
+    reasonType: raw.reasonType || '',
+    statusReason: raw.statusReason || '',
+    paymentMethod: raw.paymentMethod || 'over_the_counter',
+    paymentStatus: raw.paymentStatus || 'unpaid'
   };
 };
 
-const updateReservationStatus = async (id, newStatus) => {
+const updateReservationStatus = async (id, newStatus, extra = {}) => {
   const statusTitle = newStatus ? (newStatus.charAt(0).toUpperCase() + newStatus.slice(1)) : newStatus;
   const res = await fetchJSON(API_UPDATE(id), {
     method: 'PUT',
-    body: JSON.stringify({ status: statusTitle })
+    body: JSON.stringify({ status: statusTitle, ...extra })
   });
 
   if (!res.ok || !res.body || res.body.success === false) {
@@ -227,12 +261,96 @@ const updateReservationStatus = async (id, newStatus) => {
   if (updated) {
     RES = RES.map(r => String(r.id) === String(id) ? normalizeReservation(updated) : r);
   } else {
-    RES = RES.map(r => String(r.id) === String(id) ? { ...r, status: newStatus } : r);
+    RES = RES.map(r => String(r.id) === String(id)
+      ? { ...r, ...(newStatus ? { status: newStatus } : {}), ...extra }
+      : r);
   }
 
   renderList();
   renderMiniCal();
+  return true;
 };
+
+// ===== Reason modal (mandatory when cancelling or rescheduling) =====
+const reasonModal      = document.getElementById('reasonModal');
+const reasonApptId     = document.getElementById('reasonApptId');
+const reasonAction     = document.getElementById('reasonAction');
+const reasonIntro      = document.getElementById('reasonIntro');
+const reasonTypeInput  = document.getElementById('reasonTypeInput');
+const reasonPreset     = document.getElementById('reasonPresetInput');
+const reasonTextInput  = document.getElementById('reasonTextInput');
+const reasonConfirmBtn = document.getElementById('reasonConfirmBtn');
+
+let pendingReschedule = null; // { id, date, time } while awaiting a reschedule reason
+
+const openReasonModal = ({ id, action, intro, type }) => {
+  if (!reasonModal) return;
+  reasonApptId.value = id || '';
+  reasonAction.value = action || 'cancel';
+  reasonIntro.textContent = intro || '';
+  reasonTypeInput.value = type || (action === 'reschedule' ? 'rescheduled' : 'cancelled');
+  reasonPreset.value = '';
+  reasonTextInput.value = '';
+  reasonModal.setAttribute('aria-hidden', 'false');
+  reasonModal.classList.add('show');
+  reasonTextInput.focus();
+};
+
+const closeReasonModal = () => {
+  if (!reasonModal) return;
+  reasonModal.setAttribute('aria-hidden', 'true');
+  reasonModal.classList.remove('show');
+  pendingReschedule = null;
+};
+
+reasonPreset?.addEventListener('change', () => {
+  const v = reasonPreset.value;
+  if (v && v !== '__custom') reasonTextInput.value = v;
+  if (v === '__custom') { reasonTextInput.value = ''; reasonTextInput.focus(); }
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close-reason]')) closeReasonModal();
+});
+
+reasonConfirmBtn?.addEventListener('click', async () => {
+  const reason = (reasonTextInput.value || '').trim();
+  if (!reason) {
+    alert('Please provide a reason. The client is notified with it.');
+    reasonTextInput.focus();
+    return;
+  }
+
+  const id = reasonApptId.value;
+  const action = reasonAction.value;
+  const reasonType = reasonTypeInput.value || 'cancelled';
+
+  reasonConfirmBtn.disabled = true;
+  try {
+    if (action === 'cancel') {
+      await updateReservationStatus(id, 'cancelled', { reasonType, statusReason: reason });
+    } else if (action === 'reschedule' && pendingReschedule) {
+      const { date, time } = pendingReschedule;
+      const res = await fetchJSON(API_UPDATE(id), {
+        method: 'PUT',
+        body: JSON.stringify({ date, time, reasonType, statusReason: reason })
+      });
+      if (!res.ok || res.body?.success === false) {
+        alert(res.body?.message || 'Failed to reschedule appointment.');
+        return;
+      }
+      const updated = res.body.appointment || res.body.reservation || null;
+      if (updated) {
+        RES = RES.map(r => String(r.id) === String(id) ? normalizeReservation(updated) : r);
+      }
+      renderList();
+      renderMiniCal();
+    }
+    closeReasonModal();
+  } finally {
+    reasonConfirmBtn.disabled = false;
+  }
+});
 
 document.getElementById('resTable').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-act]');
@@ -242,8 +360,20 @@ document.getElementById('resTable').addEventListener('click', (e) => {
 
   if (act === 'confirm')  return updateReservationStatus(id, 'confirmed');
   if (act === 'complete') return updateReservationStatus(id, 'completed');
-  if (act === 'cancel')   return updateReservationStatus(id, 'cancelled');
+  if (act === 'markpaid') return updateReservationStatus(id, undefined, { paymentStatus: 'paid' });
   if (act === 'edit')     return openEdit(id);
+
+  // Cancelling always asks for a reason, which is then sent to the client.
+  if (act === 'cancel') {
+    const r = RES.find(x => String(x.id) === String(id));
+    const pet = r ? (byId(PETS, r.petId)?.name || `#${r.petId}`) : '';
+    return openReasonModal({
+      id,
+      action: 'cancel',
+      type: 'cancelled',
+      intro: `Cancelling appointment ${id}${pet ? ` for ${pet}` : ''}. The client will be notified with the reason below.`
+    });
+  }
 });
 
 // ===== Filters, Search, Export =====
@@ -479,6 +609,34 @@ form.addEventListener('submit', async (e) => {
   } else {
     // Update
     const id = fId.value;
+
+    // If the date/time changed, this is a reschedule — the clinic must give a reason,
+    // which is then included in the notification sent to the client.
+    const before = RES.find(r => String(r.id) === String(id));
+    const isReschedule = !!before &&
+      (String(before.date) !== String(payload.date) || String(before.time) !== String(payload.time));
+
+    if (isReschedule) {
+      // Save the other edited fields first, then collect the reason for the date/time move.
+      const { date, time, ...rest } = payload;
+      const pre = await fetchJSON(API_UPDATE(id), { method: 'PUT', body: JSON.stringify(rest) });
+      if (!pre.ok || pre.body?.success === false) {
+        alert(pre.body?.message || 'Failed to update appointment.');
+        return;
+      }
+
+      pendingReschedule = { id, date, time };
+      const petName = byId(PETS, payload.petId)?.name || '';
+      closeModal();
+      openReasonModal({
+        id,
+        action: 'reschedule',
+        type: 'rescheduled',
+        intro: `Rescheduling appointment ${id}${petName ? ` for ${petName}` : ''} to ${fmtDate(date)} at ${time}. The client will be notified with the reason below.`
+      });
+      return;
+    }
+
     res = await fetchJSON(API_UPDATE(id), {
       method:'PUT',
       body: JSON.stringify(payload)
@@ -535,6 +693,12 @@ const hydrateFromAPI = async () => {
     RES = items.map(normalizeReservation);
   }
 };
+
+// core.js resolves the employee's role asynchronously; re-render once it lands so the
+// veterinarian-only action buttons are drawn (or withheld) correctly.
+document.addEventListener('vetlink:role-ready', () => {
+  if (RES.length) renderList();
+});
 
 // ===== Init =====
 (async function bootstrap(){

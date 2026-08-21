@@ -80,3 +80,6 @@
 
 /* Make expanded section animate height properly */
 .expand-row.open .expand-box{max-height:800px}
+
+/* Required-field marker used by the 1NF registration/edit forms */
+.field .req, label .req { color: #C0563B; font-weight: 700; }

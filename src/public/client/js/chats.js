@@ -93,19 +93,32 @@
   };
 
   // ---------- Conversation list ----------
+  /**
+   * A chat partner may be another pet owner or clinic staff — the clinic can message
+   * customers directly now. Staff threads show the person's role.
+   */
+  const partnerName = (c) => {
+    const o = c?.otherClient || {};
+    const base = o.name || (c?.isClinic ? 'Clinic staff' : 'Pet owner');
+    return (c?.isClinic && o.position) ? `${base} · ${o.position}` : base;
+  };
+
   const renderList = () => {
     if (!CONVOS.length) {
       chatList.innerHTML = `<p class="muted" style="padding:1rem">No chats yet. Start one from the <a href="/client/breeding">Breeding</a> page.</p>`;
       return;
     }
     chatList.innerHTML = CONVOS.map(c => `
-      <div class="chat-item ${ACTIVE && ACTIVE.id === c.id ? 'active' : ''}" data-id="${esc(c.id)}">
-        <span class="avatar">${c.otherClient?.avatarUrl
-          ? `<img src="${esc(c.otherClient.avatarUrl)}" alt=""/>`
-          : esc((c.otherClient?.name || 'P').charAt(0).toUpperCase())}</span>
+      <div class="chat-item ${ACTIVE && ACTIVE.id === c.id ? 'active' : ''} ${c.isClinic ? 'clinic' : ''}" data-id="${esc(c.id)}">
+        <span class="avatar">${c.isClinic
+          ? '🏥'
+          : c.otherClient?.avatarUrl
+            ? `<img src="${esc(c.otherClient.avatarUrl)}" alt=""/>`
+            : esc((c.otherClient?.name || 'P').charAt(0).toUpperCase())}</span>
         <div class="meta">
-          <div class="name">${esc(c.otherClient?.name || 'Pet owner')}</div>
-          <div class="preview">${esc(c.lastMessage || 'Say hi! 👋')}</div>
+          <div class="name">${esc(partnerName(c))}</div>
+          ${c.isClinic ? '<div class="clinic-tag">Clinic</div>' : ''}
+          <div class="preview">${esc(c.lastMessage || (c.isClinic ? 'Message from the clinic' : 'Say hi! 👋'))}</div>
         </div>
         <div class="right">
           <span class="when">${esc(timeOf(c.lastMessageAt))}</span>
@@ -175,11 +188,17 @@
     // Header
     threadHead.style.display = '';
     threadComposer.style.display = '';
-    threadAvatar.innerHTML = convo.otherClient?.avatarUrl
-      ? `<img src="${esc(convo.otherClient.avatarUrl)}" alt=""/>`
-      : esc((convo.otherClient?.name || 'P').charAt(0).toUpperCase());
-    threadName.textContent = convo.otherClient?.name || 'Pet owner';
-    threadSub.textContent = '';
+    threadAvatar.innerHTML = convo.isClinic
+      ? '🏥'
+      : convo.otherClient?.avatarUrl
+        ? `<img src="${esc(convo.otherClient.avatarUrl)}" alt=""/>`
+        : esc((convo.otherClient?.name || 'P').charAt(0).toUpperCase());
+    threadName.textContent = partnerName(convo);
+    // Make it obvious when the owner is talking to the clinic rather than another owner.
+    threadSub.textContent = convo.isClinic ? 'Doc Ben\'z Veterinary Clinic' : '';
+
+    // The "propose breeding" action only applies to owner-to-owner threads.
+    if (proposeFromChat) proposeFromChat.style.display = convo.isClinic ? 'none' : '';
 
     threadBody.innerHTML = '';
     threadEmpty.style.display = 'none';
@@ -281,6 +300,11 @@
 
   proposeFromChat.addEventListener('click', async () => {
     if (!ACTIVE) return;
+    // Breeding proposals are between pet owners — there is nothing to propose to the clinic.
+    if (ACTIVE.isClinic) {
+      showToast('Breeding proposals are made to other pet owners, not to the clinic.');
+      return;
+    }
     if (!MY_PETS.length) {
       const { ok, body } = await fetchJSON('/client/pets/my');
       if (ok && body.success !== false) MY_PETS = Array.isArray(body.pets) ? body.pets : [];

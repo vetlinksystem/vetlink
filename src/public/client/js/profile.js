@@ -33,7 +33,10 @@ const form          = document.getElementById('profileForm');
 const nameInput     = form ? form.querySelector('[name="full_name"]') : null;
 const emailInput    = form ? form.querySelector('[name="email"]')    : null;
 const numberInput   = form ? form.querySelector('[name="number"]')   : null;
-const addressInput  = form ? form.querySelector('[name="address"]')  : null;
+const streetInput   = form ? form.querySelector('[name="street"]')   : null;
+const barangayInput = form ? form.querySelector('[name="barangay"]') : null;
+const cityInput     = form ? form.querySelector('[name="city"]')     : null;
+const provinceInput = form ? form.querySelector('[name="province"]') : null;
 const passwordInput = form ? form.querySelector('[name="password"]') : null;
 
 const statusBox     = document.getElementById('profileStatus');
@@ -56,14 +59,52 @@ const setStatus = (msg, type = 'info') => {
   else statusBox.classList.remove('hidden');
 };
 
+// Mirrors splitLegacyAddress() in utilities/personUtils.js so a client saved before
+// the address was normalized still populates the four fields for editing.
+const splitLegacyAddress = (address) => {
+  const parts = String(address || '').split(',').map(p => p.trim()).filter(Boolean);
+  const out = { street: '', barangay: '', city: '', province: '' };
+  if (!parts.length) return out;
+  if (parts.length >= 4) {
+    out.street = parts.slice(0, parts.length - 3).join(', ');
+    out.barangay = parts[parts.length - 3];
+    out.city = parts[parts.length - 2];
+    out.province = parts[parts.length - 1];
+    return out;
+  }
+  if (parts.length === 1) { out.city = parts[0]; return out; }
+  ['street', 'barangay', 'city', 'province'].slice(4 - parts.length)
+    .forEach((k, i) => { out[k] = parts[i]; });
+  return out;
+};
+
+const readAddressParts = (client) => {
+  const hasSplit = ['street', 'barangay', 'city', 'province']
+    .some(k => String(client[k] || '').trim());
+  if (hasSplit) {
+    return {
+      street: client.street || '',
+      barangay: client.barangay || '',
+      city: client.city || '',
+      province: client.province || ''
+    };
+  }
+  return splitLegacyAddress(client.address);
+};
+
 const fillForm = (client) => {
   if (!form || !client) return;
   const fullName = client.name || client.full_name || '';
   if (nameInput)     nameInput.value     = fullName;
   if (emailInput)    emailInput.value    = client.email   || '';
   if (numberInput)   numberInput.value   = client.number  || '';
-  if (addressInput)  addressInput.value  = client.address || '';
   if (passwordInput) passwordInput.value = '';
+
+  const addr = readAddressParts(client);
+  if (streetInput)   streetInput.value   = addr.street;
+  if (barangayInput) barangayInput.value = addr.barangay;
+  if (cityInput)     cityInput.value     = addr.city;
+  if (provinceInput) provinceInput.value = addr.province;
 
   if (accountNameEl) {
     accountNameEl.textContent = fullName || client.email || 'Client';
@@ -103,7 +144,10 @@ if (form) {
       name:    nameInput    ? nameInput.value.trim()    : undefined,
       email:   emailInput   ? emailInput.value.trim()   : undefined,
       number:  numberInput  ? numberInput.value.trim()  : undefined,
-      address: addressInput ? addressInput.value.trim() : undefined
+      street:   streetInput   ? streetInput.value.trim()   : undefined,
+      barangay: barangayInput ? barangayInput.value.trim() : undefined,
+      city:     cityInput     ? cityInput.value.trim()     : undefined,
+      province: provinceInput ? provinceInput.value.trim() : undefined
     };
 
     if (passwordInput && passwordInput.value.trim() !== '') {

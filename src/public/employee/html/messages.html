@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink — Messages</title>
+  <link rel="icon" type="image/png" href="/logo.png"/>
+  <link rel="stylesheet" href="/employee/css/dashboard.css"/>
+  <link rel="stylesheet" href="/employee/css/core.css"/>
+  <link rel="stylesheet" href="/employee/css/messages.css"/>
+</head>
+<body>
+<div id="app" class="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <img src="/logo.png" class="logo" alt="VetLink"/>
+      <span class="brand-name">VetLink</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytics</span></a>
+        <a class="nav-item" href="/employee/reports"><span class="icon">📈</span><span>Reports</span></a>
+      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered Customer</span></a>
+      <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
+      <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+      <a class="nav-item" href="/employee/pet-records"><span class="icon">📋</span><span>Pet Records</span></a>
+      <a class="nav-item" href="/employee/records"><span class="icon">🩺</span><span>Medical Records</span></a>
+      <a class="nav-item active" href="/employee/messages"><span class="icon">💬</span><span>Messages</span><span id="navUnread" class="nav-badge" hidden></span></a>
+      <a class="nav-item" href="/employee/breeding"><span class="icon">💞</span><span>Breeding</span></a>
+      <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
+      <a class="nav-item" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
+      <a class="nav-item" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
+      <div class="nav-spacer"></div>
+      <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
+      <div class="breadcrumbs">Home <span class="sep">/</span> <span>Messages</span></div>
+      <div class="account">
+        <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
+          <span id="accountName">User</span><span class="avatar" aria-hidden="true">🛡️</span>
+        </button>
+        <div id="accountMenu" class="menu" role="menu">
+          <a href="/employee/profile" role="menuitem">Settings / Profile</a>
+          <a href="#" id="menuLogout" role="menuitem">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="view active">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Messages</h1>
+          <p class="page-sub">Message pet owners about results, follow-ups and appointments.</p>
+        </div>
+        <div class="tools">
+          <button id="msNewBtn" class="btn-primary">＋ New message</button>
+        </div>
+      </div>
+
+      <div class="ms-layout">
+        <!-- Conversation list -->
+        <aside class="card ms-list">
+          <div class="ms-list-head">
+            <div class="searchbar" role="search">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+              <input id="msSearch" class="input search-input" placeholder="Search owner or message…"/>
+            </div>
+          </div>
+          <div id="msConversations" class="ms-convos">
+            <p class="ms-muted">Loading…</p>
+          </div>
+        </aside>
+
+        <!-- Thread -->
+        <section class="card ms-thread">
+          <header class="ms-thread-head" id="msThreadHead" hidden>
+            <div>
+              <strong id="msThreadName">—</strong>
+              <div id="msThreadMeta" class="ms-thread-meta"></div>
+            </div>
+            <a id="msThreadOwnerLink" class="btn-ghost" href="#">View owner</a>
+          </header>
+
+          <div id="msMessages" class="ms-messages">
+            <p class="ms-empty">Select a conversation, or start a new message to a pet owner.</p>
+          </div>
+
+          <form id="msForm" class="ms-composer" hidden>
+            <textarea id="msText" rows="2" placeholder="Write a message to the owner…"></textarea>
+            <button type="submit" class="btn-primary" id="msSend">Send</button>
+          </form>
+        </section>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ===== New message modal ===== -->
+<div class="modal" id="msNewModal" aria-hidden="true" role="dialog" aria-labelledby="msNewTitle">
+  <div class="modal-backdrop" data-ms-close></div>
+  <div class="modal-card modal-card--sm">
+    <div class="modal-head">
+      <h2 id="msNewTitle">New message</h2>
+      <button class="modal-close" data-ms-close aria-label="Close">✕</button>
+    </div>
+
+    <form id="msNewForm" class="modal-body">
+      <label class="ms-field">
+        <span>Pet owner <b class="req">*</b></span>
+        <select id="msNewClient" class="input" required></select>
+      </label>
+
+      <label class="ms-field">
+        <span>About which pet <i>(optional)</i></span>
+        <select id="msNewPet" class="input">
+          <option value="">Not about a specific pet</option>
+        </select>
+      </label>
+
+      <label class="ms-field">
+        <span>Message <b class="req">*</b></span>
+        <textarea id="msNewText" class="input" rows="4"
+                  placeholder="e.g. Buddy's lab results are ready — please call the clinic to discuss."></textarea>
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" data-ms-close>Cancel</button>
+        <button type="submit" class="btn-primary" id="msNewSend">Send message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="msToast"></div>
+
+<script src="/employee/js/core.js"></script>
+<script src="/employee/js/messages.js"></script>
+</body>
+</html>

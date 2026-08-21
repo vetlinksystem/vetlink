@@ -49,16 +49,68 @@
     const emp = body?.employee || body?.user || body || {};
     // Expose current employee for role-based UI (e.g., breeding permissions)
     window.VETLINK_EMPLOYEE = emp;
-    const fullName = emp.full_name || emp.name || emp.email;
-    if (accountName) accountName.textContent = fullName || 'User';
 
-    // Hide Manage Employees when not admin
-    const isAdmin = !!emp.isAdmin;
-    const manageEmployeesLink = document.querySelector('.nav a.nav-item[href="/employee/employees"]');
-    if (manageEmployeesLink && !isAdmin) {
-      manageEmployeesLink.style.display = 'none';
+    // Role + permission list come from the server (utilities/roles.js) so the UI and
+    // the API agree on what this employee may do. The server still enforces all of it —
+    // hiding a button is a convenience, never the security boundary.
+    window.VETLINK_ROLE = body?.role || null;
+    window.VETLINK_ROLE_LABEL = body?.roleLabel || '';
+    window.VETLINK_PERMISSIONS = Array.isArray(body?.permissions) ? body.permissions : [];
+    window.vetlinkCan = (permission) => window.VETLINK_PERMISSIONS.includes(permission);
+
+    const fullName = emp.full_name || emp.name || emp.email;
+    if (accountName) {
+      accountName.textContent = fullName || 'User';
+      if (window.VETLINK_ROLE_LABEL) accountName.title = window.VETLINK_ROLE_LABEL;
     }
+
+    // Show the role next to the account name where the page has a slot for it.
+    const roleBadge = document.getElementById('accountRole');
+    if (roleBadge && window.VETLINK_ROLE_LABEL) roleBadge.textContent = window.VETLINK_ROLE_LABEL;
+
+    applyPermissionsToDom();
+
+    // Let page scripts that loaded first react once the role is known.
+    document.dispatchEvent(new CustomEvent('vetlink:role-ready', {
+      detail: { role: window.VETLINK_ROLE, permissions: window.VETLINK_PERMISSIONS }
+    }));
   })();
+
+  /**
+   * Declarative permission gating for markup:
+   *   data-requires-permission="employees.manage"   → removed unless allowed
+   *   data-disable-without-permission="breeding.decide" → disabled + explained
+   */
+  function applyPermissionsToDom(root = document) {
+    const can = (p) => window.VETLINK_PERMISSIONS.includes(p);
+
+    root.querySelectorAll('[data-requires-permission]').forEach(el => {
+      const needed = el.getAttribute('data-requires-permission');
+      if (!can(needed)) el.remove();
+    });
+
+    root.querySelectorAll('[data-disable-without-permission]').forEach(el => {
+      const needed = el.getAttribute('data-disable-without-permission');
+      if (can(needed)) return;
+      el.setAttribute('disabled', 'disabled');
+      el.classList.add('is-forbidden');
+      el.title = `Only a ${needed === 'breeding.decide' ? 'veterinarian' : 'permitted role'} can do this.`;
+    });
+
+    // Nav items are gated by the permission the destination page needs.
+    const NAV_PERMISSIONS = {
+      '/employee/employees': 'employees.manage',
+      '/employee/users': 'customers.view',
+      '/employee/records': 'records.view'
+    };
+    Object.entries(NAV_PERMISSIONS).forEach(([href, permission]) => {
+      const link = document.querySelector(`.nav a.nav-item[href="${href}"]`);
+      if (link && !can(permission)) link.style.display = 'none';
+    });
+  }
+
+  // Page scripts that render rows after load can re-run the gating.
+  window.vetlinkApplyPermissions = applyPermissionsToDom;
 
   // Sidebar hide/unhide
   sidebarToggle?.addEventListener('click', () => sidebar.classList.toggle('show'));

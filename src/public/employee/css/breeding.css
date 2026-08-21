@@ -86,3 +86,165 @@
   box-shadow:0 8px 24px rgba(15,23,42,.18);
 }
 .bx-toast.show{display:block}
+
+/* View-only notice for roles that can see breeding matches but not decide them
+   (admin and staff) — the veterinarian is the final decision-maker. */
+.bx-viewonly{
+  display:inline-block;
+  font-size:12px;
+  line-height:1.4;
+  color:#8A6A22;
+  background:#FBF3DF;
+  border-left:3px solid #D8A828;
+  border-radius:6px;
+  padding:6px 10px;
+}
+
+/* ===========================================================
+   VETERINARY RISK ASSESSMENT
+   The crossbreeding flow requires the vet to see the compatibility
+   score, the estimated risk and the reasons before deciding.
+   =========================================================== */
+
+.bx-report{
+  margin:.75rem 0;
+  padding:.85rem 1rem;
+  border:1px solid #E9DFCD;
+  border-radius:14px;
+  background:#FBF7F0;
+}
+
+.bx-report-head{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  flex-wrap:wrap;
+  margin-bottom:.5rem;
+}
+
+/* Risk level chip: Low / Moderate / High */
+.bx-risk{
+  display:inline-block;
+  padding:.25rem .6rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.bx-risk.low     { background:#E9F4EE; color:#2F6B4F; }
+.bx-risk.moderate{ background:#FBF3DF; color:#8A6A22; }
+.bx-risk.high    { background:#FDF3EE; color:#A2422B; }
+
+.bx-score{
+  font-size:1.05rem;
+  font-weight:700;
+  color:#8C6E44;
+}
+.bx-score small{ font-size:.7rem; font-weight:500; color:#9A8F7E; }
+
+.bx-breedstat{
+  margin-left:auto;
+  font-size:.72rem;
+  font-weight:600;
+  padding:.22rem .55rem;
+  border-radius:8px;
+  background:#F0E7D8;
+  color:#8C6E44;
+}
+.bx-breedstat.veterinary_review{ background:#FBF3DF; color:#8A6A22; }
+.bx-breedstat.not_allowed      { background:#FDF3EE; color:#A2422B; }
+
+.bx-reco{
+  font-size:.82rem;
+  line-height:1.5;
+  color:#4A4238;
+  margin-bottom:.7rem;
+}
+
+/* Per-criterion score bars */
+.bx-crits{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+  gap:.6rem .9rem;
+  margin-bottom:.7rem;
+}
+.bx-crit-head{
+  display:flex;
+  justify-content:space-between;
+  font-size:.75rem;
+  font-weight:600;
+  color:#4A4238;
+  margin-bottom:.2rem;
+}
+.bx-crit-pts{ color:#8C6E44; }
+.bx-crit-bar{
+  height:5px;
+  border-radius:999px;
+  background:#EDE3D2;
+  overflow:hidden;
+}
+.bx-crit-bar i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#C8A06A,#8C6E44);
+}
+.bx-crit-detail{
+  margin-top:.22rem;
+  font-size:.7rem;
+  line-height:1.4;
+  color:#8A8172;
+}
+
+/* Flagged risk factors */
+.bx-flags-wrap > strong{
+  display:block;
+  font-size:.75rem;
+  color:#4A4238;
+  margin-bottom:.25rem;
+}
+.bx-flags{
+  margin:0;
+  padding-left:1.1rem;
+  font-size:.76rem;
+  line-height:1.5;
+  color:#8C4A2F;
+}
+.bx-flags li{ margin-bottom:.15rem; }
+.bx-noflags{ font-size:.76rem; color:#2F6B4F; }
+
+.bx-mustreview{
+  margin-top:.6rem;
+  padding:.5rem .7rem;
+  border-radius:8px;
+  border-left:3px solid #D8A828;
+  background:#FBF3DF;
+  font-size:.76rem;
+  line-height:1.45;
+  color:#8A6A22;
+}
+.bx-assessnote{ margin-top:.4rem; font-size:.7rem; }
+
+/* "Approve with conditions" — the middle veterinary outcome */
+.bx-btn.conditions{
+  background:#D8A828;
+  border-color:#D8A828;
+  color:#3A2E12;
+}
+.bx-btn.conditions:hover{ background:#C79A20; }
+
+.bx-cond-note{ color:#8A6A22; font-size:.68rem; }
+
+/* Post-approval lifecycle actions: final exam → breeding record → monitoring → offspring */
+.bx-btn.clearance{ background:#4E7FA8; border-color:#4E7FA8; color:#fff; }
+.bx-btn.clearance:hover{ background:#446F92; }
+.bx-btn.record{ background:#8C6E44; border-color:#8C6E44; color:#fff; }
+.bx-btn.record:hover{ background:#755936; }
+.bx-btn.monitor{ background:#6E8F72; border-color:#6E8F72; color:#fff; }
+.bx-btn.monitor:hover{ background:#5D7B61; }
+.bx-btn.offspring{ background:#B07CA8; border-color:#B07CA8; color:#fff; }
+.bx-btn.offspring:hover{ background:#996A92; }
+
+/* "Cleared to breed" — passed the final health examination */
+.bx-status.cleared{ background:#E3ECF7; color:#2F5C8C; }

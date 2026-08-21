@@ -61,6 +61,21 @@
 
   const sexIcon = (sex) => String(sex).toLowerCase() === 'female' ? '♀' : '♂';
 
+  const cap = (s) => {
+    const v = String(s || '');
+    return v ? v.charAt(0).toUpperCase() + v.slice(1) : '';
+  };
+
+  /** Age is stored in months now; render it readably. */
+  const fmtAgeMonths = (months) => {
+    const m = Number(months);
+    if (!Number.isFinite(m)) return '';
+    const y = Math.floor(m / 12), mo = m % 12;
+    if (y && mo) return `${y} yr${y > 1 ? 's' : ''} ${mo} mo${mo > 1 ? 's' : ''}`;
+    if (y) return `${y} yr${y > 1 ? 's' : ''}`;
+    return `${mo} mo${mo === 1 ? '' : 's'}`;
+  };
+
   // ---------- Tabs ----------
   const showTab = (tab) => {
     const match = tab === 'match';
@@ -108,6 +123,41 @@
   };
 
   // ---------- Candidates ----------
+  // ===== Compatibility display =====
+  // Suggested matches are ranked by the server and each carries a compatibility score,
+  // an estimated risk (Low / Moderate / High) and a veterinary recommendation.
+  // These are guidance only — every match still needs clinic approval.
+
+  const scoreRing = (c) => {
+    if (!c) return '';
+    const risk = String(c.risk || '').toLowerCase();
+    return `
+      <div class="cand-score ${esc(risk)}" title="Compatibility score">
+        <strong>${esc(c.score)}</strong><small>%</small>
+      </div>`;
+  };
+
+  const riskLine = (c) => {
+    if (!c) return '';
+    const risk = String(c.risk || '').toLowerCase();
+    const flagCount = (c.flags || []).length;
+    return `
+      <div class="cand-risk">
+        <span class="risk-badge ${esc(risk)}">${esc(c.risk)} risk</span>
+        ${c.breedStatus === 'veterinary_review'
+          ? '<span class="risk-note">Needs vet review</span>'
+          : c.breedStatus === 'compatible'
+            ? '<span class="risk-note ok">Compatible breeds</span>'
+            : ''}
+      </div>
+      ${flagCount
+        ? `<details class="cand-flags">
+             <summary>${flagCount} point${flagCount === 1 ? '' : 's'} for the vet to check</summary>
+             <ul>${c.flags.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+           </details>`
+        : ''}`;
+  };
+
   const renderCandidates = () => {
     if (!SELECTED_PET) {
       candidatesHint.style.display = '';
@@ -136,17 +186,28 @@
           <button class="btn js-propose" data-pet="${esc(p.id)}">💞 Propose</button>
           <button class="btn secondary js-chat" data-pet="${esc(p.id)}">💬 Chat</button>`;
       }
+      const comp = c.compatibility;
+      const ageText = typeof p.ageMonths === 'number'
+        ? fmtAgeMonths(p.ageMonths)
+        : (typeof p.age === 'number' ? `${p.age} yr(s)` : '');
+
       return `
         <article class="cand-card">
-          <div class="cand-photo">${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt=""/>` : '🐾'}</div>
+          <div class="cand-photo">
+            ${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt=""/>` : '🐾'}
+            ${scoreRing(comp)}
+          </div>
           <div class="cand-body">
             <h3 class="cand-name">${esc(p.name)} ${sexIcon(p.sex)}</h3>
             <div class="cand-sub">${esc(p.breed || p.species || '')}</div>
             <div class="cand-meta">
               <span class="chip">${esc(p.species || 'Pet')}</span>
               <span class="chip">${esc(p.sex || '')}</span>
-              ${typeof p.age === 'number' ? `<span class="chip">${esc(p.age)} yr(s)</span>` : ''}
+              ${ageText ? `<span class="chip">${esc(ageText)}</span>` : ''}
+              ${p.size ? `<span class="chip">${esc(cap(p.size))}</span>` : ''}
+              ${c.matchesPreference ? '<span class="chip pref">★ Matches your preference</span>' : ''}
             </div>
+            ${riskLine(comp)}
             <div class="cand-owner">👤 ${esc(c.owner?.name || 'Pet owner')}</div>
           </div>
           <div class="cand-actions">${actionHtml}</div>
@@ -173,6 +234,18 @@
       return;
     }
     CANDIDATES = Array.isArray(body.candidates) ? body.candidates : [];
+
+    // The server warns when the selected pet is past its ideal breeding age — the
+    // pairing is still allowed, but the clinic will want to review it.
+    const ageNote = body.myPetBreedingAge;
+    if (ageNote && ageNote.message) {
+      candidatesGrid.innerHTML = `<div class="breeding-age-warning">⚠️ ${esc(ageNote.message)}</div>`;
+      const warn = candidatesGrid.innerHTML;
+      renderCandidates();
+      candidatesGrid.insertAdjacentHTML('afterbegin', warn);
+      return;
+    }
+
     renderCandidates();
   };
 

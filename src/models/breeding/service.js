@@ -46,9 +46,18 @@ const isBreedingAllowed = (pet) => {
     return false;
 };
 
-// Statuses that make a pair/pet "taken"
-const ACTIVE_STATUSES = ['accepted', 'approved'];
-const OPEN_STATUSES = ['pending', 'accepted', 'approved'];
+// Breeding lifecycle:
+//   pending   → proposed, waiting on the other owner
+//   accepted  → both owners agreed, waiting on the clinic
+//   approved  → clinic approved (possibly with conditions)
+//   cleared   → final pre-breeding health examination passed; breeding may proceed
+//   completed → breeding recorded and closed out; both pets available again
+//   rejected / cancelled → dead
+//
+// "cleared" sits between approved and completed because the crossbreeding document
+// requires a final health examination of both pets immediately before breeding.
+const ACTIVE_STATUSES = ['accepted', 'approved', 'cleared'];
+const OPEN_STATUSES = ['pending', 'accepted', 'approved', 'cleared'];
 
 const getAllBreedingRecords = async () => {
     const rows = await firestoreManager.getAllData('breeding', {});

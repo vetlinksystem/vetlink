@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink — Reports</title>
+  <link rel="icon" type="image/png" href="/logo.png"/>
+  <!-- dashboard.css first (layout + beige tokens), then core.css (shared buttons) -->
+  <link rel="stylesheet" href="employee/css/dashboard.css"/>
+  <link rel="stylesheet" href="employee/css/core.css"/>
+  <link rel="stylesheet" href="employee/css/reports.css"/>
+</head>
+<body>
+  <div id="app" class="layout">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="brand">
+        <img src="/logo.png" class="logo" alt="VetLink"/>
+        <span class="brand-name">VetLink</span>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytics</span></a>
+        <a class="nav-item active" href="/employee/reports"><span class="icon">📈</span><span>Reports</span></a>
+        <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered Customer</span></a>
+        <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
+        <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+        <a class="nav-item" href="/employee/pet-records"><span class="icon">📋</span><span>Pet Records</span></a>
+        <a class="nav-item" href="/employee/records"><span class="icon">🩺</span><span>Medical Records</span></a>
+        <a class="nav-item" href="/employee/messages"><span class="icon">💬</span><span>Messages</span></a>
+        <a class="nav-item" href="/employee/breeding"><span class="icon">💞</span><span>Breeding</span></a>
+        <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
+        <a class="nav-item" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
+        <a class="nav-item" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
+
+        <div class="nav-spacer"></div>
+        <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <header class="topbar">
+        <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
+        <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Reports</span></div>
+        <div class="account">
+          <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
+            <span id="accountName">User</span>
+            <span class="avatar" aria-hidden="true">🛡️</span>
+          </button>
+          <div id="accountMenu" class="menu" role="menu">
+            <a href="/employee/profile" role="menuitem">Settings / Profile</a>
+            <a href="#" id="menuLogout" role="menuitem">Logout</a>
+          </div>
+        </div>
+      </header>
+
+      <section class="view active">
+        <div class="rp-head">
+          <div>
+            <h1 class="page-title">Clinic Report</h1>
+            <p class="rp-sub" id="rpSubtitle">Generating…</p>
+          </div>
+          <div class="rp-actions no-print">
+            <button class="btn btn-ghost" id="rpExport">⬇ Export CSV</button>
+            <button class="btn btn-primary" id="rpPrint">🖨 Print</button>
+          </div>
+        </div>
+
+        <!-- Period picker -->
+        <div class="card rp-controls no-print">
+          <div class="rp-presets" id="rpPresets" role="group" aria-label="Report period">
+            <button class="chip-btn active" data-preset="this-month">This month</button>
+            <button class="chip-btn" data-preset="last-month">Last month</button>
+            <button class="chip-btn" data-preset="this-quarter">This quarter</button>
+            <button class="chip-btn" data-preset="this-year">This year</button>
+            <button class="chip-btn" data-preset="last-12-months">Last 12 months</button>
+            <button class="chip-btn" data-preset="all-time">All time</button>
+          </div>
+          <div class="rp-custom">
+            <label for="rpFrom">From</label>
+            <input type="date" id="rpFrom"/>
+            <label for="rpTo">To</label>
+            <input type="date" id="rpTo"/>
+            <button class="btn btn-primary btn-xs" id="rpApply">Generate</button>
+          </div>
+        </div>
+
+        <div id="rpStatus" class="rp-status hidden" role="status" aria-live="polite"></div>
+
+        <!-- Everything below is rendered by reports.js -->
+        <div id="rpBody" class="rp-body"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="/employee/js/core.js"></script>
+  <script src="/employee/js/reports.js"></script>
+</body>
+</html>

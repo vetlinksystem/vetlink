@@ -102,3 +102,31 @@
   text-underline-offset: 3px;
   color: var(--brand-ink);   /* subtle warm highlight on hover */
 }
+/* ===== Cancel / reschedule reason (added) ===== */
+.modal-card--sm{ width:min(520px, 94vw); }
+.reason-intro{ margin:0 0 12px; font-size:14px; color:var(--muted, #667085); line-height:1.5; }
+.reason-note{
+  margin-top:4px;
+  font-size:12px;
+  line-height:1.45;
+  color:#8C4A2F;
+  background:#FDF3EE;
+  border-left:3px solid #C0563B;
+  border-radius:4px;
+  padding:4px 8px;
+}
+.reason-note b{ color:#C0563B; }
+#reasonModal .modal-body label{ display:block; margin-bottom:12px; }
+#reasonModal .modal-body label > span{ display:block; margin-bottom:4px; font-size:13px; font-weight:600; }
+#reasonModal .modal-body select,
+#reasonModal .modal-body textarea{
+  width:100%;
+  padding:9px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  font:inherit;
+  background:#fff;
+}
+#reasonModal .modal-actions{ padding:12px 16px; }
+.hint{ display:block; margin-top:4px; font-size:12px; color:var(--muted, #667085); }
+.field .req, label .req{ color:#C0563B; font-weight:700; }

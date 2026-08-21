@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>VetLink — Registered User</title>
+  <title>VetLink — Registered Customer</title>
   <link rel="icon" type="image/png" href="/logo.png"/>
   <link rel="stylesheet" href="employee/css/dashboard.css"/>
   <link rel="stylesheet" href="employee/css/registered_users.css"/>
@@ -14,10 +14,14 @@
   <aside id="sidebar" class="sidebar">
     <div class="brand"><img src="/logo.png" class="logo" alt="VetLink"/><span class="brand-name">VetLink</span></div>
     <nav class="nav">
-      <a class="nav-item active" href="/employee/dashboard"><span class="icon">📊</span><span>Analytic Dashboard</span></a>
-      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered User</span></a>
+      <a class="nav-item active" href="/employee/dashboard"><span class="icon">📊</span><span>Analytics</span></a>
+        <a class="nav-item" href="/employee/reports"><span class="icon">📈</span><span>Reports</span></a>
+      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered Customer</span></a>
       <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
       <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+      <a class="nav-item" href="/employee/pet-records"><span class="icon">📋</span><span>Pet Records</span></a>
+      <a class="nav-item" href="/employee/records"><span class="icon">🩺</span><span>Medical Records</span></a>
+      <a class="nav-item" href="/employee/messages"><span class="icon">💬</span><span>Messages</span></a>
       <a class="nav-item" href="/employee/breeding"><span class="icon">💞</span><span>Breeding</span></a>
       <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
       <a class="nav-item" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
@@ -31,7 +35,7 @@
   <div class="main">
     <header class="topbar">
       <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
-      <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Registered User</span></div>
+      <div class="breadcrumbs">Home <span class="sep">/</span> <span id="crumb">Registered Customer</span></div>
       <div class="account">
         <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
           <span id="accountName">User</span><span class="avatar" aria-hidden="true">🛡️</span>
@@ -44,7 +48,7 @@
     </header>
 
     <section class="view active">
-      <h1 class="page-title">Registered User</h1>
+      <h1 class="page-title">Registered Customer</h1>
 
       <div class="card" style="margin-bottom: .75rem">
         <div class="users-toolbar">
@@ -79,26 +83,47 @@
       <div class="modal-backdrop" data-close></div>
       <div class="panel panel-md">
         <header class="modal-header">
-          <strong>Update Registered User</strong>
+          <strong>Update Registered Customer</strong>
           <button class="ghost-btn" type="button" data-close aria-label="Close">✕</button>
         </header>
         <div class="content">
           <input type="hidden" id="editUserId"/>
           <div class="form-grid">
-            <label class="field full">
-              <span>Name</span>
-              <input class="input" id="editUserName"/>
+            <label class="field">
+              <span>Last Name <b class="req">*</b></span>
+              <input class="input" id="editUserLastName"/>
+            </label>
+            <label class="field">
+              <span>First Name <b class="req">*</b></span>
+              <input class="input" id="editUserFirstName"/>
+            </label>
+            <label class="field">
+              <span>Middle Name</span>
+              <input class="input" id="editUserMiddleName" placeholder="Optional"/>
+            </label>
+            <label class="field">
+              <span>Date of Birth</span>
+              <input class="input" id="editUserDateOfBirth" type="date"/>
+            </label>
+            <label class="field">
+              <span>Sex</span>
+              <select class="input" id="editUserSex">
+                <option value="">Select…</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
             </label>
             <label class="field full">
-              <span>Email</span>
+              <span>Email <b class="req">*</b></span>
               <input class="input" id="editUserEmail" type="email"/>
             </label>
             <label class="field">
-              <span>Contact No.</span>
-              <input class="input" id="editUserNumber"/>
+              <span>Contact No. <b class="req">*</b></span>
+              <input class="input" id="editUserNumber" placeholder="09xx-xxx-xxxx"/>
             </label>
             <label class="field">
-              <span>Address</span>
+              <span>Complete Address <b class="req">*</b></span>
               <input class="input" id="editUserAddress"/>
             </label>
             <label class="field full">

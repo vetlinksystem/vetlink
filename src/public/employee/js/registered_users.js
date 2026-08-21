@@ -18,13 +18,48 @@
   const modal = $('userEditModal');
   const saveBtn = $('saveUserBtn');
   const editId = $('editUserId');
-  const editName = $('editUserName');
+  const editLastName = $('editUserLastName');
+  const editFirstName = $('editUserFirstName');
+  const editMiddleName = $('editUserMiddleName');
+  const editDateOfBirth = $('editUserDateOfBirth');
+  const editSex = $('editUserSex');
   const editEmail = $('editUserEmail');
   const editNumber = $('editUserNumber');
   const editAddress = $('editUserAddress');
   const editPassword = $('editUserPassword');
 
   if (!tbody) return;
+
+  // Names are stored as 1NF fields. Older client documents only have a flat `name`,
+  // so split it on read so they can still be edited through this form.
+  const splitLegacyName = (fullName) => {
+    const parts = String(fullName || '').trim().replace(/\s+/g, ' ').split(' ').filter(Boolean);
+    if (!parts.length) return { firstName: '', middleName: '', lastName: '' };
+    if (parts.length === 1) return { firstName: parts[0], middleName: '', lastName: '' };
+    if (parts.length === 2) return { firstName: parts[0], middleName: '', lastName: parts[1] };
+    return {
+      firstName: parts[0],
+      middleName: parts.slice(1, -1).join(' '),
+      lastName: parts[parts.length - 1]
+    };
+  };
+
+  const nameParts = (u = {}) =>
+    (u.firstName || u.lastName)
+      ? { firstName: u.firstName || '', middleName: u.middleName || '', lastName: u.lastName || '' }
+      : splitLegacyName(u.name || u.fullName || '');
+
+  // PH mobile: 09XXXXXXXXX / +639XXXXXXXXX / 639XXXXXXXXX
+  const isValidMobile = (value) => {
+    const d = String(value || '').replace(/[^\d+]/g, '');
+    return /^09\d{9}$/.test(d) || /^\+639\d{9}$/.test(d) || /^639\d{9}$/.test(d);
+  };
+
+  // Roles: staff may edit customers, admin may delete them, veterinarians view only.
+  // core.js publishes the permission list from the server, which enforces the same rules.
+  const can = (p) => !!(window.vetlinkCan && window.vetlinkCan(p));
+  const canEdit = () => can('customers.edit');
+  const canDelete = () => can('customers.delete');
 
   const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
     const ctl = new AbortController();
@@ -72,8 +107,8 @@
         <td class="cell-actions" style="white-space:nowrap">
           <div class="actions-wrap">
             <a class="btn-xs link" href="/employee/user?id=${encodeURIComponent(u.id)}">View</a>
-            <button type="button" class="btn-xs primary js-edit" data-edit="${esc(u.id)}">Edit</button>
-            <button type="button" class="btn-xs danger js-del" data-del="${esc(u.id)}">Delete</button>
+            ${canEdit() ? `<button type="button" class="btn-xs primary js-edit" data-edit="${esc(u.id)}">Edit</button>` : ''}
+            ${canDelete() ? `<button type="button" class="btn-xs danger js-del" data-del="${esc(u.id)}">Delete</button>` : ''}
           </div>
         </td>
       </tr>
@@ -134,8 +169,13 @@
 
   const openModal = (u) => {
     if (!modal) return;
+    const parts = nameParts(u);
     editId.value = u.id;
-    editName.value = u.name || '';
+    editLastName.value = parts.lastName;
+    editFirstName.value = parts.firstName;
+    editMiddleName.value = parts.middleName;
+    if (editDateOfBirth) editDateOfBirth.value = u.dateOfBirth || '';
+    if (editSex) editSex.value = u.sex || '';
     editEmail.value = u.email || '';
     editNumber.value = u.number || '';
     editAddress.value = u.address || '';
@@ -159,7 +199,7 @@
 
   const matchesFilter = (u, q) => {
     if (!q) return true;
-    const hay = [u.id, u.name, u.email, u.number, u.address]
+    const hay = [u.id, u.name, u.firstName, u.middleName, u.lastName, u.email, u.number, u.address]
       .map(v => String(v || '').toLowerCase())
       .join(' | ');
     return hay.includes(q);
@@ -209,15 +249,27 @@
   saveBtn?.addEventListener('click', async () => {
     const payload = {
       id: editId.value,
-      name: (editName.value || '').trim(),
+      lastName: (editLastName.value || '').trim(),
+      firstName: (editFirstName.value || '').trim(),
+      middleName: (editMiddleName.value || '').trim(),
+      dateOfBirth: (editDateOfBirth?.value || '').trim(),
+      sex: (editSex?.value || '').trim(),
       email: (editEmail.value || '').trim(),
       number: (editNumber.value || '').trim(),
       address: (editAddress.value || '').trim(),
       password: (editPassword.value || '').trim(),
     };
 
-    if (!payload.id || !payload.name || !payload.email) {
-      alert('ID, Name, and Email are required.');
+    if (!payload.id || !payload.firstName || !payload.lastName || !payload.email) {
+      alert('ID, First Name, Last Name, and Email are required.');
+      return;
+    }
+    if (!isValidMobile(payload.number)) {
+      alert('Please enter a valid contact number (e.g. 09171234567).');
+      return;
+    }
+    if (!payload.address) {
+      alert('Complete address is required.');
       return;
     }
 
@@ -234,9 +286,11 @@
       return;
     }
 
-    // Update local cache
+    // Update local cache (keep the derived display name in sync with the split fields)
+    const derivedName = [payload.firstName, payload.middleName, payload.lastName]
+      .filter(Boolean).join(' ');
     USERS = USERS.map(u => String(u.id) === String(payload.id)
-      ? { ...u, ...payload }
+      ? { ...u, ...payload, name: derivedName }
       : u
     );
     closeModal();
@@ -246,6 +300,12 @@
   userSearch?.addEventListener('input', () => {
     FILTER = userSearch.value || '';
     render();
+  });
+
+  // core.js resolves the role asynchronously; re-render once it lands so Edit/Delete
+  // are drawn (or withheld) according to the real permission list.
+  document.addEventListener('vetlink:role-ready', () => {
+    if (USERS.length) render();
   });
 
   const loadUsers = async () => {

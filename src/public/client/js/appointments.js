@@ -103,13 +103,28 @@
   );
 
   // Table row
+  // Payment is over-the-counter only — the clinic marks it paid on site.
+  const paymentBadge = (a) => {
+    const paid = String(a.paymentStatus || 'unpaid').toLowerCase() === 'paid';
+    return `<span class="badge ${paid ? 'completed' : 'pending'}" title="Over the counter">${paid ? 'Paid' : 'Unpaid'}</span>`;
+  };
+
+  // Surface the clinic's reason whenever an appointment was rescheduled or cancelled.
+  const notesCell = (a) => {
+    const notes = a.notes ? `<div>${esc(a.notes)}</div>` : '';
+    if (!a.statusReason) return notes;
+    const label = a.reasonType === 'rescheduled' ? 'Rescheduled' : 'Cancelled';
+    return `${notes}<div class="reason-note"><b>${label}:</b> ${esc(a.statusReason)}</div>`;
+  };
+
   const rowHTML = (a) => `
     <tr>
       <td>${fmtDate(a.date)} ${a.time || ''}</td>
       <td>${esc(a.petName)}</td>
       <td>${esc(a.service)}</td>
       <td>${statusBadge(a.status)}</td>
-      <td>${esc(a.notes || '')}</td>
+      <td>${paymentBadge(a)}</td>
+      <td>${notesCell(a)}</td>
     </tr>
   `;
 
@@ -144,7 +159,7 @@
 
     tableBody.innerHTML = items.length
       ? items.map(rowHTML).join('')
-      : `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)"><em>No appointments found.</em></td></tr>`;
+      : `<tr><td colspan="6" style="padding:.75rem;color:var(--muted)"><em>No appointments found.</em></td></tr>`;
 
     if (pageInfo) {
       pageInfo.textContent = items.length
@@ -225,7 +240,9 @@
         date: dateInput.value,
         time: timeInput.value,
         service: (serviceInput.value || '').trim() || 'Check-up',
-        notes: (notesInput.value || '').trim()
+        notes: (notesInput.value || '').trim(),
+        // Over-the-counter is the only supported method (settled at the clinic).
+        paymentMethod: 'over_the_counter'
       };
 
       // Client-side guard: no past date/time
@@ -261,7 +278,11 @@
           date: payload.date,
           time: payload.time,
           status: 'Pending',
-          notes: payload.notes
+          notes: payload.notes,
+          reasonType: '',
+          statusReason: '',
+          paymentMethod: 'over_the_counter',
+          paymentStatus: 'unpaid'
         };
         APPTS.push(norm);
       }
@@ -284,7 +305,7 @@
     const apRes = await fetchJSON(API_MY_APPTS, { method: 'GET' });
     if (!apRes.ok || !apRes.body || apRes.body.success === false) {
       if (tableBody) {
-        tableBody.innerHTML = `<tr><td colspan="5" style="padding:.75rem;color:var(--muted)">
+        tableBody.innerHTML = `<tr><td colspan="6" style="padding:.75rem;color:var(--muted)">
           <em>Failed to load appointments. ${esc(apRes.body?.message || '')}</em>
         </td></tr>`;
       }

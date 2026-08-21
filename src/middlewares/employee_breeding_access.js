@@ -1,30 +1,23 @@
-const firestoreManager = require('../fb/firestore_manager');
+const { requirePermission } = require('./require_permission');
 
 /**
- * Allow only Veterinarian and Admin employees to access breeding endpoints.
- * - Admin: employee.isAdmin === true OR position/role contains "admin"
- * - Veterinarian: position/role contains "vet" (e.g., "veterinarian")
+ * Breeding access.
+ *
+ * This used to be a single check that let admin OR vet do everything, which meant an
+ * administrator could approve a breeding pairing. The clinic's roles note is explicit:
+ * admin and staff may *view* matches and their status but cannot take actions —
+ * the veterinarian is the final decision-maker.
+ *
+ * So it is now two guards:
+ *   canViewBreeding   → admin, staff, veterinarian
+ *   canDecideBreeding → veterinarian only
+ *
+ * The default export stays the "view" guard so any older require() of this module
+ * keeps working (read access) rather than silently granting decision rights.
  */
-module.exports = async function ensureEmployeeBreedingAccess(req, res, next) {
-  try {
-    const u = req.user;
-    if (!u || u.type !== 'employee') {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
+const canViewBreeding = requirePermission('breeding.view');
+const canDecideBreeding = requirePermission('breeding.decide');
 
-    const emp = await firestoreManager.getData('employees', u.id);
-    const pos = String(emp?.position || emp?.role || '').toLowerCase();
-    const isAdmin = !!emp?.isAdmin || pos.includes('admin');
-    const isVet = pos.includes('vet');
-
-    if (!isAdmin && !isVet) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
-    // Expose employee details for downstream handlers if needed
-    req.employee = emp;
-    next();
-  } catch (err) {
-    return res.status(500).json({ error: 'Server error' });
-  }
-};
+module.exports = canViewBreeding;
+module.exports.canViewBreeding = canViewBreeding;
+module.exports.canDecideBreeding = canDecideBreeding;

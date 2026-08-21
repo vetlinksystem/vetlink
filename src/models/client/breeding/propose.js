@@ -9,6 +9,7 @@ const {
     getAllBreedingRecords, getMatchedPetMap, findOpenProposalBetween,
     findConversationBetween, getConversation, appendMessage
 } = require('../../breeding/service');
+const { assessPair, buildHealthInfo } = require('../../breeding/compatibility');
 
 const OPPOSITE = { male: 'female', female: 'male' };
 
@@ -39,6 +40,18 @@ module.exports = async function proposeBreeding(clientId, req_body) {
     const mySex = String(myPet.sex || '').toLowerCase();
     if (!OPPOSITE[mySex] || String(targetPet.sex || '').toLowerCase() !== OPPOSITE[mySex]) {
         return { success: false, message: 'Pets must be of opposite sex.' };
+    }
+
+    // Compatibility assessment (breed table, size gap, breeding age, health, temperament).
+    // A pairing the table forbids, or one where either pet is underage, is refused here;
+    // everything else is stored with the proposal so the veterinarian sees the reasoning
+    // and the risk level when deciding.
+    const allRecords = await firestoreManager.getAllData('records', {});
+    const healthInfo = buildHealthInfo(allRecords, [myPet.id, targetPet.id]);
+    const assessment = assessPair(myPet, targetPet, healthInfo);
+
+    if (!assessment.eligible) {
+        return { success: false, message: assessment.reason };
     }
 
     const records = await getAllBreedingRecords();
@@ -75,6 +88,21 @@ module.exports = async function proposeBreeding(clientId, req_body) {
         notes: '',
         status: 'pending',
         requestedAt: now(),
+        // Breeding type comes from the proposing pet's registration (purebred / crossbreed).
+        breedingType: myPet.breedingType || '',
+        breedingPurpose: myPet.breedingPurpose || '',
+        // Snapshot of the assessment at proposal time, so the veterinarian sees the same
+        // score and flags the owner saw, and so the reasoning is on the record.
+        compatibility: {
+            score: assessment.score,
+            risk: assessment.risk,
+            breedStatus: assessment.breedStatus,
+            requiresVetReview: assessment.requiresVetReview,
+            recommendation: assessment.recommendation,
+            flags: assessment.flags,
+            breakdown: assessment.breakdown,
+            assessedAt: now()
+        },
         // legacy flags kept for old readers: the proposer implicitly approves
         ownerAApproved: true,
         ownerBApproved: false
@@ -118,6 +146,7 @@ module.exports = async function proposeBreeding(clientId, req_body) {
     return {
         success: true,
         id,
-        record: { ...record, myPet: publicPet(myPet), targetPet: publicPet(targetPet) }
+        record: { ...record, myPet: publicPet(myPet), targetPet: publicPet(targetPet) },
+        compatibility: record.compatibility
     };
 };

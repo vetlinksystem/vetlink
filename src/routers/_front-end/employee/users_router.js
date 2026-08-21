@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { ensureAuthPage, ensureTypePage, authenticateApi, ensureTypeApi } = require('../../../middlewares/auth');
+const { requirePermission } = require('../../../middlewares/require_permission');
 
 const employeeUsersRouter = express.Router();
 const publicPath = path.resolve(__dirname, '../../../public');
@@ -25,13 +26,14 @@ employeeUsersRouter.get('/user', ensureAuthPage, ensureTypePage('employee'), (re
 });
 
 // ===== Users APIs =====
-employeeUsersRouter.get('/users/get-all', authenticateApi, ensureTypeApi('employee'), getAllUsers);
+// Roles: admin/staff/vet may view; only staff may edit; only admin may delete.
+employeeUsersRouter.get('/users/get-all', authenticateApi, ensureTypeApi('employee'), requirePermission('customers.view'), getAllUsers);
 
 // User details API: /employee/users/get?id=...
-employeeUsersRouter.get('/users/get', authenticateApi, ensureTypeApi('employee'), getUserDetails);
+employeeUsersRouter.get('/users/get', authenticateApi, ensureTypeApi('employee'), requirePermission('customers.view'), getUserDetails);
 
 // Update / Delete registered users (clients)
-employeeUsersRouter.put('/users/update', authenticateApi, ensureTypeApi('employee'), updateUser);
-employeeUsersRouter.delete('/users/delete', authenticateApi, ensureTypeApi('employee'), deleteUser);
+employeeUsersRouter.put('/users/update', authenticateApi, ensureTypeApi('employee'), requirePermission('customers.edit'), updateUser);
+employeeUsersRouter.delete('/users/delete', authenticateApi, ensureTypeApi('employee'), requirePermission('customers.delete'), deleteUser);
 
 module.exports = employeeUsersRouter;

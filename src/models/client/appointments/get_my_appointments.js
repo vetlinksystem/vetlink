@@ -74,7 +74,13 @@ const getMyAppointments = async (clientId) => {
           date: dt?.date || null,
           time: dt?.time || null,
           status,
-          notes: a.notes || ''
+          notes: a.notes || '',
+          // Why the clinic rescheduled or cancelled — the owner is always told.
+          reasonType: a.reasonType || '',
+          statusReason: a.statusReason || '',
+          // Payment is settled over the counter at the clinic.
+          paymentMethod: a.paymentMethod || 'over_the_counter',
+          paymentStatus: a.paymentStatus || 'unpaid'
         };
       })
       .filter(a => !!a.date);

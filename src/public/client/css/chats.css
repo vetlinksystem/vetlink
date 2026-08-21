@@ -79,3 +79,20 @@
   .chat-thread.hidden-mobile{display:none}
   .back-btn{display:inline-flex}
 }
+
+/* Clinic conversations ("Message veterinarian to customer") are visually distinct
+   from owner-to-owner chats so the owner knows who they are talking to. */
+.chat-item.clinic{ background:#FBF7F0; }
+.chat-item.clinic.active{ background:#F3E9D5; }
+.chat-item .clinic-tag{
+  display:inline-block;
+  margin:.1rem 0 .15rem;
+  padding:.05rem .4rem;
+  border-radius:999px;
+  background:#8C6E44;
+  color:#fff;
+  font-size:.62rem;
+  font-weight:700;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+}

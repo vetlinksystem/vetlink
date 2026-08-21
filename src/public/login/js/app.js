@@ -28,16 +28,34 @@
   const loginUsername = $('loginUsername');
   const loginPassword = $('loginPassword');
 
-  // Inputs (register)
-  const regName = $('regName');
+  // Inputs (register) — 1NF name fields
+  const regLastName = $('regLastName');
+  const regFirstName = $('regFirstName');
+  const regMiddleName = $('regMiddleName');
+  const regDateOfBirth = $('regDateOfBirth');
+  const regSex = $('regSex');
   const regEmail = $('regEmail');
   const regNumber = $('regNumber');
-  const regAddress = $('regAddress');
+  const regStreet = $('regStreet');
+  const regBarangay = $('regBarangay');
+  const regCity = $('regCity');
+  const regProvince = $('regProvince');
   const regPassword = $('regPassword');
   const regConfirm = $('regConfirm');
   const pwRules = $('pwRules');
   const registerSubmit = $('registerSubmit');
   const loginSubmit = $('loginSubmit');
+
+  // Consent checkboxes (Data Privacy Act of 2012 — RA 10173)
+  const regConsentPrivacy = $('regConsentPrivacy');
+  const regConsentDpa = $('regConsentDpa');
+  const regConsentTruthful = $('regConsentTruthful');
+
+  // PH mobile: 09XXXXXXXXX / +639XXXXXXXXX / 639XXXXXXXXX
+  const isValidMobile = (value) => {
+    const d = String(value || '').replace(/[^\d+]/g, '');
+    return /^09\d{9}$/.test(d) || /^\+639\d{9}$/.test(d) || /^639\d{9}$/.test(d);
+  };
 
   // Password toggle (login/register)
   document.querySelectorAll('.pw-toggle[data-toggle]').forEach(btn => {
@@ -87,7 +105,28 @@
     const pwOk = checkPasswordRules(regPassword?.value || '');
     renderRules();
     const confirmOk = (regPassword?.value || '') === (regConfirm?.value || '');
-    registerSubmit.disabled = !(pwOk && confirmOk && (regName?.value||'').trim() && (regEmail?.value||'').trim());
+
+    // Required personal info: first + last name, DOB, sex, email, contact no., address
+    const identityOk =
+      !!(regFirstName?.value || '').trim() &&
+      !!(regLastName?.value || '').trim() &&
+      !!(regDateOfBirth?.value || '').trim() &&
+      !!(regSex?.value || '').trim() &&
+      !!(regEmail?.value || '').trim();
+
+    // Contact no. and every address component are no longer optional
+    const contactOk =
+      isValidMobile(regNumber?.value || '') &&
+      [regStreet, regBarangay, regCity, regProvince]
+        .every(el => !!(el?.value || '').trim());
+
+    // All three consents are mandatory under RA 10173
+    const consentOk =
+      !!regConsentPrivacy?.checked &&
+      !!regConsentDpa?.checked &&
+      !!regConsentTruthful?.checked;
+
+    registerSubmit.disabled = !(pwOk && confirmOk && identityOk && contactOk && consentOk);
   };
 
   const setStatus = (msg = '', kind = '') => {
@@ -97,10 +136,14 @@
     if (kind) authStatus.classList.add(kind);
   };
 
+  // The registration form needs a wider card than the login form.
+  const card = document.querySelector('.auth .card');
+
   const showLogin = () => {
     if (loginView) loginView.style.display = '';
     if (registerView) registerView.style.display = 'none';
     if (formTitle) formTitle.textContent = 'Login';
+    card?.classList.remove('wide');
     setStatus('');
   };
 
@@ -108,6 +151,7 @@
     if (registerView) registerView.style.display = '';
     if (loginView) loginView.style.display = 'none';
     if (formTitle) formTitle.textContent = 'Create Account';
+    card?.classList.add('wide');
     setStatus('');
   };
 
@@ -193,30 +237,62 @@
     e.preventDefault();
     setStatus('Creating account…');
 
-    const name = (regName?.value || '').trim();
-    const email = (regEmail?.value || '').trim();
-    const number = (regNumber?.value || '').trim();
-    const address = (regAddress?.value || '').trim();
-    const password = (regPassword?.value || '').trim();
+    const payload = {
+      lastName: (regLastName?.value || '').trim(),
+      firstName: (regFirstName?.value || '').trim(),
+      middleName: (regMiddleName?.value || '').trim(),
+      dateOfBirth: (regDateOfBirth?.value || '').trim(),
+      sex: (regSex?.value || '').trim(),
+      email: (regEmail?.value || '').trim(),
+      number: (regNumber?.value || '').trim(),
+      street: (regStreet?.value || '').trim(),
+      barangay: (regBarangay?.value || '').trim(),
+      city: (regCity?.value || '').trim(),
+      province: (regProvince?.value || '').trim(),
+      password: (regPassword?.value || '').trim(),
+      consentPrivacy: !!regConsentPrivacy?.checked,
+      consentDpa: !!regConsentDpa?.checked,
+      consentTruthful: !!regConsentTruthful?.checked
+    };
     const confirm = (regConfirm?.value || '').trim();
 
-    if (!name || !email || !password) {
-      setStatus('Name, email, and password are required.', 'error');
+    if (!payload.firstName || !payload.lastName) {
+      setStatus('First name and last name are required.', 'error');
       return;
     }
-    if (!checkPasswordRules(password)) {
+    if (!payload.dateOfBirth || !payload.sex) {
+      setStatus('Date of birth and sex are required.', 'error');
+      return;
+    }
+    if (!payload.email || !payload.password) {
+      setStatus('Email and password are required.', 'error');
+      return;
+    }
+    if (!isValidMobile(payload.number)) {
+      setStatus('Please enter a valid contact number (e.g. 09171234567).', 'error');
+      return;
+    }
+    if (!payload.address) {
+      setStatus('Complete address is required.', 'error');
+      return;
+    }
+    if (!checkPasswordRules(payload.password)) {
       setStatus('Password does not meet the required rules.', 'error');
       return;
     }
-    if (password !== confirm) {
+    if (payload.password !== confirm) {
       setStatus('Passwords do not match.', 'error');
+      return;
+    }
+    if (!payload.consentPrivacy || !payload.consentDpa || !payload.consentTruthful) {
+      setStatus('Please accept the Privacy Policy and the Data Privacy Act consent to continue.', 'error');
       return;
     }
 
     try {
       const { ok, body } = await fetchJSON('/register/client', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password, number, address })
+        body: JSON.stringify(payload)
       });
 
       if (!ok || body?.success === false) {
@@ -236,10 +312,23 @@
   showLogin();
   setRole('client');
 
+  // Date of birth cannot be in the future
+  if (regDateOfBirth) {
+    regDateOfBirth.max = new Date().toISOString().slice(0, 10);
+  }
+
   // Live rule validation
-  regPassword?.addEventListener('input', syncRegisterBtn);
-  regConfirm?.addEventListener('input', syncRegisterBtn);
-  regName?.addEventListener('input', syncRegisterBtn);
-  regEmail?.addEventListener('input', syncRegisterBtn);
+  [
+    regPassword, regConfirm,
+    regLastName, regFirstName, regMiddleName,
+    regDateOfBirth, regSex, regEmail, regNumber,
+    regStreet, regBarangay, regCity, regProvince
+  ].forEach(el => {
+    el?.addEventListener('input', syncRegisterBtn);
+    el?.addEventListener('change', syncRegisterBtn);
+  });
+  [regConsentPrivacy, regConsentDpa, regConsentTruthful].forEach(el => {
+    el?.addEventListener('change', syncRegisterBtn);
+  });
   syncRegisterBtn();
 })();

@@ -24,8 +24,6 @@ recordsRouter.get(
 
 // API: /client/records/my
 const getMyRecordsController = require('../../../controllers/client/records/get_my_records');
-const addRecordController = require('../../../controllers/client/records/add_record');
-const { uploadRecordFile } = require('../../../middlewares/upload');
 
 recordsRouter.get(
   '/records/my',
@@ -34,13 +32,21 @@ recordsRouter.get(
   getMyRecordsController
 );
 
-// API: POST /client/records (multipart; text fields + optional "file")
+// Medical records are READ-ONLY for pet owners.
+//
+// Owners used to be able to create their own records here, which undermines the
+// integrity of clinical information. Per the clinic's notes only veterinarians and
+// administrators may add or edit records; staff may view and print them; the customer
+// may only view. Creation now lives at POST /employee/records/:petId, gated by
+// requirePermission('records.manage').
 recordsRouter.post(
   '/records',
   authenticateApi,
   ensureTypeApi('client'),
-  uploadRecordFile,
-  addRecordController
+  (req, res) => res.status(403).json({
+    success: false,
+    message: 'Medical records can only be added by the clinic. Please ask your veterinarian to record this visit.'
+  })
 );
 
 module.exports = recordsRouter;

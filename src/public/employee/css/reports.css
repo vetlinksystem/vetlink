@@ -1,0 +1,104 @@
+/* employee/css/reports.css — Clinic Reports.
+   Uses the beige tokens already defined in dashboard.css :root. */
+
+.rp-head{
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:1rem; flex-wrap:wrap; margin-bottom:1rem;
+}
+.rp-sub{ margin:.25rem 0 0; color:var(--muted); font-size:13px; }
+.rp-actions{ display:flex; gap:.5rem; flex-wrap:wrap; }
+
+/* ===== Period picker ===== */
+.rp-controls{
+  padding:1rem; margin-bottom:1rem;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; flex-wrap:wrap;
+}
+.rp-presets{ display:flex; gap:.4rem; flex-wrap:wrap; }
+
+.chip-btn{
+  border:1px solid var(--border); background:var(--chip); color:var(--chip-ink);
+  padding:.4rem .75rem; border-radius:999px; font-size:13px; font-weight:600;
+  cursor:pointer; transition:background .15s, border-color .15s, color .15s;
+}
+.chip-btn:hover{ background:var(--surface-variant); border-color:var(--brand-2); }
+.chip-btn.active{ background:var(--brand); border-color:var(--brand); color:#fff; }
+.chip-btn:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(200,160,106,.30); }
+
+.rp-custom{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.rp-custom label{ font-size:13px; color:var(--muted); font-weight:600; }
+.rp-custom input[type="date"]{
+  border:1px solid var(--border); border-radius:10px; padding:.4rem .6rem;
+  background:#fff; color:var(--ink); font:inherit; font-size:13px;
+}
+.rp-custom input[type="date"]:focus-visible{
+  outline:none; border-color:var(--brand-2); box-shadow:0 0 0 3px rgba(200,160,106,.30);
+}
+
+/* ===== Status ===== */
+.rp-status{
+  padding:.75rem 1rem; border-radius:12px; margin-bottom:1rem; font-size:14px;
+  background:var(--chip); border:1px solid var(--border); color:var(--chip-ink);
+}
+.rp-status.error{ background:#FBEAE5; border-color:#E8C4B8; color:var(--danger); }
+.hidden{ display:none !important; }
+
+/* ===== KPI strip ===== */
+.rp-kpis{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:.75rem; margin-bottom:1.25rem;
+}
+.rp-kpi{
+  background:var(--panel); border:1px solid var(--border); border-radius:14px;
+  padding:1rem; box-shadow:var(--shadow);
+}
+.rp-kpi .v{ font-size:26px; font-weight:700; color:var(--ink); line-height:1.1; }
+.rp-kpi .l{ font-size:12px; color:var(--muted); margin-top:.3rem; font-weight:600; }
+
+/* ===== Sections ===== */
+.rp-section{
+  background:var(--panel); border:1px solid var(--border); border-radius:14px;
+  padding:1.1rem; margin-bottom:1rem; box-shadow:var(--shadow);
+  break-inside:avoid;
+}
+.rp-section h2{
+  margin:0 0 .85rem; font-size:15px; color:var(--ink);
+  display:flex; align-items:center; gap:.5rem;
+}
+.rp-section h2 .tag{
+  font-size:11px; font-weight:700; color:var(--chip-ink);
+  background:var(--chip); border:1px solid var(--border);
+  padding:.15rem .5rem; border-radius:999px;
+}
+
+.rp-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; }
+
+/* ===== Tables ===== */
+.rp-table-wrap{ overflow-x:auto; }
+.rp-table{ width:100%; border-collapse:collapse; font-size:13px; }
+.rp-table th{
+  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+  color:var(--muted); padding:.45rem .5rem; border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+.rp-table td{ padding:.45rem .5rem; border-bottom:1px solid var(--border); color:var(--ink); }
+.rp-table tr:last-child td{ border-bottom:none; }
+.rp-table td.num, .rp-table th.num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+/* Inline proportion bar behind the label */
+.rp-bar{ position:relative; display:block; height:6px; border-radius:999px;
+  background:var(--surface-variant); overflow:hidden; margin-top:.3rem; }
+.rp-bar > i{ position:absolute; inset:0 auto 0 0; background:var(--brand); border-radius:999px; }
+
+.rp-empty{ color:var(--muted); font-size:13px; font-style:italic; padding:.5rem 0; }
+
+/* ===== Print ===== */
+@media print{
+  .sidebar, .topbar, .no-print{ display:none !important; }
+  body{ background:#fff; }
+  .layout, .main{ display:block; margin:0; padding:0; }
+  .view{ padding:0; }
+  .rp-section, .rp-kpi{ box-shadow:none; border-color:#ddd; }
+  .rp-kpis{ grid-template-columns:repeat(4,1fr); }
+  .page-title{ margin-top:0; }
+}

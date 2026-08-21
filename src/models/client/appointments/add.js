@@ -3,6 +3,9 @@ const { generateAppointmentId } = require('../../../utilities/idGenerator');
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
+// The clinic accepts over-the-counter payment only — no online payment is processed.
+const PAYMENT_METHOD = 'over_the_counter';
+
 const isPastDateTime = (date, time) => {
   const dt = new Date(`${date}T${time}:00`);
   if (isNaN(dt)) return true;
@@ -25,7 +28,8 @@ const addClientAppointment = async (clientId, body) => {
     date,    // 'YYYY-MM-DD'
     time,    // 'HH:MM'
     service, // e.g. 'Check-up'
-    notes
+    notes,
+    paymentMethod // over-the-counter only, see below
   } = body || {};
 
   if (!petId || !date || !time) {
@@ -34,6 +38,13 @@ const addClientAppointment = async (clientId, body) => {
 
   if (isPastDateTime(date, time)) {
     return { success: false, message: 'You cannot book an appointment in the past.' };
+  }
+
+  if (paymentMethod && String(paymentMethod) !== PAYMENT_METHOD) {
+    return {
+      success: false,
+      message: 'Only over-the-counter payment is supported. Please settle the service fee at the clinic.'
+    };
   }
 
   const bookedCount = await countAppointmentsForDate(date);
@@ -55,6 +66,13 @@ const addClientAppointment = async (clientId, body) => {
     notes: notes || '',
     status: 'Pending',
     scheduleChanged: false,
+    // Reason the clinic later reschedules/cancels (filled in by the vet, shown to the client)
+    reasonType: '',
+    statusReason: '',
+    // Payment for services is settled at the clinic. Only one method is supported,
+    // so anything else the client sends is coerced to it.
+    paymentMethod: PAYMENT_METHOD,
+    paymentStatus: 'unpaid',
     createdAt: new Date().toISOString()
   };
 

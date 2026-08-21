@@ -62,30 +62,77 @@
       <!-- REGISTER VIEW (CLIENT ONLY) -->
       <div id="registerView" style="display:none;">
         <form id="registerForm">
-          <div class="field">
-            <span>Full Name</span>
-            <input id="regName" type="text" placeholder="Your name" required/>
+          <div class="section-label">Personal Information</div>
+
+          <div class="field-row">
+            <div class="field">
+              <span>Last Name <b class="req">*</b></span>
+              <input id="regLastName" type="text" placeholder="Dela Cruz" required/>
+            </div>
+            <div class="field">
+              <span>First Name <b class="req">*</b></span>
+              <input id="regFirstName" type="text" placeholder="Maria" required/>
+            </div>
+            <div class="field">
+              <span>Middle Name <i class="opt">(optional)</i></span>
+              <input id="regMiddleName" type="text" placeholder="Santos"/>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span>Date of Birth <b class="req">*</b></span>
+              <input id="regDateOfBirth" type="date" required/>
+            </div>
+            <div class="field">
+              <span>Sex <b class="req">*</b></span>
+              <select id="regSex" required>
+                <option value="">Select…</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
           </div>
 
           <div class="field">
-            <span>Email</span>
+            <span>Email <b class="req">*</b></span>
             <input id="regEmail" type="email" placeholder="you@example.com" required/>
           </div>
 
           <div class="field">
-            <span>Contact No. (optional)</span>
-            <input id="regNumber" type="tel" placeholder="09xx-xxx-xxxx"/>
+            <span>Contact No. <b class="req">*</b></span>
+            <input id="regNumber" type="tel" placeholder="09xx-xxx-xxxx" required/>
           </div>
 
-          <div class="field">
-            <span>Address (optional)</span>
-            <input id="regAddress" type="text" placeholder="Street, City, Province"/>
+          <div class="field-row">
+            <div class="field">
+              <span>House No. / Street <b class="req">*</b></span>
+              <input id="regStreet" type="text" placeholder="123 Rizal St." required/>
+            </div>
+            <div class="field">
+              <span>Barangay <b class="req">*</b></span>
+              <input id="regBarangay" type="text" placeholder="Poblacion" required/>
+            </div>
           </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span>City / Municipality <b class="req">*</b></span>
+              <input id="regCity" type="text" placeholder="Tagbilaran City" required/>
+            </div>
+            <div class="field">
+              <span>Province <b class="req">*</b></span>
+              <input id="regProvince" type="text" placeholder="Bohol" required/>
+            </div>
+          </div>
+
+          <div class="section-label">Account Information</div>
 
           <div class="field">
             <span>Password</span>
             <div class="pw-wrap">
-              <input id="regPassword" type="password" placeholder="••••••••" minlength="6" required/>
+              <input id="regPassword" type="password" placeholder="••••••••" minlength="11" required/>
               <button type="button" class="pw-toggle" data-toggle="regPassword" aria-label="Show or hide password" title="Show/Hide">👁️</button>
             </div>
             <div class="pw-rules" id="pwRules" aria-live="polite">
@@ -100,9 +147,43 @@
           <div class="field">
             <span>Confirm Password</span>
             <div class="pw-wrap">
-              <input id="regConfirm" type="password" placeholder="••••••••" minlength="6" required/>
+              <input id="regConfirm" type="password" placeholder="••••••••" minlength="11" required/>
               <button type="button" class="pw-toggle" data-toggle="regConfirm" aria-label="Show or hide password" title="Show/Hide">👁️</button>
             </div>
+          </div>
+
+          <!-- DATA PRIVACY ACT NOTICE (RA 10173) -->
+          <div class="dpa-notice">
+            <div class="dpa-title">🔒 Data Privacy Act Notice</div>
+            <p>VetLink collects your personal information solely for the purpose of providing veterinary
+               services, appointment scheduling, medical record management, pet ownership verification,
+               and other legitimate system functions.</p>
+            <p>Your information will be processed securely and in accordance with the
+               <b>Data Privacy Act of 2012 (Republic Act No. 10173)</b>. We will not disclose your personal
+               information to unauthorized parties without your consent, unless required by law.</p>
+            <p class="dpa-links">For more information, please read our
+              <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
+              <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a>.</p>
+          </div>
+
+          <div class="section-label">Consent</div>
+          <div class="consent">
+            <label class="consent-row">
+              <input type="checkbox" id="regConsentPrivacy" required/>
+              <span>I have read and understood the
+                <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
+                <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a>.</span>
+            </label>
+            <label class="consent-row">
+              <input type="checkbox" id="regConsentDpa" required/>
+              <span>I voluntarily consent to the collection, processing, storage, and use of my personal
+                information in accordance with the Data Privacy Act of 2012 (RA 10173) for the purposes
+                of using the VetLink Veterinary Management System.</span>
+            </label>
+            <label class="consent-row">
+              <input type="checkbox" id="regConsentTruthful" required/>
+              <span>I certify that the information I have provided is true and correct.</span>
+            </label>
           </div>
 
           <button class="submit" type="submit" id="registerSubmit">Create Account</button>
@@ -114,6 +195,14 @@
       </div>
 
     </div>
+
+    <footer class="auth-footer">
+      <div>© 2025 Doc Ben'z Veterinary Management System. All rights reserved.</div>
+      <div class="auth-footer-links">
+        <a href="/privacy">Privacy Policy</a> •
+        <a href="/terms">Terms and Conditions</a>
+      </div>
+    </footer>
   </div>
 
   <script src="/login/js/app.js"></script>

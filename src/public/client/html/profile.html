@@ -86,10 +86,26 @@
                 <input class="input" id="phone" name="number"/>
               </div>
 
+              <!-- Address is stored as separate 1NF fields; profile.js reads these
+                   by name and the server derives the flat `address` from them. -->
               <div>
-                <label for="address">Address</label>
-                <!-- name="address" used by profile.js -->
-                <input class="input" id="address" name="address"/>
+                <label for="street">House No. / Street</label>
+                <input class="input" id="street" name="street"/>
+              </div>
+
+              <div>
+                <label for="barangay">Barangay</label>
+                <input class="input" id="barangay" name="barangay"/>
+              </div>
+
+              <div>
+                <label for="city">City / Municipality</label>
+                <input class="input" id="city" name="city"/>
+              </div>
+
+              <div>
+                <label for="province">Province</label>
+                <input class="input" id="province" name="province"/>
               </div>
 
               <div class="profile-actions">

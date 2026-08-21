@@ -1,0 +1,304 @@
+/* ===========================================================
+   EMPLOYEE — MEDICAL RECORDS
+   Screen layout plus a print stylesheet, because staff need to
+   print records (roles note: "staff/doctor can view records for printing").
+   =========================================================== */
+
+.page-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:.75rem;
+}
+.page-sub{
+  margin:.25rem 0 0;
+  font-size:.82rem;
+  color:var(--muted, #8A8172);
+}
+.page-head .tools{ display:flex; gap:.5rem; flex-wrap:wrap; }
+
+/* ===== Filters ===== */
+.rx-filters{
+  display:flex;
+  align-items:flex-end;
+  gap:.75rem;
+  flex-wrap:wrap;
+  margin-bottom:.75rem;
+  padding:.9rem 1rem;
+}
+.rx-filters .searchbar{ flex:1 1 260px; }
+
+.rx-field{ display:flex; flex-direction:column; gap:.25rem; }
+.rx-field > span{
+  font-size:.78rem;
+  font-weight:600;
+  color:var(--text, #2B2620);
+}
+.rx-field .req{ color:#C0563B; font-weight:700; }
+.rx-field .hint{
+  font-size:.72rem;
+  color:var(--muted, #8A8172);
+}
+
+/* ===== Summary chips ===== */
+.rx-summary{
+  display:flex;
+  gap:.5rem;
+  flex-wrap:wrap;
+  margin-bottom:.75rem;
+}
+.rx-chip{
+  display:inline-flex;
+  align-items:baseline;
+  gap:.35rem;
+  padding:.4rem .7rem;
+  border-radius:999px;
+  background:#FBF7F0;
+  border:1px solid #E9DFCD;
+  font-size:.78rem;
+  color:#6B6255;
+}
+.rx-chip strong{ font-size:.95rem; color:#8C6E44; }
+
+/* ===== Table ===== */
+.rx-muted{
+  padding:12px;
+  color:var(--muted, #8A8172);
+  font-style:italic;
+}
+.rx-type-badge{
+  display:inline-block;
+  padding:.2rem .55rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:600;
+  background:#F0E7D8;
+  color:#8C6E44;
+  white-space:nowrap;
+}
+.rx-type-badge.surgery{ background:#F5E3DC; color:#A2422B; }
+.rx-type-badge.vaccination{ background:#E3ECF7; color:#2F5C8C; }
+.rx-type-badge.grooming{ background:#FBF3DF; color:#8A6A22; }
+.rx-type-badge.checkup,
+.rx-type-badge.general_checkup{ background:#E9F4EE; color:#2F6B4F; }
+
+.rx-detail-row td{
+  background:#FBF7F0;
+  padding:.75rem 1rem;
+}
+.rx-detail-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:.5rem .9rem;
+}
+.rx-detail-item{ font-size:.8rem; }
+.rx-detail-label{
+  font-weight:600;
+  color:#8C6E44;
+  display:block;
+  margin-bottom:.1rem;
+}
+.rx-detail-value{ color:#4A4238; }
+.rx-detail-notes{
+  margin-top:.6rem;
+  font-size:.8rem;
+  color:#4A4238;
+  white-space:pre-wrap;
+}
+
+/* ===== Add-record modal ===== */
+.rx-form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:.9rem;
+  margin-bottom:1rem;
+}
+.rx-span-2{ grid-column:1 / -1; margin-top:.9rem; }
+
+.rx-type-fields{
+  border:1px solid #E9DFCD;
+  border-radius:14px;
+  background:#FBF7F0;
+  padding:1rem;
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:.9rem;
+}
+.rx-type-fields:empty{ display:none; }
+.rx-type-fields .rx-full{ grid-column:1 / -1; }
+
+/* Checkbox groups (grooming services, anaesthesia agents) */
+.rx-checkgroup{ grid-column:1 / -1; }
+.rx-checkgroup > span{
+  display:block;
+  font-size:.78rem;
+  font-weight:600;
+  margin-bottom:.4rem;
+}
+.rx-checkgroup .rx-checks{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.45rem .9rem;
+}
+.rx-checkgroup label{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  font-size:.8rem;
+  cursor:pointer;
+}
+.rx-checkgroup input[type="checkbox"]{
+  width:16px; height:16px;
+  accent-color:#C8A06A;
+  cursor:pointer;
+}
+
+/* Screening grid for the general check-up form */
+.rx-screening{ grid-column:1 / -1; }
+.rx-screening > span{
+  display:block;
+  font-size:.78rem;
+  font-weight:600;
+  margin-bottom:.4rem;
+}
+.rx-screening-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
+  gap:.6rem;
+}
+
+.toast{
+  position:fixed;
+  left:50%; bottom:24px;
+  transform:translateX(-50%) translateY(20px);
+  background:#2B2620;
+  color:#fff;
+  padding:.6rem 1rem;
+  border-radius:10px;
+  font-size:.85rem;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s, transform .2s;
+  z-index:11000;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ===========================================================
+   PRINT
+   Only #rxPrintArea is printed. Staff select a record (or the
+   whole filtered list) and the sheet is built into that element.
+   =========================================================== */
+.rx-print-area{ display:none; }
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+
+  /* Hide the whole app chrome; print only the record sheet. */
+  #app,
+  .modal,
+  .toast,
+  .rx-no-print { display:none !important; }
+
+  body{
+    background:#fff !important;
+    color:#000;
+    font:12pt/1.5 Georgia, 'Times New Roman', serif;
+  }
+
+  .rx-print-area{
+    display:block !important;
+    width:100%;
+  }
+
+  .rx-print-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:2px solid #000;
+    padding-bottom:8pt;
+    margin-bottom:14pt;
+  }
+  .rx-print-clinic{ font-size:16pt; font-weight:bold; }
+  .rx-print-clinic small{
+    display:block;
+    font-size:9pt;
+    font-weight:normal;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .rx-print-meta{ font-size:9pt; text-align:right; }
+
+  .rx-print-title{
+    font-size:13pt;
+    font-weight:bold;
+    margin:0 0 8pt;
+  }
+
+  .rx-print-block{
+    margin-bottom:12pt;
+    page-break-inside:avoid;
+  }
+  .rx-print-block h3{
+    font-size:11pt;
+    margin:0 0 4pt;
+    border-bottom:1px solid #999;
+    padding-bottom:2pt;
+  }
+
+  .rx-print-kv{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:2pt 16pt;
+    font-size:10.5pt;
+  }
+  .rx-print-kv div{ display:flex; gap:6pt; }
+  .rx-print-kv b{ min-width:130pt; }
+
+  .rx-print-notes{
+    font-size:10.5pt;
+    white-space:pre-wrap;
+    border:1px solid #999;
+    padding:6pt;
+    min-height:36pt;
+  }
+
+  .rx-print-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:9.5pt;
+  }
+  .rx-print-table th,
+  .rx-print-table td{
+    border:1px solid #666;
+    padding:4pt 6pt;
+    text-align:left;
+    vertical-align:top;
+  }
+  .rx-print-table thead{ display:table-header-group; }
+  .rx-print-table tr{ page-break-inside:avoid; }
+
+  .rx-print-sign{
+    margin-top:26pt;
+    display:flex;
+    justify-content:space-between;
+    gap:24pt;
+    page-break-inside:avoid;
+  }
+  .rx-print-sign div{
+    flex:1;
+    border-top:1px solid #000;
+    padding-top:4pt;
+    font-size:9.5pt;
+    text-align:center;
+  }
+
+  .rx-print-footer{
+    margin-top:16pt;
+    padding-top:6pt;
+    border-top:1px solid #999;
+    font-size:8.5pt;
+    text-align:center;
+  }
+}

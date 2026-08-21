@@ -59,12 +59,11 @@
             <small style="color:var(--muted)">Manage profiles, vaccines, and breeding preference.</small>
           </div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-            <!-- Species filter (used by pets.js as #filterSpecies) -->
+            <!-- Species filter (used by pets.js as #filterSpecies).
+                 The clinic is dogs only, so pets.js repopulates this from the species
+                 actually present — normally just "Dog", plus anything legacy. -->
             <select class="input" id="filterSpecies" style="width:160px">
               <option value="">All species</option>
-              <option>Dog</option>
-              <option>Cat</option>
-              <option>Others</option>
             </select>
 
             <!-- Sex filter (new, used by pets.js as #filterSex) -->
@@ -105,36 +104,114 @@
       </header>
       <div class="content">
         <div class="form-grid" style="display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)">
-          <input class="input" id="pName" placeholder="Name"/>
-          <select class="input" id="pSpecies">
-            <option>Dog</option><option>Cat</option><option>Others</option>
-          </select>
-          <select class="input" id="pBreed">
-            <option value="">Breed</option>
-          </select>
+          <label style="grid-column:span 2">
+            <span>Pet Name <b class="req">*</b></span>
+            <input class="input" id="pName" placeholder="e.g. Buddy"/>
+          </label>
 
-          <input class="input" id="pBreedOther" placeholder="Specify breed" style="display:none"/>
+          <!-- Species is no longer asked for: the server derives it from the breed. -->
+          <label>
+            <span>Breed <b class="req">*</b></span>
+            <select class="input" id="pBreed">
+              <option value="">Select breed…</option>
+            </select>
+          </label>
 
-          <select class="input" id="pSex">
-            <option value="">Sex (optional)</option>
-            <option>Male</option>
-            <option>Female</option>
-          </select>
+          <label>
+            <span>Sex <b class="req">*</b></span>
+            <select class="input" id="pSex">
+              <option value="">Select sex…</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </label>
 
-          <input class="input" id="pAge" type="number" min="0" placeholder="Age (yrs)"/>
+          <label style="grid-column:span 2;display:none" id="pBreedOtherWrap">
+            <span>Specify breed <b class="req">*</b></span>
+            <input class="input" id="pBreedOther" placeholder="Type the breed"/>
+          </label>
+
+          <label>
+            <span>Size <b class="req">*</b></span>
+            <select class="input" id="pSize">
+              <option value="">Select size…</option>
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Weight (kg) <b class="req">*</b></span>
+            <input class="input" id="pWeight" type="number" min="0" step="0.1" placeholder="e.g. 28"/>
+          </label>
+
+          <label>
+            <span>Age <b class="req">*</b></span>
+            <input class="input" id="pAgeMonths" type="number" min="0" placeholder="Age"/>
+          </label>
+
+          <label>
+            <span>Age unit</span>
+            <select class="input" id="pAgeUnit">
+              <option value="months">Months</option>
+              <option value="years">Years</option>
+            </select>
+          </label>
 
           <label class="breeding col-2" style="grid-column:span 2;display:flex;align-items:center;gap:.6rem">
             <input type="checkbox" id="pBreeding" />
             <span>Allow this pet for breeding</span>
           </label>
 
-          <textarea
-            class="input col-2"
-            id="pNotes"
-            placeholder="Notes (optional)"
-            rows="3"
-            style="grid-column:span 2"
-          ></textarea>
+          <!-- Shown only when breeding is enabled -->
+          <div id="pBreedingBox" class="breeding-box" style="grid-column:span 2;display:none">
+            <div class="breeding-note" id="pBreedingAgeNote"></div>
+
+            <label>
+              <span>Breeding Type <b class="req">*</b></span>
+              <select class="input" id="pBreedingType">
+                <option value="">Choose type…</option>
+                <option value="purebred">Purebred — parents are the same breed</option>
+                <option value="crossbreed">Crossbreed — parents are different breeds</option>
+              </select>
+            </label>
+
+            <div id="pCrossbreedFields" style="display:none">
+              <label>
+                <span>Purpose of breeding <b class="req">*</b></span>
+                <select class="input" id="pBreedingPurpose">
+                  <option value="">Choose purpose…</option>
+                  <option value="companion">Companion</option>
+                  <option value="working">Working</option>
+                  <option value="show">Show</option>
+                  <option value="guard">Guard</option>
+                  <option value="therapy">Therapy</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Preferred size of mate</span>
+                <select class="input" id="pPreferredSize">
+                  <option value="">No preference</option>
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <label style="grid-column:span 2">
+            <span>Describe your pet <b class="req">*</b></span>
+            <textarea
+              class="input"
+              id="pDescription"
+              placeholder="Colour, markings, personality, anything the clinic should know…"
+              rows="3"
+            ></textarea>
+          </label>
 
           <div class="col-2" style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
             <button class="btn ghost" data-close>Cancel</button>

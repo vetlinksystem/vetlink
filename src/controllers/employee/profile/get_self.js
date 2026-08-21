@@ -1,4 +1,5 @@
 const getEmployeeSelfModel = require('../../../models/employee/profile/get_self');
+const { resolveRole, permissionsFor, ROLE_LABELS } = require('../../../utilities/roles');
 
 const getEmployeeSelfController = async (req, res) => {
   try {
@@ -19,9 +20,17 @@ const getEmployeeSelfController = async (req, res) => {
       });
     }
 
+    // The front-end uses role + permissions to hide the controls this user is not
+    // allowed to use (e.g. breeding decision buttons for admin/staff). The server
+    // still enforces every one of these on the API side.
+    const role = resolveRole(result.employee);
+
     return res.json({
       success: true,
-      employee: result.employee
+      employee: result.employee,
+      role,
+      roleLabel: ROLE_LABELS[role] || role,
+      permissions: permissionsFor(role)
     });
   } catch (error) {
     console.error('Error getting employee self:', error);

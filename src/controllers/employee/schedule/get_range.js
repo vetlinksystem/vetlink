@@ -2,9 +2,18 @@ const getScheduleRangeModel = require('../../../models/employee/schedule/get_ran
 
 const getScheduleRangeController = async (req, res) => {
   try {
-    const { from, to } = req.query;
+    const { from, to, includePending, includeCancelled } = req.query;
 
-    const items = await getScheduleRangeModel({ from, to });
+    // The calendar shows confirmed visits only. These flags let the UI opt pending
+    // requests / cancelled appointments back in behind a toggle.
+    const truthy = (v) => v === true || v === 'true' || v === '1';
+
+    const items = await getScheduleRangeModel({
+      from,
+      to,
+      includePending: truthy(includePending),
+      includeCancelled: truthy(includeCancelled)
+    });
 
     return res.json({
       success: true,

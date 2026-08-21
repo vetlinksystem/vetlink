@@ -52,12 +52,22 @@
   const pSubmit   = document.getElementById('pSubmit');
 
   const pName     = document.getElementById('pName');
-  const pSpecies  = document.getElementById('pSpecies');
   const pBreed    = document.getElementById('pBreed');
   const pSex      = document.getElementById('pSex');
-  const pAge      = document.getElementById('pAge');
+  const pSize     = document.getElementById('pSize');
+  const pWeight   = document.getElementById('pWeight');
+  const pAgeMonths= document.getElementById('pAgeMonths');
+  const pAgeUnit  = document.getElementById('pAgeUnit');
   const pBreeding = document.getElementById('pBreeding');
-  const pNotes    = document.getElementById('pNotes');
+  const pDescription = document.getElementById('pDescription');
+
+  // Breeding sub-form (revealed only when breeding is enabled)
+  const pBreedingBox      = document.getElementById('pBreedingBox');
+  const pBreedingType     = document.getElementById('pBreedingType');
+  const pCrossbreedFields = document.getElementById('pCrossbreedFields');
+  const pBreedingPurpose  = document.getElementById('pBreedingPurpose');
+  const pPreferredSize    = document.getElementById('pPreferredSize');
+  const pBreedingAgeNote  = document.getElementById('pBreedingAgeNote');
 
   const toastEl   = document.getElementById('toast');
 
@@ -127,52 +137,34 @@
 
   const distinct = (arr) => [...new Set(arr)].sort((a,b)=> String(a).localeCompare(String(b)));
 
-  // Common breeds (can be expanded anytime)
-  const DOG_BREEDS = [
-    'Aspin','Beagle','Belgian Malinois','Bichon Frise','Border Collie','Boxer','Bulldog','Chihuahua','Chow Chow',
-    'Cocker Spaniel','Dachshund','Doberman Pinscher','French Bulldog','German Shepherd','Golden Retriever','Great Dane',
-    'Husky','Jack Russell Terrier','Labrador Retriever','Lhasa Apso','Maltese','Mini Pinscher','Pomeranian','Poodle',
-    'Pug','Rottweiler','Samoyed','Shih Tzu','Siberian Husky','Staffordshire Bull Terrier','Toy Poodle','Yorkshire Terrier'
-  ];
+  // Breeds come from the server catalog (/catalogs/pet-options), which also knows each
+  // breed's species and size class. Species is no longer asked for on this form — the
+  // server derives it from the breed — so the breed list is no longer filtered by it.
+  let BREED_LIST = [];
+  let BREEDING_AGE = { female: { min: 18, max: 24 }, male: { min: 12, max: 15 } };
 
-  const CAT_BREEDS = [
-    'Domestic Shorthair','Domestic Longhair','Persian','Siamese','Maine Coon','Ragdoll','British Shorthair','Bengal',
-    'Sphynx','Scottish Fold','Russian Blue','American Shorthair','Abyssinian','Birman','Himalayan','Norwegian Forest Cat'
-  ];
-
-  // For "Others" species (types)
-  const OTHER_TYPES = [
-    'Rabbit','Hamster','Guinea Pig','Bird','Parrot','Lovebird','Turtle','Fish','Snake','Lizard'
-  ];
-
-  const pBreedOther = document.getElementById('pBreedOther');
+  const pBreedOther     = document.getElementById('pBreedOther');
+  const pBreedOtherWrap = document.getElementById('pBreedOtherWrap');
 
   const toggleOtherBreed = () => {
-    if (!pBreedOther) return;
+    if (!pBreedOtherWrap) return;
     const isOther = String(pBreed?.value || '') === 'Other';
-    pBreedOther.style.display = isOther ? '' : 'none';
-    if (!isOther) pBreedOther.value = '';
+    pBreedOtherWrap.style.display = isOther ? '' : 'none';
+    if (!isOther && pBreedOther) pBreedOther.value = '';
   };
 
-  const setBreedOptions = (species) => {
+  const setBreedOptions = () => {
     if (!pBreed) return;
-    const sp = String(species || '').trim();
 
-    let base = [];
-    if (sp === 'Dog') base = DOG_BREEDS;
-    else if (sp === 'Cat') base = CAT_BREEDS;
-    else if (sp === 'Others') base = OTHER_TYPES;
-
-    // Also include existing breeds in data (in case you already have uncommon ones saved)
-    const existing = distinct(PETS.filter(p => !sp || p.species === sp).map(p => p.breed).filter(Boolean));
-    const breeds = distinct([...(base || []), ...(existing || [])]);
+    // Include any breed already saved on the owner's pets, so uncommon entries survive.
+    const existing = distinct(PETS.map(p => p.breed).filter(Boolean));
+    const breeds = distinct([...BREED_LIST, ...existing]);
 
     const current = String(pBreed.value || '');
-    pBreed.innerHTML = `<option value="">Breed</option>` +
+    pBreed.innerHTML = `<option value="">Select breed…</option>` +
       breeds.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('') +
       `<option value="Other">Other</option>`;
 
-    // keep selection if still present
     if (current && [...pBreed.options].some(o => o.value === current)) {
       pBreed.value = current;
     } else {
@@ -180,6 +172,111 @@
     }
 
     toggleOtherBreed();
+  };
+
+  const loadPetOptions = async () => {
+    const { ok, body } = await fetchJSON('/catalogs/pet-options', { method: 'GET' });
+    if (ok && body && body.success !== false) {
+      if (Array.isArray(body.breeds)) BREED_LIST = body.breeds;
+      if (body.breedingAge) BREEDING_AGE = body.breedingAge;
+    }
+    setBreedOptions();
+  };
+
+  // ===== Breeding sub-form =====
+
+  /** Age entered on the form, expressed in months. */
+  const enteredAgeMonths = () => {
+    const raw = Number(pAgeMonths?.value);
+    if (!Number.isFinite(raw) || raw < 0) return null;
+    return (pAgeUnit?.value === 'years') ? Math.round(raw * 12) : Math.round(raw);
+  };
+
+  const fmtAge = (months) => {
+    if (months === null) return '';
+    const y = Math.floor(months / 12), m = months % 12;
+    if (y && m) return `${y} yr${y > 1 ? 's' : ''} ${m} mo${m > 1 ? 's' : ''}`;
+    if (y) return `${y} yr${y > 1 ? 's' : ''}`;
+    return `${m} mo${m === 1 ? '' : 's'}`;
+  };
+
+  /**
+   * Ideal breeding age: Female 18–24 months, Male 12–15 months.
+   * Too young is a hard block; past the window is a warning the vet will review.
+   */
+  const breedingAgeState = () => {
+    const sex = String(pSex?.value || '').toLowerCase();
+    const win = BREEDING_AGE[sex];
+    const months = enteredAgeMonths();
+    if (!win) return { level: 'info', message: "Select the pet's sex to check the ideal breeding age." };
+    if (months === null) return { level: 'info', message: "Enter the pet's age to check the ideal breeding age." };
+    if (months < win.min) {
+      return { level: 'error',
+        message: `Too young for breeding — ${fmtAge(months)} old. The ideal breeding age for a ${sex} is ${win.min}–${win.max} months.` };
+    }
+    if (months > win.max) {
+      return { level: 'warn',
+        message: `Past the ideal breeding age for a ${sex} (${win.min}–${win.max} months). A veterinarian will review this pairing.` };
+    }
+    return { level: 'ok', message: `Within the ideal breeding age for a ${sex} (${win.min}–${win.max} months).` };
+  };
+
+  const syncBreedingBox = () => {
+    if (!pBreedingBox) return;
+    const on = !!pBreeding?.checked;
+    pBreedingBox.style.display = on ? '' : 'none';
+
+    if (pCrossbreedFields) {
+      pCrossbreedFields.style.display =
+        (on && pBreedingType?.value === 'crossbreed') ? '' : 'none';
+    }
+
+    if (pBreedingAgeNote) {
+      if (!on) {
+        pBreedingAgeNote.textContent = '';
+        pBreedingAgeNote.className = 'breeding-note';
+      } else {
+        const st = breedingAgeState();
+        pBreedingAgeNote.textContent = st.message;
+        pBreedingAgeNote.className = `breeding-note ${st.level}`;
+      }
+    }
+  };
+
+  pBreeding?.addEventListener('change', syncBreedingBox);
+  pBreedingType?.addEventListener('change', syncBreedingBox);
+  pSex?.addEventListener('change', syncBreedingBox);
+  pAgeMonths?.addEventListener('input', syncBreedingBox);
+  pAgeUnit?.addEventListener('change', syncBreedingBox);
+
+  // ===== Display helpers =====
+
+  /** Age is stored in months now; older documents only have whole years. */
+  const petAgeText = (p) => {
+    const m = (typeof p.ageMonths === 'number')
+      ? p.ageMonths
+      : (typeof p.age === 'number' ? p.age * 12 : null);
+    if (m === null) return '';
+    const y = Math.floor(m / 12), mo = m % 12;
+    if (y && mo) return `${y} yr${y > 1 ? 's' : ''} ${mo} mo${mo > 1 ? 's' : ''}`;
+    if (y) return `${y} yr${y > 1 ? 's' : ''}`;
+    return `${mo} mo${mo === 1 ? '' : 's'}`;
+  };
+
+  const sizeText = (p) => {
+    const s = String(p.size || '').toLowerCase();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const breedingTypeText = (p) => {
+    const t = String(p.breedingType || '').toLowerCase();
+    if (t === 'purebred') return 'Purebred';
+    if (t === 'crossbreed') {
+      const purpose = String(p.breedingPurpose || '');
+      return purpose ? `Crossbreed (${purpose})` : 'Crossbreed';
+    }
+    return 'Not set';
   };
 
   const buildCard = (p) => `
@@ -205,7 +302,11 @@
         </div>
         <div>
           <dt>Age</dt>
-          <dd>${typeof p.age === 'number' ? esc(p.age + ' yr(s)') : '—'}</dd>
+          <dd>${esc(petAgeText(p) || '—')}</dd>
+        </div>
+        <div>
+          <dt>Size</dt>
+          <dd>${esc(sizeText(p) || '—')}</dd>
         </div>
         <div>
           <dt>Breeding</dt>
@@ -238,7 +339,15 @@
           </div>
           <div class="detail-item">
             <div class="detail-label">Age</div>
-            <div class="detail-value">${typeof p.age === 'number' ? esc(p.age + ' yr(s)') : '—'}</div>
+            <div class="detail-value">${esc(petAgeText(p) || '—')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Size</div>
+            <div class="detail-value">${esc(sizeText(p) || '—')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Weight</div>
+            <div class="detail-value">${p.weight ? esc(p.weight + ' kg') : '—'}</div>
           </div>
           <div class="detail-item">
             <div class="detail-label">Breeding</div>
@@ -248,9 +357,13 @@
                 : '<span class="badge no">Not allowed</span>'}
             </div>
           </div>
+          <div class="detail-item">
+            <div class="detail-label">Breeding Type</div>
+            <div class="detail-value">${p.breedingAllowed ? esc(breedingTypeText(p)) : '—'}</div>
+          </div>
           <div class="detail-item span-2">
-            <div class="detail-label">Notes</div>
-            <div class="detail-value">${p.notes ? esc(p.notes) : '—'}</div>
+            <div class="detail-label">Description</div>
+            <div class="detail-value">${(p.description || p.notes) ? esc(p.description || p.notes) : '—'}</div>
           </div>
         </div>
       </section>
@@ -428,9 +541,7 @@
 
     // Fill / reset form fields
     if (pName) pName.value = pet?.name || '';
-    if (pSpecies) pSpecies.value = pet?.species || 'Dog';
-    // Breed dropdown is populated based on species
-    setBreedOptions(pSpecies ? pSpecies.value : '');
+    setBreedOptions();
     if (pBreed) {
       const b = String(pet?.breed || '');
       const has = [...pBreed.options].some(o => o.value === b);
@@ -444,9 +555,30 @@
       toggleOtherBreed();
     }
     if (pSex) pSex.value = pet?.sex || '';
-    if (pAge) pAge.value = (typeof pet?.age === 'number') ? pet.age : '';
+    if (pSize) pSize.value = String(pet?.size || '').toLowerCase();
+    if (pWeight) pWeight.value = (pet?.weight ?? '') === null ? '' : (pet?.weight ?? '');
+
+    // Age is stored in months; fall back to the legacy whole-years field.
+    if (pAgeMonths && pAgeUnit) {
+      if (typeof pet?.ageMonths === 'number') {
+        pAgeMonths.value = pet.ageMonths;
+        pAgeUnit.value = 'months';
+      } else if (typeof pet?.age === 'number') {
+        pAgeMonths.value = pet.age;
+        pAgeUnit.value = 'years';
+      } else {
+        pAgeMonths.value = '';
+        pAgeUnit.value = 'months';
+      }
+    }
+
     if (pBreeding) pBreeding.checked = !!pet?.breedingAllowed;
-    if (pNotes) pNotes.value = pet?.notes || '';
+    if (pBreedingType) pBreedingType.value = String(pet?.breedingType || '');
+    if (pBreedingPurpose) pBreedingPurpose.value = String(pet?.breedingPurpose || '');
+    if (pPreferredSize) pPreferredSize.value = String(pet?.preferredSize || '');
+    // "notes" is the legacy name of this field on older pet documents.
+    if (pDescription) pDescription.value = pet?.description || pet?.notes || '';
+    syncBreedingBox();
 
     // Force show regardless of CSS
     petModal.classList.add('open', 'show', 'active');
@@ -470,11 +602,6 @@
   const onModalEsc = (e) => {
     if (e.key === 'Escape') closePetModal();
   };
-
-  // When species changes, refresh the breed dropdown list
-  if (pSpecies) {
-    pSpecies.addEventListener('change', () => setBreedOptions(pSpecies.value));
-  }
 
   // When breed changes, toggle the custom breed field
   if (pBreed) {
@@ -516,26 +643,93 @@
         pName?.focus();
         return;
       }
-      const species = (pSpecies?.value || '').trim();
       let breed = (pBreed?.value || '').trim();
       if (breed === 'Other') {
         breed = (pBreedOther?.value || '').trim();
         if (!breed) {
           showToast('Please specify the breed.');
           pBreedOther?.focus();
-          pSubmit.disabled = false;
+          return;
+        }
+      }
+      if (!breed) {
+        showToast('Please select the breed.');
+        pBreed?.focus();
+        return;
+      }
+
+      // Sex is no longer optional.
+      const sex = (pSex?.value || '').trim();
+      if (!sex) {
+        showToast("Please select the pet's sex.");
+        pSex?.focus();
+        return;
+      }
+
+      const size = (pSize?.value || '').trim();
+      if (!size) {
+        showToast("Please select the pet's size.");
+        pSize?.focus();
+        return;
+      }
+
+      const weight = Number(pWeight?.value);
+      if (!Number.isFinite(weight) || weight <= 0) {
+        showToast("Please enter the pet's weight in kilograms.");
+        pWeight?.focus();
+        return;
+      }
+
+      const ageMonths = enteredAgeMonths();
+      if (ageMonths === null) {
+        showToast("Please enter the pet's age.");
+        pAgeMonths?.focus();
+        return;
+      }
+
+      // Description replaced the old optional "notes" field and is required.
+      const description = (pDescription?.value || '').trim();
+      if (!description) {
+        showToast('Please describe your pet.');
+        pDescription?.focus();
+        return;
+      }
+
+      const breedingAllowed = !!pBreeding?.checked;
+      const breedingType = (pBreedingType?.value || '').trim();
+
+      if (breedingAllowed) {
+        if (!breedingType) {
+          showToast('Choose a breeding type: Purebred or Crossbreed.');
+          pBreedingType?.focus();
+          return;
+        }
+        if (breedingType === 'crossbreed' && !(pBreedingPurpose?.value || '').trim()) {
+          showToast('Choose the purpose of breeding.');
+          pBreedingPurpose?.focus();
+          return;
+        }
+        // Ideal breeding age: Female 18–24 months, Male 12–15 months.
+        const ageState = breedingAgeState();
+        if (ageState.level === 'error') {
+          showToast(ageState.message);
+          pAgeMonths?.focus();
           return;
         }
       }
 
       const payload = {
         name,
-        species,
-        breed,
-        sex: (pSex?.value || '').trim(),
-        age: pAge?.value ? Number(pAge.value) : null,
-        breedingAllowed: !!pBreeding?.checked,
-        notes: (pNotes?.value || '').trim()
+        breed,          // species is derived from this server-side
+        sex,
+        size,
+        weight,
+        ageMonths,
+        description,
+        breedingAllowed,
+        breedingType: breedingAllowed ? breedingType : '',
+        breedingPurpose: breedingAllowed ? (pBreedingPurpose?.value || '').trim() : '',
+        preferredSize: breedingAllowed ? (pPreferredSize?.value || '').trim() : ''
       };
 
       const isEdit = modalMode === 'edit' && editingPetId;
@@ -614,5 +808,8 @@
     PETS = Array.isArray(body.pets) ? body.pets : [];
     syncFilters();
     renderPets();
+
+    // Breed list (and the ideal breeding-age windows) come from the server catalog.
+    await loadPetOptions();
   })();
 })();

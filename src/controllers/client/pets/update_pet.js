@@ -1,7 +1,15 @@
 const firestoreManager = require('../../../fb/firestore_manager');
+const {
+  normalizePetFields,
+  validatePet,
+  findDuplicate,
+  checkBreedingAge
+} = require('../../../utilities/petUtils');
 
 // PUT /client/pets/:id
 // Only the owning client can update their pet.
+// Fields are normalized the same way as on create: species is derived from the breed,
+// sex and description are required, and the pet cannot be edited into a duplicate.
 module.exports = async (req, res) => {
   try {
     const clientId = req.user?.id;
@@ -18,28 +26,35 @@ module.exports = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You are not allowed to update this pet.' });
     }
 
-    const {
-      name,
-      species,
-      breed,
-      sex,
-      age,
-      breedingAllowed,
-      notes,
-    } = req.body || {};
+    // Merge the submitted fields over what's stored, then validate the result.
+    const fields = normalizePetFields(req.body || {}, existing);
+
+    const check = validatePet(fields);
+    if (!check.ok) {
+      return res.status(400).json({ success: false, message: check.message });
+    }
+
+    // Editing a pet must not collide with another pet the same owner already has.
+    const ownerPets = await firestoreManager.getAllData('pets', { ownerId: clientId });
+    const dup = findDuplicate(
+      (Array.isArray(ownerPets) ? ownerPets : []).filter(p => String(p.ownerId) === String(clientId)),
+      { ...fields, ownerId: clientId },
+      id
+    );
+    if (dup) {
+      return res.status(409).json({
+        success: false,
+        duplicate: true,
+        existingId: dup.id,
+        message: `Another one of your pets already has these details (${fields.name} — ${fields.breed}, ${fields.sex}).`
+      });
+    }
 
     const patch = {
       id,
-      updatedAt: new Date().toISOString(),
+      ...fields,
+      updatedAt: new Date().toISOString()
     };
-
-    if (typeof name === 'string') patch.name = name.trim();
-    if (typeof species === 'string') patch.species = species.trim();
-    if (typeof breed === 'string') patch.breed = breed.trim();
-    if (typeof sex === 'string') patch.sex = sex.trim();
-    if (typeof age !== 'undefined') patch.age = age;
-    if (typeof breedingAllowed !== 'undefined') patch.breedingAllowed = !!breedingAllowed;
-    if (typeof notes === 'string') patch.notes = notes;
 
     const ok = await firestoreManager.updatePartialData('pets', patch);
     if (!ok) {
@@ -47,7 +62,14 @@ module.exports = async (req, res) => {
     }
 
     const updated = await firestoreManager.getData('pets', id);
-    return res.json({ success: true, pet: updated });
+
+    const ageNote = patch.breedingAllowed ? checkBreedingAge(patch) : null;
+
+    return res.json({
+      success: true,
+      pet: updated,
+      breedingAgeNotice: ageNote && ageNote.status === 'past_prime' ? ageNote.message : null
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: 'Server error while updating pet.', error: err.message });

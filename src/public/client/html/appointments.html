@@ -84,7 +84,8 @@
                   <th>Pet</th>
                   <th>Service</th>
                   <th>Status</th>
-                  <th>Notes</th>
+                  <th>Payment</th>
+                  <th>Notes / Reason</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -133,6 +134,13 @@
               <option value="Consultation">Consultation</option>
               <option value="Other">Other</option>
             </select>
+          </label>
+          <label style="grid-column:span 2">
+            <span>Payment Method</span>
+            <select class="input" id="aPaymentMethod" disabled>
+              <option value="over_the_counter" selected>Over the counter (pay at the clinic)</option>
+            </select>
+            <small class="hint">The service fee is settled at the clinic. No online payment is processed.</small>
           </label>
           <label style="grid-column:span 2">
             <span>Notes (optional)</span>

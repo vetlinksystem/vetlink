@@ -123,3 +123,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Sego
 
 /* optional: ensure icon column width matches buttons */
 .nav .icon { width: 20px; text-align: center; opacity: .9; }
+
+/* Controls disabled because the current role lacks the permission (see utilities/roles.js) */
+.is-forbidden{
+  opacity:.45;
+  cursor:not-allowed;
+  pointer-events:none;
+}

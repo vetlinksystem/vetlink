@@ -3,6 +3,11 @@ const path = require('path');
 const express = require('express');
 const firestoreManager = require('../../../fb/firestore_manager');
 const { generateClientId } = require('../../../utilities/idGenerator');
+const {
+  validatePersonPayload,
+  buildConsent,
+  consentIsComplete
+} = require('../../../utilities/personUtils');
 
 const passwordMeetsRules = (pw) => {
   const s = String(pw || '');
@@ -23,6 +28,15 @@ loginRouters.use(express.static(publicPath));
 /* PAGE */
 loginRouters.get('/', ensureGuestPage, (req, res) => {
   return res.sendFile(path.join(publicPath, 'login/html/index.html'));
+});
+
+/* LEGAL PAGES (public — required by the Data Privacy Act notice) */
+loginRouters.get('/privacy', (req, res) => {
+  return res.sendFile(path.join(publicPath, 'login/html/privacy.html'));
+});
+
+loginRouters.get('/terms', (req, res) => {
+  return res.sendFile(path.join(publicPath, 'login/html/terms.html'));
 });
 
 /* LOGIN (FIXED: now checks Firestore) */
@@ -110,14 +124,28 @@ loginRouters.post('/login', async (req, res) => {
 /* REGISTER CLIENT (NEW) */
 loginRouters.post('/register/client', async (req, res) => {
   try {
-    const { name, email, password, number, address } = req.body || {};
+    const body = req.body || {};
+    const { password } = body;
 
-    if (!name || !email || !password) {
+    // Back-compat: older Android builds still post a single flat `name`.
+    if (!body.firstName && !body.lastName && body.name) {
+      const { splitLegacyName } = require('../../../utilities/personUtils');
+      Object.assign(body, splitLegacyName(body.name));
+    }
+
+    if (!password) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required.'
+        message: 'Password is required.'
       });
     }
+
+    // Names / contact details are validated together (1NF fields, required contact info).
+    const check = validatePersonPayload(body, { requireContact: true });
+    if (!check.ok) {
+      return res.status(400).json({ success: false, message: check.message });
+    }
+    const person = check.data;
 
     if (!passwordMeetsRules(password)) {
       return res.status(400).json({
@@ -126,9 +154,17 @@ loginRouters.post('/register/client', async (req, res) => {
       });
     }
 
+    // Data Privacy Act of 2012 (RA 10173) — explicit consent is mandatory.
+    if (!consentIsComplete(body)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You must read and accept the Privacy Policy, consent to the processing of your personal information under RA 10173, and certify that your information is correct.'
+      });
+    }
+
     // Check existing email
-    const existing = await firestoreManager.getAllData('clients', { email });
-    if (Array.isArray(existing) && existing.length > 0) {
+    const existing = await firestoreManager.getAllData('clients', { email: person.email });
+    if (Array.isArray(existing) && existing.some(c => String(c.email || '').toLowerCase() === person.email)) {
       return res.status(409).json({
         success: false,
         message: 'Email is already registered.'
@@ -141,11 +177,9 @@ loginRouters.post('/register/client', async (req, res) => {
     const clientDoc = {
       id: clientId,
       type: 'client',
-      name,
-      email,
+      ...person,          // firstName / middleName / lastName / name / email / number / address / dateOfBirth / sex
       password,
-      number: number || '',
-      address: address || '',
+      consent: buildConsent(body),
       createdAt: new Date().toISOString()
     };
 
@@ -158,7 +192,7 @@ loginRouters.post('/register/client', async (req, res) => {
     }
 
     // Auto-login after register
-    const tokenUser = { id: clientId, type: 'client', name };
+    const tokenUser = { id: clientId, type: 'client', name: person.name };
     const token = signAccess(tokenUser);
 
     res.cookie('token', token, {

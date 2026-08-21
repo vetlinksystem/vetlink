@@ -81,7 +81,12 @@ const getClientDashboardOverview = async (clientId) => {
           service: a.purpose || a.service || 'Appointment',
           date: dt?.date || null,
           time: dt?.time || null,
-          status
+          status,
+          // Why the clinic rescheduled or cancelled — surfaced on the owner's dashboard.
+          reasonType: a.reasonType || '',
+          statusReason: a.statusReason || '',
+          paymentMethod: a.paymentMethod || 'over_the_counter',
+          paymentStatus: a.paymentStatus || 'unpaid'
         };
       })
       .filter(a => !!a.date);

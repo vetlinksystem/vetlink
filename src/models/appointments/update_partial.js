@@ -9,12 +9,26 @@ const updateAppointmentPartial = async (id, patch = {}) => {
   const before = await firestoreManager.getData('appointments', id);
 
   // Only allow known fields to be updated.
-  const allowed = ['status', 'notes', 'purpose', 'dateTime', 'clientId', 'petId'];
+  const allowed = [
+    'status', 'notes', 'purpose', 'dateTime', 'clientId', 'petId',
+    // Reason the clinic changed the appointment (rescheduled / cancelled) — shown to the client.
+    'reasonType', 'statusReason',
+    // Payment is over-the-counter only; the clinic marks it paid on site.
+    'paymentMethod', 'paymentStatus'
+  ];
   const data = { id };
 
   allowed.forEach((k) => {
     if (patch[k] !== undefined) data[k] = patch[k];
   });
+
+  const CANCELLED_STATUSES = ['cancelled', 'canceled', 'declined', 'rejected'];
+  const nextStatusRaw = String(data.status ?? before?.status ?? '').trim().toLowerCase();
+  const prevStatusRaw = String(before?.status || '').trim().toLowerCase();
+  const isBecomingCancelled =
+    data.status !== undefined &&
+    CANCELLED_STATUSES.includes(nextStatusRaw) &&
+    !CANCELLED_STATUSES.includes(prevStatusRaw);
 
   // If date & time are provided, compose dateTime
   if (patch.date !== undefined || patch.time !== undefined) {
@@ -26,8 +40,27 @@ const updateAppointmentPartial = async (id, patch = {}) => {
   }
 
   // Flag if the date/time was changed by the clinic.
-  if (data.dateTime !== undefined && String(data.dateTime) !== String(before?.dateTime || '')) {
+  const isRescheduled =
+    data.dateTime !== undefined && String(data.dateTime) !== String(before?.dateTime || '');
+  if (isRescheduled) {
     data.scheduleChanged = true;
+  }
+
+  // A reason is mandatory whenever the clinic cancels or reschedules — the client
+  // is always told *why*, not just that something changed.
+  const reasonText = String(data.statusReason ?? '').trim();
+  if ((isBecomingCancelled || isRescheduled) && !reasonText) {
+    return {
+      success: false,
+      message: isBecomingCancelled
+        ? 'Please provide a reason for cancelling this appointment.'
+        : 'Please provide a reason for rescheduling this appointment.'
+    };
+  }
+  if (reasonText) {
+    data.statusReason = reasonText;
+    data.reasonType = String(data.reasonType || (isBecomingCancelled ? 'cancelled' : 'rescheduled'));
+    data.reasonSetAt = new Date().toISOString();
   }
 
   if (Object.keys(data).length <= 1) {
@@ -66,6 +99,23 @@ const updateAppointmentPartial = async (id, patch = {}) => {
             payload: { appointmentId: after?.id }
           });
         }
+
+        // Cancellation used to update silently — the client was never told, and never
+        // told why. Both are now sent.
+        if (CANCELLED_STATUSES.includes(nextStatus)) {
+          const reason = String(after?.statusReason || '').trim();
+          await addNotification({
+            clientId: String(clientId),
+            type: 'appointment_cancelled',
+            title: 'Appointment Cancelled',
+            message: `Your appointment has been cancelled by the clinic.${reason ? ` Reason: ${reason}` : ''}`,
+            payload: {
+              appointmentId: after?.id || null,
+              reasonType: after?.reasonType || 'cancelled',
+              statusReason: reason
+            }
+          });
+        }
       }
 
       if (clientId && data.scheduleChanged) {
@@ -94,12 +144,19 @@ const updateAppointmentPartial = async (id, patch = {}) => {
         const oldDT = fmtDT(before?.dateTime);
         const newDT = fmtDT(after?.dateTime);
 
+        const reason = String(after?.statusReason || '').trim();
+
         await addNotification({
           clientId: String(clientId),
           type: 'appointment_schedule_changed',
           title: 'Appointment Rescheduled',
-          message: `Your appointment for ${petName} has been rescheduled from ${oldDT} to ${newDT}.`,
-          payload: { appointmentId: after?.id || null, newDateTime: after?.dateTime || null }
+          message: `Your appointment for ${petName} has been rescheduled from ${oldDT} to ${newDT}.${reason ? ` Reason: ${reason}` : ''}`,
+          payload: {
+            appointmentId: after?.id || null,
+            newDateTime: after?.dateTime || null,
+            reasonType: after?.reasonType || 'rescheduled',
+            statusReason: reason
+          }
         });
       }
     } catch (notifyErr) {

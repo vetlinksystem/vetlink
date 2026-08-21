@@ -6,6 +6,7 @@ const { generateConversationId } = require('../../../utilities/idGenerator');
 const {
     getClient, findConversationBetween, appendMessage
 } = require('../../breeding/service');
+const { buildTypes, CLIENT } = require('../../chats/participants');
 const sendMessageNotification = require('./notify');
 
 module.exports = async function startConversation(clientId, req_body) {
@@ -31,6 +32,12 @@ module.exports = async function startConversation(clientId, req_body) {
         conversation = {
             id,
             participantIds: [String(clientId), String(otherClientId)],
+            // Both sides are pet owners here. A conversation with the clinic is created
+            // by models/employee/chats/start.js and marks the staff side as 'employee'.
+            participantTypes: buildTypes([
+                { id: clientId, type: CLIENT },
+                { id: otherClientId, type: CLIENT }
+            ]),
             petIds: [myPetId, otherPetId].filter(Boolean).map(String),
             lastMessage: '',
             lastMessageAt: '',
@@ -54,7 +61,7 @@ module.exports = async function startConversation(clientId, req_body) {
     if (messageText) {
         const result = await appendMessage(conversation, { senderId: String(clientId), text: messageText });
         if (result) {
-            sendMessageNotification(conversation, String(clientId), messageText, result.unread).catch(() => {});
+            sendMessageNotification(conversation, String(clientId), messageText, result.unread).catch(err => console.warn('chat notification failed:', err?.message || err));
         }
     }
 

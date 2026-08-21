@@ -74,9 +74,18 @@
 
   const byId = (arr, id) => arr.find(x => String(x.id) === String(id));
 
+  // A cancelled appointment no longer holds its slot, so it must not appear on the
+  // calendar at all — previously it still drew a dot and counted toward the "+N"
+  // overflow, which made booked days look busier than they were.
+  const HIDDEN_FROM_CALENDAR = ['cancelled', 'canceled', 'declined', 'rejected'];
+
+  const isHiddenStatus = (statusRaw) =>
+    HIDDEN_FROM_CALENDAR.includes(String(statusRaw || '').trim().toLowerCase());
+
   const statusToMarker = (statusRaw) => {
     const s = String(statusRaw || '').toLowerCase();
     if (s === 'pending') return 'marker warn';
+    // Kept for the cancelled styling should HIDDEN_FROM_CALENDAR ever be relaxed.
     if (s === 'cancelled' || s === 'canceled') return 'marker danger';
     return 'marker';
   };
@@ -237,6 +246,9 @@
   const mapAppointmentsToEvents = (appointments) => {
     const events = [];
     for (const raw of appointments || []) {
+      // Cancelled/declined requests free their slot and are excluded from the calendar.
+      if (isHiddenStatus(raw.status)) continue;
+
       const dt = normalizeDateTime(raw.dateTime || raw.date || null);
       if (!dt.date) continue;
 

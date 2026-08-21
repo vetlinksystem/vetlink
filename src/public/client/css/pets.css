@@ -189,3 +189,36 @@
   padding:1rem 1rem .6rem;
 }
 .modal .panel .content{ padding:0 1rem 1rem; }
+
+/* ===== Pet form: breeding sub-form + required markers (added) ===== */
+.form-grid label > span{
+  display:block;
+  margin-bottom:.3rem;
+  font-size:.82rem;
+  font-weight:600;
+  color:var(--text);
+}
+.form-grid label .req{ color:#C0563B; font-weight:700; }
+
+.breeding-box{
+  border:1px solid var(--line, #E9DFCD);
+  border-radius:14px;
+  background:#FBF7F0;
+  padding:.9rem 1rem;
+  display:grid;
+  gap:.75rem;
+}
+.breeding-box label > span{ font-size:.8rem; }
+
+.breeding-note{
+  font-size:.78rem;
+  line-height:1.45;
+  padding:.5rem .65rem;
+  border-radius:8px;
+  border-left:3px solid transparent;
+}
+.breeding-note:empty{ display:none; }
+.breeding-note.info { color:#6B6255; background:#F3EDE3; border-left-color:#C8A06A; }
+.breeding-note.ok   { color:#2F6B4F; background:#E9F4EE; border-left-color:#3F8F68; }
+.breeding-note.warn { color:#8A6A22; background:#FBF3DF; border-left-color:#D8A828; }
+.breeding-note.error{ color:#8C4A2F; background:#FDF3EE; border-left-color:#C0563B; }

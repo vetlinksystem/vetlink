@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink — Medical Records</title>
+  <link rel="icon" type="image/png" href="/logo.png"/>
+  <link rel="stylesheet" href="/employee/css/dashboard.css"/>
+  <link rel="stylesheet" href="/employee/css/core.css"/>
+  <link rel="stylesheet" href="/employee/css/records.css"/>
+</head>
+<body>
+<div id="app" class="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <img src="/logo.png" class="logo" alt="VetLink"/>
+      <span class="brand-name">VetLink</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="/employee/dashboard"><span class="icon">📊</span><span>Analytics</span></a>
+        <a class="nav-item" href="/employee/reports"><span class="icon">📈</span><span>Reports</span></a>
+      <a class="nav-item" href="/employee/users"><span class="icon">👥</span><span>Registered Customer</span></a>
+      <a class="nav-item" href="/employee/employees"><span class="icon">🧑</span><span>Manage Employees</span></a>
+      <a class="nav-item" href="/employee/pets"><span class="icon">🐾</span><span>Manage Pets</span></a>
+      <a class="nav-item" href="/employee/pet-records"><span class="icon">📋</span><span>Pet Records</span></a>
+      <a class="nav-item active" href="/employee/records"><span class="icon">🩺</span><span>Medical Records</span></a>
+      <a class="nav-item" href="/employee/messages"><span class="icon">💬</span><span>Messages</span></a>
+      <a class="nav-item" href="/employee/breeding"><span class="icon">💞</span><span>Breeding</span></a>
+      <a class="nav-item" href="/employee/schedule"><span class="icon">🗓️</span><span>Schedule</span></a>
+      <a class="nav-item" href="/employee/appointments"><span class="icon">📝</span><span>Appointments</span></a>
+      <a class="nav-item" href="/employee/profile"><span class="icon">⚙️</span><span>Update Profile</span></a>
+      <div class="nav-spacer"></div>
+      <button class="nav-item danger" id="logoutBtn"><span class="icon">↩️</span><span>Logout</span></button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <button id="sidebarToggle" class="ghost-btn" aria-label="Toggle menu">☰</button>
+      <div class="breadcrumbs">Home <span class="sep">/</span> <span>Medical Records</span></div>
+      <div class="account">
+        <button id="accountBtn" class="avatar-btn" aria-haspopup="menu" aria-expanded="false">
+          <span id="accountName">User</span><span class="avatar" aria-hidden="true">🛡️</span>
+        </button>
+        <div id="accountMenu" class="menu" role="menu">
+          <a href="/employee/profile" role="menuitem">Settings / Profile</a>
+          <a href="#" id="menuLogout" role="menuitem">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="view active">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Medical Records</h1>
+          <p class="page-sub" id="rxRoleNote">Records can only be added or edited by veterinarians.</p>
+        </div>
+        <div class="tools">
+          <button id="rxPrintBtn" class="btn-ghost">🖨️ Print</button>
+          <button id="rxAddBtn" class="btn-primary" data-requires-permission="records.manage">＋ Add Record</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card rx-filters">
+        <div class="searchbar" role="search">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input id="rxSearch" class="input search-input" placeholder="Search by pet, owner, record ID, veterinarian or notes…"/>
+        </div>
+        <label class="rx-field">
+          <span>Type</span>
+          <select id="rxTypeFilter" class="input">
+            <option value="">All types</option>
+          </select>
+        </label>
+        <label class="rx-field">
+          <span>From</span>
+          <input id="rxFrom" class="input" type="date"/>
+        </label>
+        <label class="rx-field">
+          <span>To</span>
+          <input id="rxTo" class="input" type="date"/>
+        </label>
+        <button id="rxClearBtn" class="btn-ghost">Clear</button>
+      </div>
+
+      <div id="rxSummary" class="rx-summary"></div>
+
+      <!-- Records table -->
+      <div class="card table rx-table-wrap">
+        <table id="rxTable">
+          <thead>
+            <tr>
+              <th>Record</th>
+              <th>Date</th>
+              <th>Pet</th>
+              <th>Owner</th>
+              <th>Type</th>
+              <th>Veterinarian</th>
+              <th class="rx-no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rxTableBody">
+            <tr><td colspan="7" class="rx-muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ===== Add Record Modal (veterinarian / admin only) ===== -->
+<div class="modal" id="rxAddModal" aria-hidden="true" role="dialog" aria-labelledby="rxAddTitle">
+  <div class="modal-backdrop" data-rx-close></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="rxAddTitle">Add Medical Record</h2>
+      <button class="modal-close" data-rx-close aria-label="Close">✕</button>
+    </div>
+
+    <form id="rxForm" class="modal-body">
+      <div class="rx-form-grid">
+        <label class="rx-field">
+          <span>Pet <b class="req">*</b></span>
+          <select id="rxPet" class="input" required></select>
+        </label>
+        <label class="rx-field">
+          <span>Record type <b class="req">*</b></span>
+          <select id="rxType" class="input" required>
+            <option value="">Select type…</option>
+          </select>
+        </label>
+        <label class="rx-field">
+          <span>Date <b class="req">*</b></span>
+          <input id="rxDate" class="input" type="date" required/>
+        </label>
+        <label class="rx-field">
+          <span>Veterinarian</span>
+          <input id="rxVet" class="input" placeholder="Attending veterinarian"/>
+        </label>
+      </div>
+
+      <!-- Type-specific fields are built here from /catalogs/medical -->
+      <div id="rxTypeFields" class="rx-type-fields"></div>
+
+      <label class="rx-field rx-span-2">
+        <span>Notes</span>
+        <textarea id="rxNotes" class="input" rows="3" placeholder="Additional notes…"></textarea>
+      </label>
+
+      <label class="rx-field rx-span-2">
+        <span>Attachment (optional)</span>
+        <input id="rxFile" class="input" type="file" accept="image/*,application/pdf"/>
+        <small class="hint">Lab result, x-ray or scanned document.</small>
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" data-rx-close>Cancel</button>
+        <button type="submit" class="btn-primary" id="rxSaveBtn">Save Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Printable record sheet ===== -->
+<div id="rxPrintArea" class="rx-print-area" aria-hidden="true"></div>
+
+<div class="toast" id="rxToast"></div>
+
+<script src="/employee/js/core.js"></script>
+<script src="/employee/js/records.js"></script>
+</body>
+</html>

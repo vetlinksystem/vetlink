@@ -30,3 +30,17 @@
   display:flex;
   gap:.5rem;
 }
+
+/* Read-only notice: records are maintained by the clinic, not the owner. */
+.records-readonly-note{
+  margin-top:.75rem;
+  padding:.7rem .9rem;
+  border:1px solid #E9DFCD;
+  border-left:3px solid #C8A06A;
+  border-radius:10px;
+  background:#FBF7F0;
+  font-size:.82rem;
+  line-height:1.5;
+  color:#6B6255;
+}
+.records-readonly-note a{ color:#8C6E44; font-weight:600; }
