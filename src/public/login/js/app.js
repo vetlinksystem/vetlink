@@ -272,8 +272,20 @@
       setStatus('Please enter a valid contact number (e.g. 09171234567).', 'error');
       return;
     }
-    if (!payload.address) {
-      setStatus('Complete address is required.', 'error');
+    // Address is stored in 1NF (street / barangay / city / province) — check the parts,
+    // not the derived flat `address`, which the payload never carries.
+    const ADDRESS_LABELS = {
+      street: 'house/street',
+      barangay: 'barangay',
+      city: 'city/municipality',
+      province: 'province'
+    };
+    const missingAddress = Object.keys(ADDRESS_LABELS).filter(k => !payload[k]);
+    if (missingAddress.length) {
+      setStatus(
+        `Please complete your address — missing: ${missingAddress.map(k => ADDRESS_LABELS[k]).join(', ')}.`,
+        'error'
+      );
       return;
     }
     if (!checkPasswordRules(payload.password)) {

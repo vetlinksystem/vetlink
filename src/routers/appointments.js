@@ -11,6 +11,7 @@ const deleteAppointmentController = require('../controllers/appointments/delete'
 const listAppointmentsController = require('../controllers/appointments/list');
 const createAppointmentController = require('../controllers/appointments/create');
 const updateAppointmentPartialController = require('../controllers/appointments/update_partial');
+const availabilityController = require('../controllers/appointments/availability');
 
 // Staff may add/edit appointments; only a veterinarian may confirm/cancel/complete.
 const appointmentWriteAccess = require('../middlewares/appointment_action_access');
@@ -23,6 +24,9 @@ appointmentRouters.put('/update', updateAppointmentController);
 appointmentRouters.delete('/delete', deleteAppointmentController);
 
 // ===== REST endpoints =====
+// GET /appointments/availability?date=YYYY-MM-DD — taken time slots for that day.
+// Declared before '/' so it is not swallowed by a later parameterised route.
+appointmentRouters.get('/availability', availabilityController);
 // GET /appointments?limit=100&offset=0
 appointmentRouters.get('/', listAppointmentsController);
 // POST /appointments

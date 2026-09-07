@@ -66,6 +66,7 @@
   const serviceInput= document.getElementById('aService');
   const notesInput  = document.getElementById('aNotes');
   const submitBtn   = document.getElementById('aSubmit');
+  const slotHint    = document.getElementById('aSlotHint');
 
   const toast       = document.getElementById('toast');
 
@@ -199,6 +200,53 @@
     });
   }
 
+  // ===== Slot availability =====
+  // One appointment per time slot. The server rejects a taken slot, but the client is
+  // told up front which times are gone so it never gets that far.
+  const API_AVAILABILITY = '/appointments/availability';
+  let TAKEN = [];
+
+  const fmt12h = (t) => {
+    const [h, m] = String(t || '').split(':');
+    const hour = parseInt(h, 10);
+    if (Number.isNaN(hour)) return t;
+    return `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
+  };
+
+  const refreshAvailability = async () => {
+    TAKEN = [];
+    if (!slotHint) return;
+    const date = dateInput?.value;
+    if (!date) { slotHint.textContent = ''; return; }
+
+    slotHint.textContent = 'Checking availability…';
+    const { ok, body } = await fetchJSON(`${API_AVAILABILITY}?date=${encodeURIComponent(date)}`);
+    if (!ok || body?.success === false) { slotHint.textContent = ''; return; }
+
+    TAKEN = Array.isArray(body.taken) ? body.taken : [];
+    slotHint.textContent = body.full
+      ? 'This day is fully booked — please choose another date.'
+      : TAKEN.length
+        ? `Already booked: ${TAKEN.slice().sort().map(fmt12h).join(', ')}`
+        : 'All times are open on this day.';
+    slotHint.classList.toggle('warn', !!body.full);
+    validateSlot();
+  };
+
+  /** Warn as soon as a taken time is typed, rather than at submit. */
+  const validateSlot = () => {
+    if (!slotHint || !timeInput?.value) return true;
+    const clash = TAKEN.includes(timeInput.value);
+    if (clash) {
+      slotHint.textContent = `${fmt12h(timeInput.value)} is already booked. Please choose another time.`;
+      slotHint.classList.add('warn');
+    }
+    return !clash;
+  };
+
+  dateInput?.addEventListener('change', refreshAvailability);
+  timeInput?.addEventListener('change', validateSlot);
+
   // Book buttons
   const openBooking = () => {
     if (!petSelect) return;
@@ -217,8 +265,10 @@
     timeInput.value = '';
     serviceInput.value = '';
     notesInput.value = '';
+    if (slotHint) { slotHint.textContent = ''; slotHint.classList.remove('warn'); }
 
     openModal();
+    refreshAvailability();
   };
 
   if (bookBtn) bookBtn.addEventListener('click', openBooking);
@@ -249,6 +299,15 @@
       const dt = new Date(`${payload.date}T${payload.time}:00`);
       if (isNaN(dt) || dt < new Date()) {
         showToast('You cannot book an appointment in the past.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save';
+        return;
+      }
+
+      // Client-side guard: the slot is already taken (the server enforces this too).
+      if (TAKEN.includes(payload.time)) {
+        showToast(`${fmt12h(payload.time)} is already booked. Please choose another time.`);
+        validateSlot();
         submitBtn.disabled = false;
         submitBtn.textContent = 'Save';
         return;

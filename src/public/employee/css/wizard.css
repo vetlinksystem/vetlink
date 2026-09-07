@@ -1,0 +1,216 @@
+/* src/public/employee/css/wizard.css
+ * Styles for the shared step dialog (js/wizard.js).
+ * Loads after core.css, which supplies the .modal / .modal-card shell.
+ */
+
+/* The dialog is a fixed frame: same width, same top edge, same minimum body height on
+   every step of every flow. Content used to size the card and `margin:auto` re-centred
+   it, so the whole dialog grew, shrank and jumped between steps — different flows
+   looked like different components. */
+.vwz { align-items: flex-start; padding: 0 16px; }
+
+.vwz .modal-card {
+  width: min(660px, 96vw);
+  margin: 7vh auto 5vh;
+  display: flex;
+  flex-direction: column;
+  max-height: 86vh;
+}
+
+.vwz-title { margin: 0; font-size: 1.05rem; }
+.vwz-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+/* ===== The 1 — 2 — 3 rail =====
+   Equal grid columns with the label centred under its number, and the connector drawn
+   from the previous number's centre to this one. Laying the rail out as a flex row
+   instead made every connector a different length, because each step's leftover space
+   depended on how long its label happened to be. */
+.vwz-steps {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  list-style: none;
+  margin: 0;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #FBF7F0;
+}
+
+.vwz-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Spans the gap between two adjacent step numbers — always the same length. */
+.vwz-step + .vwz-step::before {
+  content: "";
+  position: absolute;
+  top: 13px;
+  right: 50%;
+  left: -50%;
+  height: 2px;
+  margin: 0 20px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.vwz-step.on + .vwz-step::before,
+.vwz-step.done + .vwz-step::before { background: var(--brand-2); }
+
+.vwz-step-no {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.vwz-step-label {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vwz-step.on { color: var(--brand-ink); }
+.vwz-step.on .vwz-step-no { background: var(--container); border-color: var(--brand); color: var(--brand-ink); }
+
+.vwz-step.done { color: var(--ink); }
+.vwz-step.done .vwz-step-no { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+/* ===== Body =====
+   Two columns, so a date or a count no longer stretches across the whole dialog while
+   the next field does the same underneath it. min-height keeps a one-question step the
+   same size as a six-field one. */
+.vwz-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 14px;
+  /* A fixed viewport, not a content-sized one. Measured across the five flows the
+     natural step height ranges from 96px to 499px, so letting content drive it meant
+     the dialog visibly grew and shrank on every Next. It now stays one size and the
+     few genuinely long steps (a checklist, the review) scroll inside it. */
+  height: clamp(240px, 42vh, 400px);
+  overflow-y: auto;
+}
+
+/* Single-step dialogs (a plain confirm) have no sequence to stay steady for. */
+.vwz--compact .vwz-body { height: auto; max-height: 62vh; }
+.vwz--compact .modal-card { width: min(520px, 96vw); }
+.vwz-intro { margin: 0; grid-column: 1 / -1; color: var(--muted); font-size: 13.5px; }
+
+.vwz-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* Anything wide — text areas, option lists, checklists, read-only blocks — takes the
+   full row; short inputs pair up. */
+.vwz-field--full, .vwz-static { grid-column: 1 / -1; }
+.vwz-label { font-weight: 700; font-size: 13.5px; }
+.vwz-req { color: var(--danger); }
+.vwz-hint { margin: 0; color: var(--muted); font-size: 12.5px; }
+
+.vwz-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  padding: 9px 11px;
+  font: inherit;
+}
+.vwz-input:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(200, 160, 106, .25);
+}
+textarea.vwz-input { resize: vertical; min-height: 72px; }
+
+/* Radio options render as pickable cards rather than bare dots. Equal columns and a
+   shared min-height so a pair with hint text is not visibly taller than a pair without. */
+.vwz-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+.vwz-choice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.vwz-choice:hover { background: #FBF7F0; border-color: var(--brand-2); }
+.vwz-choice.on { background: var(--container); border-color: var(--brand); }
+.vwz-choice input { flex: 0 0 auto; accent-color: var(--brand-ink); }
+.vwz-choice-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vwz-choice-text small { color: var(--muted); font-size: 12px; }
+
+.vwz-checklist { display: flex; flex-direction: column; gap: 8px; }
+.vwz-check { display: flex; align-items: flex-start; gap: 9px; font-size: 13.5px; cursor: pointer; }
+.vwz-check input { margin-top: 3px; accent-color: var(--brand-ink); }
+
+.vwz-static { font-size: 14px; }
+.vwz-confirm { margin: 0; }
+.vwz-confirm.danger { color: var(--danger); font-weight: 600; }
+
+/* ===== Review step ===== */
+.vwz-review-intro, .vwz-review-head, .vwz-review { grid-column: 1 / -1; }
+.vwz-review-intro { margin: 0; color: var(--muted); font-size: 13.5px; }
+.vwz-review-head {
+  margin: 6px 0 0;
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--brand-ink);
+}
+.vwz-review { margin: 0; display: flex; flex-direction: column; gap: 0; }
+.vwz-review-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.vwz-review-row:last-child { border-bottom: 0; }
+.vwz-review-row dt { flex: 0 0 42%; color: var(--muted); font-size: 13px; margin: 0; }
+.vwz-review-row dd { flex: 1 1 auto; margin: 0; font-weight: 600; font-size: 13.5px; word-break: break-word; }
+
+/* ===== Footer ===== */
+.vwz-error {
+  margin: 0;
+  padding: 0 16px;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+.vwz-actions { padding: 12px 16px; margin-top: 0; }
+/* .btn-ghost sets display:inline-flex, which beats the [hidden] default — Back would
+   still be drawn on the first step without this. */
+.vwz [hidden] { display: none !important; }
+/* Cancel sits on the left, Back/Next stay together on the right. */
+.vwz-actions > [data-vwz-cancel] { margin-right: auto; }
+
+@media (max-width: 560px) {
+  .vwz-body { grid-template-columns: 1fr; height: auto; max-height: 62vh; }
+  .vwz-step-label { display: none; }
+  .vwz .modal-card { margin: 3vh auto; max-height: 94vh; }
+}

@@ -119,6 +119,72 @@
 /* Row action groups keep an even rhythm rather than collapsing together. */
 .row-actions { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
 
+/* Visible to screen readers only — e.g. the unread count behind the notification dot. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== Modal shell =====
+ * .modal / .modal-backdrop / .modal-card were only ever defined inside
+ * manage_employees.css and pets.css, so a page that used the same markup without
+ * loading one of those (messages) rendered the dialog as plain content at the
+ * bottom of the page. The shell now lives here with the rest of the shared UI;
+ * page stylesheets load afterwards and can still override it.
+ */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6vh 16px;
+  overflow-y: auto;
+}
+.modal.show { display: flex; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 34, 22, .38);
+}
+
+.modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(680px, 96vw);
+  margin: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.modal-card--sm { width: min(520px, 96vw); }
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-head h2 { margin: 0; font-size: 1.05rem; }
+
+.modal-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+/* The dialog owns the scroll; the page behind it must not scroll with it. */
+body.modal-open { overflow: hidden; }
+
 /* ===== Modal dismiss ===== */
 .modal-close {
   display: inline-flex;

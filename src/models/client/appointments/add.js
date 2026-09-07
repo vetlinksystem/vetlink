@@ -1,7 +1,6 @@
 const firestoreManager = require('../../../fb/firestore_manager');
 const { generateAppointmentId } = require('../../../utilities/idGenerator');
-
-const pad2 = (n) => String(n).padStart(2, '0');
+const { checkSlotAvailable } = require('../../../utilities/appointmentSlots');
 
 // The clinic accepts over-the-counter payment only — no online payment is processed.
 const PAYMENT_METHOD = 'over_the_counter';
@@ -10,12 +9,6 @@ const isPastDateTime = (date, time) => {
   const dt = new Date(`${date}T${time}:00`);
   if (isNaN(dt)) return true;
   return dt < new Date();
-};
-
-const countAppointmentsForDate = async (date) => {
-  const rows = await firestoreManager.getAllData('appointments', { dateTime: date });
-  if (!Array.isArray(rows)) return 0;
-  return rows.filter(r => String(r.dateTime || '').startsWith(date) && String(r.status || '').toLowerCase() !== 'cancelled').length;
 };
 
 const addClientAppointment = async (clientId, body) => {
@@ -47,9 +40,10 @@ const addClientAppointment = async (clientId, body) => {
     };
   }
 
-  const bookedCount = await countAppointmentsForDate(date);
-  if (bookedCount >= 5) {
-    return { success: false, message: 'This day is fully booked (max 5 appointments). Please choose another date.' };
+  // Daily cap, the time slot itself, and the same pet twice in one day.
+  const slot = await checkSlotAvailable({ date, time, petId });
+  if (!slot.ok) {
+    return { success: false, message: slot.message, reason: slot.reason };
   }
 
   // Use sequential, human-friendly IDs (a1001, a1002, ...)

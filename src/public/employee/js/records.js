@@ -409,16 +409,21 @@
     vetInput.value = window.VETLINK_EMPLOYEE?.name || '';
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
   };
 
   const closeModal = () => {
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
   };
 
   addBtn?.addEventListener('click', openModal);
   document.addEventListener('click', (e) => {
     if (e.target.closest('[data-rx-close]')) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
   });
 
   form?.addEventListener('submit', async (e) => {

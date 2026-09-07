@@ -1,5 +1,6 @@
 const firestoreManager = require('../../fb/firestore_manager');
 const addNotification = require('../notifications/add');
+const { checkSlotAvailable, dayOf, timeOf } = require('../../utilities/appointmentSlots');
 
 // Partial update so we don't overwrite the appointment document.
 const updateAppointmentPartial = async (id, patch = {}) => {
@@ -61,6 +62,20 @@ const updateAppointmentPartial = async (id, patch = {}) => {
     data.statusReason = reasonText;
     data.reasonType = String(data.reasonType || (isBecomingCancelled ? 'cancelled' : 'rescheduled'));
     data.reasonSetAt = new Date().toISOString();
+  }
+
+  // A reschedule must respect the same slot rules as a new booking, or the clinic can
+  // move an appointment straight on top of an existing one.
+  if (isRescheduled && !isBecomingCancelled) {
+    const slot = await checkSlotAvailable({
+      date: dayOf(data.dateTime),
+      time: timeOf(data.dateTime),
+      petId: data.petId ?? before?.petId,
+      ignoreId: id
+    });
+    if (!slot.ok) {
+      return { success: false, message: slot.message, reason: slot.reason };
+    }
   }
 
   if (Object.keys(data).length <= 1) {

@@ -74,18 +74,21 @@
 
   const byId = (arr, id) => arr.find(x => String(x.id) === String(id));
 
-  // A cancelled appointment no longer holds its slot, so it must not appear on the
-  // calendar at all — previously it still drew a dot and counted toward the "+N"
-  // overflow, which made booked days look busier than they were.
-  const HIDDEN_FROM_CALENDAR = ['cancelled', 'canceled', 'declined', 'rejected'];
+  // The calendar shows the clinic's actual schedule, so an appointment only appears
+  // once someone has acted on it. A cancelled request no longer holds its slot, and a
+  // pending request is still just a request — neither belongs on the calendar. Both
+  // used to draw a dot and count toward the "+N" overflow, which made days look
+  // busier than they really were. Pending requests are handled on Appointments.
+  const HIDDEN_FROM_CALENDAR = ['cancelled', 'canceled', 'declined', 'rejected', 'pending', ''];
 
   const isHiddenStatus = (statusRaw) =>
     HIDDEN_FROM_CALENDAR.includes(String(statusRaw || '').trim().toLowerCase());
 
   const statusToMarker = (statusRaw) => {
     const s = String(statusRaw || '').toLowerCase();
+    if (s === 'completed') return 'marker done';
+    // Kept for the styling should HIDDEN_FROM_CALENDAR ever be relaxed.
     if (s === 'pending') return 'marker warn';
-    // Kept for the cancelled styling should HIDDEN_FROM_CALENDAR ever be relaxed.
     if (s === 'cancelled' || s === 'canceled') return 'marker danger';
     return 'marker';
   };
@@ -140,9 +143,18 @@
     if (!pop || !popTitle || !popBody) return;
 
     popTitle.textContent = title;
+
+    // Booking now rejects a taken slot, but records saved before that rule still exist,
+    // so a slot holding more than one appointment is flagged instead of shown as two
+    // identical-looking rows.
+    const perSlot = {};
+    events.forEach(ev => { perSlot[ev.start] = (perSlot[ev.start] || 0) + 1; });
+
     popBody.innerHTML = events.map(ev => `
-      <div class="event">
-        <div class="when">${ev.start}${ev.end ? ' – ' + ev.end : ''}</div>
+      <div class="event${perSlot[ev.start] > 1 ? ' conflict' : ''}">
+        <div class="when">${ev.start}${ev.end ? ' – ' + ev.end : ''}${
+          perSlot[ev.start] > 1 ? '<span class="conflict-flag">double booked</span>' : ''
+        }</div>
         <div class="purpose">${ev.purpose || 'Appointment'}</div>
         <div class="meta">
           Owner: <a class="link" href="/employee/user?id=${encodeURIComponent(ev.ownerId)}">${ev.ownerName || ('#' + ev.ownerId)}</a>

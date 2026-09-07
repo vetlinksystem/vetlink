@@ -43,6 +43,10 @@
 
   let RECORDS = [];
 
+  // Every multi-answer flow below runs through the shared step dialog (js/wizard.js)
+  // instead of a chain of browser confirm()/prompt() boxes.
+  const wizard = window.vetlinkWizard;
+
   /**
    * Only a veterinarian may act on a breeding match. Admin and staff see the same
    * records read-only. core.js publishes the permission list from the server; the API
@@ -254,6 +258,11 @@
   // Step 9 final examination → step 10 breeding record → monitoring → offspring.
   // ===========================================================
 
+  const FIT_OPTIONS = [
+    { value: 'yes', label: 'Fit to breed', hint: 'Passed the examination' },
+    { value: 'no', label: 'Not fit', hint: 'Stops the breeding' }
+  ];
+
   /** Step 9: the final pre-breeding health examination of both pets. */
   const finalExam = async (id) => {
     const r = RECORDS.find(x => String(x.id) === String(id));
@@ -261,22 +270,63 @@
     const a = r.petA?.name || r.petAId;
     const b = r.petB?.name || r.petBId;
 
-    const aFit = confirm(`Final health examination — ${a} × ${b}\n\nIs ${a} fit to breed?\n\nOK = fit, Cancel = not fit`);
-    const bFit = confirm(`Is ${b} fit to breed?\n\nOK = fit, Cancel = not fit`);
-
-    const findings = prompt(
-      (aFit && bFit)
-        ? 'Examination findings (optional):'
-        : 'Findings — why is the pet not fit to breed? (shown to both owners):'
-    ) || '';
-
-    if (!aFit || !bFit) {
-      if (!confirm('This will STOP the breeding and release both pets. Continue?')) return;
-    }
+    const answers = await wizard.open({
+      title: 'Final health examination',
+      subtitle: `${a} × ${b} • ${r.id}`,
+      submitLabel: 'Save examination',
+      reviewIntro: 'This result is recorded on the breeding and shown to both owners.',
+      steps: [
+        {
+          title: a,
+          intro: `Examine ${a} and record whether the pet is fit to breed.`,
+          fields: [{
+            name: 'aFit', label: `Is ${a} fit to breed?`, type: 'radio',
+            options: FIT_OPTIONS, value: 'yes', required: true
+          }]
+        },
+        {
+          title: b,
+          intro: `Examine ${b} and record whether the pet is fit to breed.`,
+          fields: [{
+            name: 'bFit', label: `Is ${b} fit to breed?`, type: 'radio',
+            options: FIT_OPTIONS, value: 'yes', required: true
+          }]
+        },
+        {
+          title: 'Findings',
+          fields: [
+            {
+              name: 'findings', type: 'textarea',
+              label: 'Examination findings',
+              placeholder: 'What was observed during the examination…',
+              hint: 'Shown to both owners.'
+            },
+            // A failed examination ends the breeding, so it is confirmed in the flow
+            // rather than in a second dialog the vet could dismiss by accident.
+            {
+              name: 'stopAck', type: 'checkbox',
+              checkboxLabel: 'I understand this stops the breeding and releases both pets.',
+              showIf: (d) => d.aFit === 'no' || d.bFit === 'no',
+              required: true,
+              requiredMessage: 'Confirm that you want to stop this breeding.'
+            }
+          ],
+          validate: (d) => (d.aFit === 'no' || d.bFit === 'no') && !String(d.findings || '').trim()
+            ? 'Findings are required when a pet is not fit to breed.'
+            : null
+        }
+      ]
+    });
+    if (!answers) return;
 
     const { ok, body } = await fetchJSON('/breeding/clearance', {
       method: 'PUT',
-      body: JSON.stringify({ id, petAFit: aFit, petBFit: bFit, findings })
+      body: JSON.stringify({
+        id,
+        petAFit: answers.aFit === 'yes',
+        petBFit: answers.bFit === 'yes',
+        findings: answers.findings || ''
+      })
     });
 
     if (!ok || body.success === false) { toast(body?.message || 'Failed to record the examination.'); return; }
@@ -291,31 +341,67 @@
 
     const existing = r.breedingDetails || {};
     const today = new Date().toISOString().slice(0, 10);
+    const pair = `${r.petA?.name || r.petAId} × ${r.petB?.name || r.petBId}`;
 
-    const breedingDate = prompt('Breeding date (YYYY-MM-DD):', existing.breedingDate || today);
-    if (breedingDate === null) return;
-
-    const matingType = prompt(
-      'Mating type — type "natural" or "artificial_insemination":',
-      existing.matingType || 'natural'
-    );
-    if (matingType === null) return;
-
-    const numberOfMating = prompt('Number of matings:', existing.numberOfMating || '1');
-    if (numberOfMating === null) return;
-
-    const place = prompt('Place / location:', existing.place || '') || '';
-    const studFee = prompt('Stud fee (leave blank if none):', existing.studFee ?? '') || '';
-    const estimatedLitterSize = prompt('Estimated litter size (e.g. 3 - 6):', existing.estimatedLitterSize || '') || '';
-    const healthObservations = prompt('Health observations:', existing.healthObservations || '') || '';
-    const notes = prompt('Additional notes:', existing.notes || '') || '';
+    const answers = await wizard.open({
+      title: existing.breedingDate ? 'Edit breeding record' : 'Breeding record',
+      subtitle: `${pair} • ${r.id}`,
+      submitLabel: 'Save record',
+      reviewIntro: 'The expected due date is calculated from the breeding date once saved.',
+      steps: [
+        {
+          title: 'Mating',
+          fields: [
+            {
+              name: 'breedingDate', label: 'Breeding date', type: 'date',
+              value: existing.breedingDate || today, required: true, max: today,
+              validate: (v) => new Date(v) > new Date() ? 'The breeding date cannot be in the future.' : null
+            },
+            {
+              name: 'matingType', label: 'Mating type', type: 'radio', required: true,
+              value: existing.matingType || 'natural',
+              options: [
+                { value: 'natural', label: 'Natural' },
+                { value: 'artificial_insemination', label: 'Artificial insemination' }
+              ]
+            },
+            {
+              name: 'numberOfMating', label: 'Number of matings', type: 'number',
+              value: existing.numberOfMating || '1', min: 1, required: true
+            },
+            { name: 'place', label: 'Place / location', type: 'text', value: existing.place || '' }
+          ]
+        },
+        {
+          title: 'Details',
+          fields: [
+            {
+              name: 'studFee', label: 'Stud fee', type: 'text',
+              value: existing.studFee ?? '', placeholder: 'Leave blank if none'
+            },
+            {
+              name: 'estimatedLitterSize', label: 'Estimated litter size', type: 'text',
+              value: existing.estimatedLitterSize || '', placeholder: 'e.g. 3 - 6'
+            }
+          ]
+        },
+        {
+          title: 'Observations',
+          fields: [
+            {
+              name: 'healthObservations', label: 'Health observations', type: 'textarea',
+              value: existing.healthObservations || ''
+            },
+            { name: 'notes', label: 'Additional notes', type: 'textarea', value: existing.notes || '' }
+          ]
+        }
+      ]
+    });
+    if (!answers) return;
 
     const { ok, body } = await fetchJSON('/breeding/record', {
       method: 'PUT',
-      body: JSON.stringify({
-        id, breedingDate, matingType, numberOfMating, place, studFee,
-        estimatedLitterSize, healthObservations, notes
-      })
+      body: JSON.stringify({ id, ...answers })
     });
 
     if (!ok || body.success === false) { toast(body?.message || 'Failed to save the breeding record.'); return; }
@@ -329,35 +415,82 @@
     if (!r || !r.monitoring) { toast('No monitoring schedule on this record.'); return; }
 
     const m = r.monitoring;
-    const lines = (m.schedule || []).map((s, i) =>
-      `${i + 1}. ${s.label} — due ${s.dueDate} [${s.status}]`).join('\n');
+    const schedule = m.schedule || [];
+    const today = new Date().toISOString().slice(0, 10);
 
-    const choice = prompt(
-      `Monitoring — ${r.breedingDetails?.combination || ''}\n`
-      + `Pregnancy status: ${m.pregnancyStatus}\n`
-      + `Expected due date: ${m.expectedDueDate || '—'}\n\n`
-      + `${lines}\n\n`
-      + 'Type a pregnancy status (unconfirmed / confirmed / not_pregnant / delivered),\n'
-      + 'or a step number to mark it done:'
-    );
-    if (choice === null || !choice.trim()) return;
+    // The check-up schedule is read-only context; the vet picks what to update.
+    const scheduleHtml = schedule.length
+      ? `<dl class="vwz-review">${schedule.map(s => `
+          <div class="vwz-review-row">
+            <dt>${esc(s.label)}</dt>
+            <dd>due ${esc(s.dueDate)} — ${esc(s.status)}</dd>
+          </div>`).join('')}</dl>`
+      : '<p class="vwz-hint">No check-ups scheduled.</p>';
 
-    const value = choice.trim().toLowerCase();
-    const payload = { id };
+    const answers = await wizard.open({
+      title: 'Pregnancy monitoring',
+      subtitle: `${r.breedingDetails?.combination || r.id} • due ${m.expectedDueDate || '—'}`,
+      submitLabel: 'Save update',
+      steps: [
+        {
+          title: 'Current',
+          fields: [{
+            type: 'static',
+            html: `<p class="vwz-intro">Pregnancy status: <strong>${esc(m.pregnancyStatus)}</strong></p>${scheduleHtml}`
+          }]
+        },
+        {
+          title: 'What to update',
+          fields: [{
+            name: 'mode', label: 'What are you updating?', type: 'radio', required: true, value: 'status',
+            options: [
+              { value: 'status', label: 'Pregnancy status', hint: 'Confirmed, not pregnant, delivered' },
+              { value: 'step', label: 'A scheduled check-up', hint: 'Mark a check-up as done' }
+            ]
+          }]
+        },
+        {
+          title: 'Details',
+          fields: [
+            {
+              name: 'pregnancyStatus', label: 'Pregnancy status', type: 'select',
+              value: m.pregnancyStatus || 'unconfirmed',
+              showIf: (d) => d.mode === 'status',
+              options: [
+                { value: 'unconfirmed', label: 'Unconfirmed' },
+                { value: 'confirmed', label: 'Confirmed pregnant' },
+                { value: 'not_pregnant', label: 'Not pregnant' },
+                { value: 'delivered', label: 'Delivered' }
+              ]
+            },
+            {
+              name: 'confirmedDate', label: 'Confirmation date', type: 'date', value: today,
+              showIf: (d) => d.mode === 'status' && d.pregnancyStatus === 'confirmed'
+            },
+            {
+              name: 'stepKey', label: 'Check-up', type: 'select',
+              showIf: (d) => d.mode === 'step',
+              required: true,
+              value: schedule[0]?.key || '',
+              options: schedule.map(s => ({ value: s.key, label: `${s.label} — due ${s.dueDate}` }))
+            },
+            {
+              name: 'stepNotes', label: 'Check-up notes', type: 'textarea',
+              showIf: (d) => d.mode === 'step'
+            }
+          ]
+        }
+      ]
+    });
+    if (!answers) return;
 
-    if (/^\d+$/.test(value)) {
-      const step = (m.schedule || [])[Number(value) - 1];
-      if (!step) { toast('No such step.'); return; }
-      payload.stepKey = step.key;
-      payload.stepStatus = 'done';
-      payload.stepNotes = prompt(`Notes for "${step.label}":`, step.notes || '') || '';
-    } else {
-      payload.pregnancyStatus = value;
-      if (value === 'confirmed') {
-        payload.confirmedDate = prompt('Confirmation date (YYYY-MM-DD):',
-          new Date().toISOString().slice(0, 10)) || '';
-      }
-    }
+    const payload = answers.mode === 'step'
+      ? { id, stepKey: answers.stepKey, stepStatus: 'done', stepNotes: answers.stepNotes || '' }
+      : {
+          id,
+          pregnancyStatus: answers.pregnancyStatus,
+          ...(answers.pregnancyStatus === 'confirmed' ? { confirmedDate: answers.confirmedDate || '' } : {})
+        };
 
     const { ok, body } = await fetchJSON('/breeding/pregnancy', {
       method: 'PUT',
@@ -374,26 +507,45 @@
     const r = RECORDS.find(x => String(x.id) === String(id));
     if (!r) return;
 
-    const deliveryDate = prompt('Delivery date (YYYY-MM-DD):',
-      r.monitoring?.deliveredAt || new Date().toISOString().slice(0, 10));
-    if (deliveryDate === null) return;
+    const today = new Date().toISOString().slice(0, 10);
 
-    const entered = prompt(
-      'Offspring — one per line, as:  name, sex, weight_kg, status\n'
-      + 'status is "alive" or "stillborn" (defaults to alive).\n\n'
-      + 'Example:\n  Pup 1, Male, 0.4, alive\n  Pup 2, Female, 0.35, alive',
-      (r.offspring || []).map(o =>
-        `${o.name}, ${o.sex}, ${o.weight ?? ''}, ${o.status}`).join('\n')
-    );
-    if (entered === null) return;
+    const answers = await wizard.open({
+      title: 'Offspring records',
+      subtitle: `${r.petA?.name || r.petAId} × ${r.petB?.name || r.petBId} • ${r.id}`,
+      submitLabel: 'Save offspring',
+      steps: [
+        {
+          title: 'Delivery',
+          fields: [{
+            name: 'deliveryDate', label: 'Delivery date', type: 'date', required: true, max: today,
+            value: r.monitoring?.deliveredAt || today
+          }]
+        },
+        {
+          title: 'Litter',
+          intro: 'One offspring per line: name, sex, weight in kg, status.',
+          fields: [{
+            name: 'rows', label: 'Offspring', type: 'lines', required: true, rows: 7,
+            hint: 'status is "alive" or "stillborn" — it defaults to alive.',
+            placeholder: 'Pup 1, Male, 0.4, alive\nPup 2, Female, 0.35, alive',
+            value: (r.offspring || []).map(o => `${o.name}, ${o.sex}, ${o.weight ?? ''}, ${o.status}`),
+            validate: (v) => v.some(line => !line.split(',')[0]?.trim())
+              ? 'Every line needs a name before the first comma.'
+              : null
+          }]
+        }
+      ]
+    });
+    if (!answers) return;
 
-    const list = entered.split('\n').map(line => {
+    const list = answers.rows.map(line => {
       const [name, sex, weight, status] = line.split(',').map(s => (s || '').trim());
       return { name, sex, weight, status };
     }).filter(o => o.name || o.sex);
 
     if (!list.length) { toast('Add at least one offspring.'); return; }
 
+    const deliveryDate = answers.deliveryDate;
     const { ok, body } = await fetchJSON('/breeding/offspring', {
       method: 'PUT',
       body: JSON.stringify({ id, deliveryDate, offspring: list })
@@ -433,35 +585,86 @@
     const pair = r ? `${r.petA?.name || r.petAId} × ${r.petB?.name || r.petBId}` : id;
 
     if (decision === 'reject') {
-      notes = prompt(
-        `Not recommending breeding ${pair}.\n\n`
-        + 'Reason (shown to both owners):'
-      ) || '';
+      const answers = await wizard.open({
+        title: 'Not recommended',
+        subtitle: `${pair} • ${id}`,
+        submitLabel: 'Record decision',
+        reviewIntro: 'The reason below is sent to both owners.',
+        steps: [{
+          title: 'Reason',
+          intro: `You are recording that breeding ${pair} is not recommended.`,
+          fields: [{
+            name: 'notes', label: 'Reason (shown to both owners)', type: 'textarea',
+            required: true, rows: 5
+          }]
+        }]
+      });
+      if (!answers) return;
+      notes = answers.notes;
     } else if (decision === 'complete') {
-      if (!confirm(`Mark breeding ${pair} as completed?\nBoth pets will become available for breeding again.`)) return;
+      const ok = await wizard.confirm({
+        title: 'Complete breeding',
+        subtitle: `${pair} • ${id}`,
+        message: 'Both pets will become available for breeding again.',
+        confirmLabel: 'Mark completed'
+      });
+      if (!ok) return;
     } else if (decision === 'approve_with_conditions') {
       const picked = suggestedConditions(r?.compatibility);
-      const suggested = CONDITION_LIBRARY
-        .filter(c => picked.has(c.key))
-        .map(c => c.text)
-        .join('\n');
 
-      const entered = prompt(
-        `Approve breeding ${pair} WITH CONDITIONS.\n\n`
-        + 'One condition per line. These are recorded and sent to both owners.\n'
-        + 'Suggested conditions are pre-filled — edit as needed:',
-        suggested
-      );
-      if (entered === null) return; // cancelled
+      const answers = await wizard.open({
+        title: 'Approve with conditions',
+        subtitle: `${pair} • ${id}`,
+        submitLabel: 'Approve with conditions',
+        reviewIntro: 'These conditions are recorded on the breeding and sent to both owners.',
+        steps: [
+          {
+            title: 'Assessment',
+            fields: [{
+              type: 'static',
+              html: riskReport(r?.compatibility)
+            }]
+          },
+          {
+            title: 'Conditions',
+            intro: 'Conditions suggested by the assessment are pre-ticked. Add your own below.',
+            fields: [
+              {
+                name: 'picked', label: 'Standard conditions', type: 'checklist',
+                options: CONDITION_LIBRARY.map(c => ({ value: c.text, label: c.text })),
+                value: CONDITION_LIBRARY.filter(c => picked.has(c.key)).map(c => c.text)
+              },
+              {
+                name: 'extra', label: 'Additional conditions', type: 'lines', rows: 3,
+                hint: 'One per line.'
+              }
+            ],
+            validate: (d) => (d.picked.length + d.extra.length)
+              ? null
+              : 'Select or write at least one condition.'
+          },
+          {
+            title: 'Note',
+            fields: [{
+              name: 'notes', label: 'Additional note for the owners', type: 'textarea',
+              hint: 'Optional.'
+            }]
+          }
+        ]
+      });
+      if (!answers) return;
 
-      conditions = entered.split('\n').map(s => s.trim()).filter(Boolean);
-      if (!conditions.length) {
-        toast('At least one condition is required.');
-        return;
-      }
-      notes = prompt('Additional note for the owners (optional):') || '';
+      conditions = answers.picked.concat(answers.extra);
+      notes = answers.notes || '';
     } else {
-      if (!confirm(`Approve breeding ${pair}?\nBoth pets will be reserved and hidden from the match list, and other open proposals for them will be cancelled.`)) return;
+      const ok = await wizard.confirm({
+        title: 'Approve breeding',
+        subtitle: `${pair} • ${id}`,
+        message: 'Both pets will be reserved and hidden from the match list, and other open '
+               + 'proposals for them will be cancelled.',
+        confirmLabel: 'Approve'
+      });
+      if (!ok) return;
     }
 
     const { ok, body } = await fetchJSON('/breeding/admin-decision', {

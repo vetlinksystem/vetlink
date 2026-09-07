@@ -70,7 +70,17 @@ const uploadBuffer = async (folder, buffer, opts = {}) => {
   });
 
   if (error) {
-    return { success: false, message: error.message || 'Upload failed.' };
+    // supabase-js surfaces a dead/paused project or a bad SUPABASE_URL as a bare
+    // "fetch failed", which tells whoever is uploading nothing useful. Name it.
+    const raw = error.message || 'Upload failed.';
+    const unreachable = /fetch failed|ENOTFOUND|ECONNREFUSED|network/i.test(raw);
+    if (unreachable) console.error('Supabase storage unreachable:', SUPABASE_URL, raw);
+    return {
+      success: false,
+      message: unreachable
+        ? 'File storage is unreachable right now. Please try again later, or contact the administrator.'
+        : raw,
+    };
   }
 
   const { data } = sb.storage.from(BUCKET).getPublicUrl(objectPath);

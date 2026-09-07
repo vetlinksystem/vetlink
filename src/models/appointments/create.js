@@ -1,16 +1,11 @@
 const firestoreManager = require('../../fb/firestore_manager');
 const { generateAppointmentId } = require('../../utilities/idGenerator');
+const { checkSlotAvailable } = require('../../utilities/appointmentSlots');
 
 const isPastDateTime = (date, time) => {
   const dt = new Date(`${date}T${time}:00`);
   if (isNaN(dt)) return true;
   return dt < new Date();
-};
-
-const countAppointmentsForDate = async (date) => {
-  const rows = await firestoreManager.getAllData('appointments', { dateTime: date });
-  if (!Array.isArray(rows)) return 0;
-  return rows.filter(r => String(r.dateTime || '').startsWith(date) && String(r.status || '').toLowerCase() !== 'cancelled').length;
 };
 
 // Create an appointment (used by Employee UI). Uses same schema as client appointment creation.
@@ -34,10 +29,10 @@ const createAppointment = async (body = {}) => {
     return { success: false, message: 'You cannot schedule an appointment in the past.' };
   }
 
-  // Limit: max 5 appointments per day (excluding cancelled)
-  const bookedCount = await countAppointmentsForDate(date);
-  if (bookedCount >= 5) {
-    return { success: false, message: 'This day is fully booked (max 5 appointments). Please choose another date.' };
+  // Daily cap, the time slot itself, and the same pet twice in one day.
+  const slot = await checkSlotAvailable({ date, time, petId });
+  if (!slot.ok) {
+    return { success: false, message: slot.message, reason: slot.reason };
   }
 
   // Use sequential, human-friendly IDs (a1001, a1002, ...)

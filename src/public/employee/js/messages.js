@@ -272,6 +272,7 @@
     newPet.innerHTML = '<option value="">Not about a specific pet</option>';
     newModal.classList.add('show');
     newModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
 
     if (!newClient.options.length) {
       const { ok, body } = await fetchJSON(`${API_CLIENTS}?limit=500&offset=0`);
@@ -290,11 +291,15 @@
   const closeNew = () => {
     newModal.classList.remove('show');
     newModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
   };
 
   newBtn?.addEventListener('click', openNew);
   document.addEventListener('click', (e) => {
     if (e.target.closest('[data-ms-close]')) closeNew();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && newModal.classList.contains('show')) closeNew();
   });
 
   // Only that owner's pets can be the subject of the thread.

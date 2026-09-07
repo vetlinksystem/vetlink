@@ -53,3 +53,5 @@
 }
 .reason-note b{ color:#C0563B; }
 .hint{ display:block; margin-top:4px; font-size:12px; color:var(--muted); }
+/* A slot that is already taken, or a day that is full. */
+.hint.warn{ color:var(--danger); font-weight:600; }

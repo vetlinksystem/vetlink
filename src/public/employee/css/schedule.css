@@ -30,6 +30,15 @@
 .marker.warn{ background:#f59e0b; }
 .marker.danger{ background:#ef4444; }
 .marker.gray{ background:#94a3b8; }
+.marker.done{ background:#7C9A6B; }
+
+/* Two appointments already sitting on the same slot — new bookings are blocked, but
+   records created before that rule existed still need to be visible. */
+.event.conflict{ border-color:#E9C4B9; background:#FBF1EE; }
+.conflict-flag{
+  display:inline-block; margin-left:8px; padding:1px 7px; border-radius:999px;
+  background:#F3D9D1; color:#8C3A24; font-size:11px; font-weight:800; vertical-align:middle;
+}
 .count-pill{ margin-left:auto; font-size:11px; padding:2px 6px; border:1px solid var(--border); border-radius:999px; color:#475569; background:#fff; }
 
 .empty-day{ border:none; background:transparent; cursor:default; }
