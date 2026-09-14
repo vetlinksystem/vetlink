@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink • Employee Login</title>
+  <link rel="icon" type="image/png" href="/logo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="/login/css/styles.css"/>
+</head>
+<body class="page-auth" data-role="employee">
+
+  <header class="site-header">
+    <a class="brand-pill" href="/" aria-label="Doc Ben'z home">
+      <img src="/logo.png" alt="" class="brand-pill-logo"/>
+      <span class="brand-pill-name">Doc Ben’z</span>
+    </a>
+    <div class="tagline">
+      <svg class="paw" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paw"/></svg>
+      Healthy Pets <span class="dot-sep">•</span> Happier Lives
+    </div>
+  </header>
+
+  <main class="auth-split">
+    <aside class="auth-photo auth-photo-employee">
+      <div class="auth-photo-caption">
+        <h2>Trusted Professionals<br/>for Healthier Pets</h2>
+        <p>Access your staff dashboard,<br/>patient records and veterinary<br/>tools.</p>
+      </div>
+    </aside>
+
+    <div class="auth-panel">
+      <svg class="paw deco deco-panel" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paw"/></svg>
+
+      <div class="auth-card" id="authCard">
+        <h1 class="auth-title" id="formTitle">Employee Login</h1>
+        <p class="auth-sub" id="formSub">Authorized staff access</p>
+
+        <div class="status" id="authStatus" role="status" aria-live="polite"></div>
+
+        <div id="loginView">
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="loginUsername">Username / Employee ID</label>
+              <div class="input-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
+                <input id="loginUsername" type="text" placeholder="Enter your username or employee ID" autocomplete="username" required/>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="loginPassword">Password</label>
+              <div class="input-icon pw-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>
+                <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password" required/>
+                <button type="button" class="pw-toggle" data-toggle="loginPassword" aria-label="Show password" title="Show/Hide">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-eye"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <input type="hidden" id="loginUserType" value="employee"/>
+
+            <button class="submit" type="submit" id="loginSubmit">Login</button>
+          </form>
+
+          <div class="cta-box cta-note">
+            <svg class="cta-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>
+            <span><small>Employee accounts are created<br/>by the system administrator.</small></span>
+          </div>
+
+          <a href="/" class="back-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-back"/></svg> Back to portal
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div>© 2025 Doc Ben'z Veterinary Management System. All rights reserved.</div>
+    <div class="site-footer-links">
+      <a href="/privacy">Privacy Policy</a> •
+      <a href="/terms">Terms and Conditions</a>
+    </div>
+  </footer>
+
+  <!-- ICON SPRITE -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-paw" viewBox="0 0 24 24"><ellipse cx="6" cy="9.5" rx="2.1" ry="2.7" transform="rotate(-18 6 9.5)"/><ellipse cx="10" cy="5.6" rx="2.2" ry="2.9" transform="rotate(-6 10 5.6)"/><ellipse cx="14.6" cy="5.6" rx="2.2" ry="2.9" transform="rotate(8 14.6 5.6)"/><ellipse cx="18.4" cy="9.6" rx="2.1" ry="2.7" transform="rotate(20 18.4 9.6)"/><path d="M12.3 11.2c2.6 0 5.6 3.6 5.6 6.2 0 2-1.5 2.9-3 2.9-1.2 0-1.8-.6-2.6-.6s-1.4.6-2.6.6c-1.5 0-3-.9-3-2.9 0-2.6 3-6.2 5.6-6.2z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M3.8 20.5c.6-4.3 4-7 8.2-7s7.6 2.7 8.2 7c0 .5-.4.9-.9.9H4.7c-.5 0-.9-.4-.9-.9z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7 10V7.5a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="4.5" y="10" width="15" height="11" rx="2.2" fill="currentColor"/><circle cx="12" cy="15.5" r="1.5" fill="#fff"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1.8 12S5.5 5.5 12 5.5 22.2 12 22.2 12 18.5 18.5 12 18.5 1.8 12 1.8 12z" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M1.8 12S5.5 5.5 12 5.5 22.2 12 22.2 12 18.5 18.5 12 18.5 1.8 12 1.8 12z" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M4 20L20 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19.5 12h-14m5.5-5.5L5.5 12l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <script src="/login/js/app.js"></script>
+</body>
+</html>

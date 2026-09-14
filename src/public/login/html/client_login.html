@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VetLink • Client Login</title>
+  <link rel="icon" type="image/png" href="/logo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="/login/css/styles.css"/>
+</head>
+<body class="page-auth" data-role="client">
+
+  <header class="site-header">
+    <a class="brand-pill" href="/" aria-label="Doc Ben'z home">
+      <img src="/logo.png" alt="" class="brand-pill-logo"/>
+      <span class="brand-pill-name">Doc Ben’z</span>
+    </a>
+    <div class="tagline">
+      <svg class="paw" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paw"/></svg>
+      Healthy Pets <span class="dot-sep">•</span> Happier Lives
+    </div>
+  </header>
+
+  <main class="auth-split">
+    <aside class="auth-photo auth-photo-client">
+      <div class="auth-photo-caption">
+        <h2>Your Pet’s Health<br/>is Our Priority</h2>
+        <p>Access your pet’s records,<br/>book appointments and<br/>stay connected with your vet.</p>
+      </div>
+    </aside>
+
+    <div class="auth-panel">
+      <svg class="paw deco deco-panel" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paw"/></svg>
+
+      <div class="auth-card" id="authCard">
+        <h1 class="auth-title" id="formTitle">Client Login</h1>
+        <p class="auth-sub" id="formSub">Access your pet’s care portal</p>
+
+        <div class="status" id="authStatus" role="status" aria-live="polite"></div>
+
+        <!-- LOGIN VIEW -->
+        <div id="loginView">
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="loginUsername">Email / Username</label>
+              <div class="input-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg>
+                <input id="loginUsername" type="text" placeholder="Enter your email address or username" autocomplete="username" required/>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="loginPassword">Password</label>
+              <div class="input-icon pw-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>
+                <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password" required/>
+                <button type="button" class="pw-toggle" data-toggle="loginPassword" aria-label="Show password" title="Show/Hide">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-eye"/></svg>
+                </button>
+              </div>
+              <a href="#" class="forgot" id="forgotLink">Forgot password?</a>
+            </div>
+
+            <input type="hidden" id="loginUserType" value="client"/>
+
+            <button class="submit" type="submit" id="loginSubmit">Login</button>
+          </form>
+
+          <a href="#register" class="cta-box" id="toRegister">
+            <svg class="cta-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user-plus"/></svg>
+            <span>
+              <small>New client?</small>
+              <b>Create an Account <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg></b>
+            </span>
+          </a>
+
+          <a href="/" class="back-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-back"/></svg> Back to portal
+          </a>
+        </div>
+
+        <!-- REGISTER VIEW (CLIENT ONLY) -->
+        <div id="registerView" hidden>
+          <form id="registerForm">
+            <div class="section-label">Personal Information</div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="regLastName">Last Name <b class="req">*</b></label>
+                <input id="regLastName" type="text" placeholder="Dela Cruz" required/>
+              </div>
+              <div class="field">
+                <label for="regFirstName">First Name <b class="req">*</b></label>
+                <input id="regFirstName" type="text" placeholder="Maria" required/>
+              </div>
+              <div class="field">
+                <label for="regMiddleName">Middle Name <i class="opt">(optional)</i></label>
+                <input id="regMiddleName" type="text" placeholder="Santos"/>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="regDateOfBirth">Date of Birth <b class="req">*</b></label>
+                <input id="regDateOfBirth" type="date" required/>
+              </div>
+              <div class="field">
+                <label for="regSex">Sex <b class="req">*</b></label>
+                <select id="regSex" required>
+                  <option value="">Select…</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="regEmail">Email <b class="req">*</b></label>
+              <input id="regEmail" type="email" placeholder="you@example.com" required/>
+            </div>
+
+            <div class="field">
+              <label for="regNumber">Contact No. <b class="req">*</b></label>
+              <input id="regNumber" type="tel" placeholder="09xx-xxx-xxxx" required/>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="regStreet">House No. / Street <b class="req">*</b></label>
+                <input id="regStreet" type="text" placeholder="123 Rizal St." required/>
+              </div>
+              <div class="field">
+                <label for="regBarangay">Barangay <b class="req">*</b></label>
+                <input id="regBarangay" type="text" placeholder="Poblacion" required/>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="regCity">City / Municipality <b class="req">*</b></label>
+                <input id="regCity" type="text" placeholder="Tagbilaran City" required/>
+              </div>
+              <div class="field">
+                <label for="regProvince">Province <b class="req">*</b></label>
+                <input id="regProvince" type="text" placeholder="Bohol" required/>
+              </div>
+            </div>
+
+            <div class="section-label">Account Information</div>
+
+            <div class="field">
+              <label for="regPassword">Password</label>
+              <div class="pw-wrap">
+                <input id="regPassword" type="password" placeholder="Create a password" minlength="11" autocomplete="new-password" required/>
+                <button type="button" class="pw-toggle" data-toggle="regPassword" aria-label="Show password" title="Show/Hide">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-eye"/></svg>
+                </button>
+              </div>
+              <div class="pw-rules" id="pwRules" aria-live="polite">
+                <div class="rule" data-rule="len"><span class="dot">✗</span> 11 characters</div>
+                <div class="rule" data-rule="upper"><span class="dot">✗</span> One uppercase</div>
+                <div class="rule" data-rule="lower"><span class="dot">✗</span> One lowercase</div>
+                <div class="rule" data-rule="num"><span class="dot">✗</span> One number</div>
+                <div class="rule" data-rule="special"><span class="dot">✗</span> One special character</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="regConfirm">Confirm Password</label>
+              <div class="pw-wrap">
+                <input id="regConfirm" type="password" placeholder="Re-enter your password" minlength="11" autocomplete="new-password" required/>
+                <button type="button" class="pw-toggle" data-toggle="regConfirm" aria-label="Show password" title="Show/Hide">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-eye"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- DATA PRIVACY ACT NOTICE (RA 10173) -->
+            <div class="dpa-notice">
+              <div class="dpa-title">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>
+                Data Privacy Act Notice
+              </div>
+              <p>VetLink collects your personal information solely for the purpose of providing veterinary
+                 services, appointment scheduling, medical record management, pet ownership verification,
+                 and other legitimate system functions.</p>
+              <p>Your information will be processed securely and in accordance with the
+                 <b>Data Privacy Act of 2012 (Republic Act No. 10173)</b>. We will not disclose your personal
+                 information to unauthorized parties without your consent, unless required by law.</p>
+              <p class="dpa-links">For more information, please read our
+                <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
+                <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a>.</p>
+            </div>
+
+            <div class="section-label">Consent</div>
+            <div class="consent">
+              <label class="consent-row">
+                <input type="checkbox" id="regConsentPrivacy" required/>
+                <span>I have read and understood the
+                  <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
+                  <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a>.</span>
+              </label>
+              <label class="consent-row">
+                <input type="checkbox" id="regConsentDpa" required/>
+                <span>I voluntarily consent to the collection, processing, storage, and use of my personal
+                  information in accordance with the Data Privacy Act of 2012 (RA 10173) for the purposes
+                  of using the VetLink Veterinary Management System.</span>
+              </label>
+              <label class="consent-row">
+                <input type="checkbox" id="regConsentTruthful" required/>
+                <span>I certify that the information I have provided is true and correct.</span>
+              </label>
+            </div>
+
+            <button class="submit" type="submit" id="registerSubmit">Create Account</button>
+          </form>
+
+          <a href="#login" class="back-link" id="toLogin">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-back"/></svg> Already have an account? Back to login
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div>© 2025 Doc Ben'z Veterinary Management System. All rights reserved.</div>
+    <div class="site-footer-links">
+      <a href="/privacy">Privacy Policy</a> •
+      <a href="/terms">Terms and Conditions</a>
+    </div>
+  </footer>
+
+  <!-- ICON SPRITE -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-paw" viewBox="0 0 24 24"><ellipse cx="6" cy="9.5" rx="2.1" ry="2.7" transform="rotate(-18 6 9.5)"/><ellipse cx="10" cy="5.6" rx="2.2" ry="2.9" transform="rotate(-6 10 5.6)"/><ellipse cx="14.6" cy="5.6" rx="2.2" ry="2.9" transform="rotate(8 14.6 5.6)"/><ellipse cx="18.4" cy="9.6" rx="2.1" ry="2.7" transform="rotate(20 18.4 9.6)"/><path d="M12.3 11.2c2.6 0 5.6 3.6 5.6 6.2 0 2-1.5 2.9-3 2.9-1.2 0-1.8-.6-2.6-.6s-1.4.6-2.6.6c-1.5 0-3-.9-3-2.9 0-2.6 3-6.2 5.6-6.2z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 7l8.2 6 8.2-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7 10V7.5a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="4.5" y="10" width="15" height="11" rx="2.2" fill="currentColor"/><circle cx="12" cy="15.5" r="1.5" fill="#fff"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1.8 12S5.5 5.5 12 5.5 22.2 12 22.2 12 18.5 18.5 12 18.5 1.8 12 1.8 12z" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M1.8 12S5.5 5.5 12 5.5 22.2 12 22.2 12 18.5 18.5 12 18.5 1.8 12 1.8 12z" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M4 20L20 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-user-plus" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M1.5 20.5c.5-4 3.6-6.6 7.5-6.6s7 2.6 7.5 6.6z"/><path d="M19 8v6M16 11h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h14m-5.5-5.5L18.5 12 13 17.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19.5 12h-14m5.5-5.5L5.5 12l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <script src="/login/js/app.js"></script>
+</body>
+</html>

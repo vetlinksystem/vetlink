@@ -9,16 +9,16 @@
 
   // Title + status
   const formTitle = $('formTitle');
+  const formSub = $('formSub');
   const authStatus = $('authStatus');
 
   // Switch links
   const toRegister = $('toRegister');
   const toLogin = $('toLogin');
-  const registerCta = $('registerCta');
+  const forgotLink = $('forgotLink');
 
-  // Role buttons
-  const loginAsClientBtn = $('loginAsClientBtn');
-  const loginAsEmployeeBtn = $('loginAsEmployeeBtn');
+  // The page decides the role (/client/login vs /employee/login)
+  const role = document.body.dataset.role === 'employee' ? 'employee' : 'client';
   const loginUserType = $('loginUserType');
 
   // Forms
@@ -66,7 +66,8 @@
       if (!input) return;
       const isPass = input.type === 'password';
       input.type = isPass ? 'text' : 'password';
-      btn.textContent = isPass ? '🙈' : '👁️';
+      btn.setAttribute('aria-label', isPass ? 'Hide password' : 'Show password');
+      btn.querySelector('use')?.setAttribute('href', isPass ? '#i-eye-off' : '#i-eye');
     });
   });
 
@@ -137,59 +138,55 @@
     if (kind) authStatus.classList.add(kind);
   };
 
-  // The registration form needs a wider card than the login form.
-  const card = document.querySelector('.auth .card');
+  const LOGIN_COPY = role === 'employee'
+    ? { title: 'Employee Login', sub: 'Authorized staff access' }
+    : { title: 'Client Login', sub: 'Access your pet’s care portal' };
 
   const showLogin = () => {
-    if (loginView) loginView.style.display = '';
-    if (registerView) registerView.style.display = 'none';
-    if (formTitle) formTitle.textContent = 'Login';
-    card?.classList.remove('wide');
+    if (loginView) loginView.hidden = false;
+    if (registerView) registerView.hidden = true;
+    if (formTitle) formTitle.textContent = LOGIN_COPY.title;
+    if (formSub) formSub.textContent = LOGIN_COPY.sub;
     setStatus('');
   };
 
+  // Self-registration is for clients only — staff accounts are created by an admin.
   const showRegister = () => {
-    if (registerView) registerView.style.display = '';
-    if (loginView) loginView.style.display = 'none';
+    if (!registerView) return showLogin();
+    registerView.hidden = false;
+    if (loginView) loginView.hidden = true;
     if (formTitle) formTitle.textContent = 'Create Account';
-    card?.classList.add('wide');
+    if (formSub) formSub.textContent = 'Register as a new client';
     setStatus('');
   };
 
-  const setRole = (role) => {
-    if (loginUserType) loginUserType.value = role;
-
-    loginAsClientBtn?.classList.toggle('active', role === 'client');
-    loginAsEmployeeBtn?.classList.toggle('active', role === 'employee');
-
-    // Self-registration is for clients only — staff accounts are created by an admin.
-    if (registerCta) registerCta.style.display = role === 'employee' ? 'none' : '';
-    if (loginUsername) {
-      loginUsername.placeholder = role === 'employee' ? 'staff@docbenz.com' : 'you@example.com';
-    }
-    setStatus('');
+  // #register deep-links straight to the form (e.g. "Create an Account" on the portal)
+  const syncViewWithHash = () => {
+    if (location.hash === '#register') showRegister();
+    else showLogin();
   };
 
   // --- Events: switch views ---
   toRegister?.addEventListener('click', (e) => {
     e.preventDefault();
+    history.replaceState(null, '', '#register');
     showRegister();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
   toLogin?.addEventListener('click', (e) => {
     e.preventDefault();
+    history.replaceState(null, '', location.pathname);
     showLogin();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // --- Events: role buttons ---
-  loginAsClientBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    setRole('client');
-  });
+  window.addEventListener('hashchange', syncViewWithHash);
 
-  loginAsEmployeeBtn?.addEventListener('click', (e) => {
+  // No self-service reset yet — point the user to the clinic.
+  forgotLink?.addEventListener('click', (e) => {
     e.preventDefault();
-    setRole('employee');
+    setStatus('Please contact Doc Ben’z clinic staff to reset your password.');
   });
 
   // --- Helper: fetch JSON ---
@@ -214,7 +211,7 @@
 
     const username = (loginUsername?.value || '').trim();
     const password = (loginPassword?.value || '').trim();
-    const user_type = loginUserType?.value || 'client';
+    const user_type = loginUserType?.value || role;
 
     if (!username || !password) {
       setStatus('Please enter your email/username and password.', 'error');
@@ -329,8 +326,7 @@
   });
 
   // Init
-  showLogin();
-  setRole('client');
+  syncViewWithHash();
 
   // Date of birth cannot be in the future
   if (regDateOfBirth) {

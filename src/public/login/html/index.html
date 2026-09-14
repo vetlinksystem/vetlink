@@ -3,208 +3,149 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>VetLink • Login</title>
+  <title>VetLink • Doc Ben'z Veterinary Management System</title>
   <link rel="icon" type="image/png" href="/logo.png"/>
-
-  <!-- keep your existing stylesheet name -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Caveat:wght@500;700&display=swap"/>
   <link rel="stylesheet" href="/login/css/styles.css"/>
 </head>
-<body>
-  <div class="auth">
-    <div class="card">
+<body class="page-portal">
 
-      <!-- BRAND -->
-      <div class="brand">
-        <!-- If you have a logo image, use it here; else remove the img -->
-        <img class="logo" src="/logo.png" alt="VetLink" onerror="this.style.display='none'"/>
-        <h1 class="brand-title">VetLink</h1>
-        <p class="brand-sub">Secure portal access for clients & staff</p>
+  <!-- HEADER -->
+  <header class="site-header">
+    <a class="brand-pill" href="/" aria-label="Doc Ben'z home">
+      <img src="/logo.png" alt="" class="brand-pill-logo"/>
+      <span class="brand-pill-name">Doc Ben’z</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Main">
+      <a href="/" class="active">Home</a>
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#contact">Contact</a>
+      <a href="#help">Help</a>
+    </nav>
+
+    <div class="tagline">
+      <svg class="paw" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paw"/></svg>
+      Healthy Pets <span class="dot-sep">•</span> Happier Lives
+    </div>
+  </header>
+
+  <!-- HERO / PORTAL CHOOSER -->
+  <main class="portal-hero">
+    <div class="hero-photo" aria-hidden="true"></div>
+    <div class="hero-blob" aria-hidden="true"></div>
+    <svg class="paw deco deco-1" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paw"/></svg>
+    <svg class="paw deco deco-2" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paw"/></svg>
+
+    <div class="portal-center">
+      <div class="divider-paw" aria-hidden="true">
+        <span></span>
+        <svg class="paw" viewBox="0 0 24 24"><use href="#i-paw"/></svg>
+        <span></span>
       </div>
+      <h1 class="portal-title">Welcome to VetLink</h1>
+      <p class="portal-sub">Veterinary Management System</p>
+      <p class="portal-choose">Choose your portal to continue</p>
 
-      <h2 class="title" id="formTitle">Login</h2>
-
-      <!-- STATUS -->
-      <div class="status" id="authStatus"></div>
-
-      <!-- LOGIN VIEW -->
-      <div id="loginView">
-        <!-- Role switch (login only) -->
-        <div class="role-switch">
-          <button type="button" class="role-btn active" id="loginAsClientBtn">Client</button>
-          <button type="button" class="role-btn" id="loginAsEmployeeBtn">Employee</button>
-        </div>
-
-        <form id="loginForm">
-          <div class="field">
-            <span>Email / Username</span>
-            <input id="loginUsername" type="text" placeholder="you@example.com" required/>
+      <div class="portal-cards">
+        <section class="portal-card">
+          <div class="portal-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
           </div>
+          <h2>Client Portal</h2>
+          <p class="portal-for">For pet owners</p>
+          <p class="portal-desc">Manage your pets, appointments, medical records and more.</p>
+          <a class="btn-primary" href="/client/login">
+            Client Login
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </a>
+          <p class="portal-foot">New client? <a href="/client/login#register">Create an Account</a></p>
+        </section>
 
-          <div class="field">
-            <span>Password</span>
-            <div class="pw-wrap">
-              <input id="loginPassword" type="password" placeholder="••••••••" required/>
-              <button type="button" class="pw-toggle" data-toggle="loginPassword" aria-label="Show or hide password" title="Show/Hide">👁️</button>
-            </div>
+        <section class="portal-card">
+          <div class="portal-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vet"/></svg>
           </div>
-
-          <!-- hidden user_type controlled by buttons -->
-          <input type="hidden" id="loginUserType" value="client"/>
-
-          <button class="submit" type="submit" id="loginSubmit">Login</button>
-        </form>
-
-        <div class="meta" id="registerCta">
-          New client? <a href="#" id="toRegister">Create an account</a>
-        </div>
+          <h2>Employee Portal</h2>
+          <p class="portal-for">For clinic staff</p>
+          <p class="portal-desc">Access your staff dashboard, patients and veterinary tools.</p>
+          <a class="btn-primary" href="/employee/login">
+            Employee Login
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </a>
+          <p class="portal-foot portal-foot-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>
+            <span>Employee accounts are created<br/>by the system administrator.</span>
+          </p>
+        </section>
       </div>
-
-      <!-- REGISTER VIEW (CLIENT ONLY) -->
-      <div id="registerView" style="display:none;">
-        <form id="registerForm">
-          <div class="section-label">Personal Information</div>
-
-          <div class="field-row">
-            <div class="field">
-              <span>Last Name <b class="req">*</b></span>
-              <input id="regLastName" type="text" placeholder="Dela Cruz" required/>
-            </div>
-            <div class="field">
-              <span>First Name <b class="req">*</b></span>
-              <input id="regFirstName" type="text" placeholder="Maria" required/>
-            </div>
-            <div class="field">
-              <span>Middle Name <i class="opt">(optional)</i></span>
-              <input id="regMiddleName" type="text" placeholder="Santos"/>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <span>Date of Birth <b class="req">*</b></span>
-              <input id="regDateOfBirth" type="date" required/>
-            </div>
-            <div class="field">
-              <span>Sex <b class="req">*</b></span>
-              <select id="regSex" required>
-                <option value="">Select…</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Prefer not to say">Prefer not to say</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <span>Email <b class="req">*</b></span>
-            <input id="regEmail" type="email" placeholder="you@example.com" required/>
-          </div>
-
-          <div class="field">
-            <span>Contact No. <b class="req">*</b></span>
-            <input id="regNumber" type="tel" placeholder="09xx-xxx-xxxx" required/>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <span>House No. / Street <b class="req">*</b></span>
-              <input id="regStreet" type="text" placeholder="123 Rizal St." required/>
-            </div>
-            <div class="field">
-              <span>Barangay <b class="req">*</b></span>
-              <input id="regBarangay" type="text" placeholder="Poblacion" required/>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <span>City / Municipality <b class="req">*</b></span>
-              <input id="regCity" type="text" placeholder="Tagbilaran City" required/>
-            </div>
-            <div class="field">
-              <span>Province <b class="req">*</b></span>
-              <input id="regProvince" type="text" placeholder="Bohol" required/>
-            </div>
-          </div>
-
-          <div class="section-label">Account Information</div>
-
-          <div class="field">
-            <span>Password</span>
-            <div class="pw-wrap">
-              <input id="regPassword" type="password" placeholder="••••••••" minlength="11" required/>
-              <button type="button" class="pw-toggle" data-toggle="regPassword" aria-label="Show or hide password" title="Show/Hide">👁️</button>
-            </div>
-            <div class="pw-rules" id="pwRules" aria-live="polite">
-              <div class="rule" data-rule="len"><span class="dot">✗</span> 11 characters</div>
-              <div class="rule" data-rule="upper"><span class="dot">✗</span> One uppercase</div>
-              <div class="rule" data-rule="lower"><span class="dot">✗</span> One lowercase</div>
-              <div class="rule" data-rule="num"><span class="dot">✗</span> One number</div>
-              <div class="rule" data-rule="special"><span class="dot">✗</span> One special character</div>
-            </div>
-          </div>
-
-          <div class="field">
-            <span>Confirm Password</span>
-            <div class="pw-wrap">
-              <input id="regConfirm" type="password" placeholder="••••••••" minlength="11" required/>
-              <button type="button" class="pw-toggle" data-toggle="regConfirm" aria-label="Show or hide password" title="Show/Hide">👁️</button>
-            </div>
-          </div>
-
-          <!-- DATA PRIVACY ACT NOTICE (RA 10173) -->
-          <div class="dpa-notice">
-            <div class="dpa-title">🔒 Data Privacy Act Notice</div>
-            <p>VetLink collects your personal information solely for the purpose of providing veterinary
-               services, appointment scheduling, medical record management, pet ownership verification,
-               and other legitimate system functions.</p>
-            <p>Your information will be processed securely and in accordance with the
-               <b>Data Privacy Act of 2012 (Republic Act No. 10173)</b>. We will not disclose your personal
-               information to unauthorized parties without your consent, unless required by law.</p>
-            <p class="dpa-links">For more information, please read our
-              <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
-              <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a>.</p>
-          </div>
-
-          <div class="section-label">Consent</div>
-          <div class="consent">
-            <label class="consent-row">
-              <input type="checkbox" id="regConsentPrivacy" required/>
-              <span>I have read and understood the
-                <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
-                <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a>.</span>
-            </label>
-            <label class="consent-row">
-              <input type="checkbox" id="regConsentDpa" required/>
-              <span>I voluntarily consent to the collection, processing, storage, and use of my personal
-                information in accordance with the Data Privacy Act of 2012 (RA 10173) for the purposes
-                of using the VetLink Veterinary Management System.</span>
-            </label>
-            <label class="consent-row">
-              <input type="checkbox" id="regConsentTruthful" required/>
-              <span>I certify that the information I have provided is true and correct.</span>
-            </label>
-          </div>
-
-          <button class="submit" type="submit" id="registerSubmit">Create Account</button>
-        </form>
-
-        <div class="meta">
-          Already have an account? <a href="#" id="toLogin">Back to login</a>
-        </div>
-      </div>
-
     </div>
 
-    <footer class="auth-footer">
-      <div>© 2025 Doc Ben'z Veterinary Management System. All rights reserved.</div>
-      <div class="auth-footer-links">
-        <a href="/privacy">Privacy Policy</a> •
-        <a href="/terms">Terms and Conditions</a>
-      </div>
-    </footer>
-  </div>
+    <div class="hero-script" aria-hidden="true">
+      <span>Better Care</span>
+      <span>for Every</span>
+      <span>Pet <svg class="heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.3 3 4.5 6.6 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.6 0 5.7 3.8 4.2 7.3C19.5 16.4 12 21 12 21z"/></svg></span>
+      <svg class="paw" viewBox="0 0 24 24"><use href="#i-paw"/></svg>
+    </div>
+  </main>
 
-  <script src="/login/js/app.js"></script>
+  <!-- INFO -->
+  <section class="info" id="about">
+    <div class="info-inner">
+      <div class="info-head">
+        <h2>About VetLink</h2>
+        <p>VetLink is the veterinary management system of Doc Ben’z Veterinary Clinic. It connects pet owners and
+           clinic staff in one place — from booking a visit to keeping every pet’s medical history up to date.</p>
+      </div>
+
+      <div class="info-grid" id="services">
+        <div class="info-item">
+          <h3>Appointments</h3>
+          <p>Book check-ups, vaccinations and grooming, and track the status of every visit.</p>
+        </div>
+        <div class="info-item">
+          <h3>Pet Records</h3>
+          <p>Consultations, vaccinations, procedures and medications — all in your pet’s profile.</p>
+        </div>
+        <div class="info-item">
+          <h3>Breeding</h3>
+          <p>Find compatible matches with veterinary clearance and pregnancy monitoring.</p>
+        </div>
+        <div class="info-item">
+          <h3>Messages</h3>
+          <p>Chat with clinic staff and get notified about updates to your pets and bookings.</p>
+        </div>
+      </div>
+
+      <div class="info-help" id="help">
+        <h2>Need help?</h2>
+        <ul>
+          <li><b>New pet owner?</b> Choose <i>Client Portal</i> and select <i>Create an Account</i>.</li>
+          <li><b>Clinic staff?</b> Employee accounts are created by the system administrator.</li>
+          <li><b>Forgot your password?</b> Please contact the clinic so staff can verify your identity and help you regain access.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer" id="contact">
+    <div>© 2025 Doc Ben'z Veterinary Management System. All rights reserved.</div>
+    <div class="site-footer-links">
+      <a href="/privacy">Privacy Policy</a> •
+      <a href="/terms">Terms and Conditions</a>
+    </div>
+  </footer>
+
+  <!-- ICON SPRITE -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-paw" viewBox="0 0 24 24"><ellipse cx="6" cy="9.5" rx="2.1" ry="2.7" transform="rotate(-18 6 9.5)"/><ellipse cx="10" cy="5.6" rx="2.2" ry="2.9" transform="rotate(-6 10 5.6)"/><ellipse cx="14.6" cy="5.6" rx="2.2" ry="2.9" transform="rotate(8 14.6 5.6)"/><ellipse cx="18.4" cy="9.6" rx="2.1" ry="2.7" transform="rotate(20 18.4 9.6)"/><path d="M12.3 11.2c2.6 0 5.6 3.6 5.6 6.2 0 2-1.5 2.9-3 2.9-1.2 0-1.8-.6-2.6-.6s-1.4.6-2.6.6c-1.5 0-3-.9-3-2.9 0-2.6 3-6.2 5.6-6.2z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M3.8 20.5c.6-4.3 4-7 8.2-7s7.6 2.7 8.2 7c0 .5-.4.9-.9.9H4.7c-.5 0-.9-.4-.9-.9z"/></symbol>
+    <symbol id="i-vet" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="3.9"/><path d="M4.2 21.4c.3-4.6 3.3-8 7.8-8s7.5 3.4 7.8 8z"/><path d="M9.3 13.9v3.3a2.7 2.7 0 0 0 5.4 0v-3.3" fill="none" stroke="#7A4B28" stroke-width="1.3" stroke-linecap="round"/><circle cx="14.7" cy="17.2" r="1" fill="#7A4B28"/><path d="M11.1 15.6h1.8M12 14.7v1.8" stroke="#7A4B28" stroke-width="1" stroke-linecap="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h14m-5.5-5.5L18.5 12 13 17.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7 10V7.5a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="4.5" y="10" width="15" height="11" rx="2.2"/><circle cx="12" cy="15.5" r="1.5" fill="#fff"/></symbol>
+  </svg>
 </body>
 </html>

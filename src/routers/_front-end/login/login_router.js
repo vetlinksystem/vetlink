@@ -25,9 +25,19 @@ const publicPath = path.resolve(__dirname, '../../../public');
 
 loginRouters.use(express.static(publicPath));
 
-/* PAGE */
+/* PAGES */
+// Portal chooser (client vs employee)
 loginRouters.get('/', ensureGuestPage, (req, res) => {
   return res.sendFile(path.join(publicPath, 'login/html/index.html'));
+});
+
+// Client login + registration (/client/login#register opens the sign-up form)
+loginRouters.get('/client/login', ensureGuestPage, (req, res) => {
+  return res.sendFile(path.join(publicPath, 'login/html/client_login.html'));
+});
+
+loginRouters.get('/employee/login', ensureGuestPage, (req, res) => {
+  return res.sendFile(path.join(publicPath, 'login/html/employee_login.html'));
 });
 
 /* LEGAL PAGES (public — required by the Data Privacy Act notice) */
