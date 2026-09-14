@@ -5,9 +5,11 @@ const addEmployeeController = async (req, res) => {
         const result = await addEmployeeModel(req.body);
 
         if (!result || result.success === false) {
-            return res.status(500).json({
+            // A validation failure is the caller's fault, not a server error —
+            // the form shows `message`, so it has to survive.
+            return res.status(result && result.message ? 400 : 500).json({
                 success: false,
-                message: 'Failed to add Employee!'
+                message: (result && result.message) || 'Failed to add Employee!'
             });
         }
 

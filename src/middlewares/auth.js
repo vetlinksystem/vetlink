@@ -9,7 +9,11 @@ const signAccess = (user) => {
         type: user.type,
         name: String(user.name ?? '').trim()
     };
-    return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '1h' });
+    // Must match the session cookie's maxAge (1 day, set where the cookie is
+    // issued). When the token expired first, the cookie stayed and the user
+    // looked logged in while every API call quietly 401'd — which is how the
+    // notification bell "stopped working" an hour into a session.
+    return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '1d' });
 }
 
 const verify = (token) => {

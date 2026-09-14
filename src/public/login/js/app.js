@@ -14,6 +14,7 @@
   // Switch links
   const toRegister = $('toRegister');
   const toLogin = $('toLogin');
+  const registerCta = $('registerCta');
 
   // Role buttons
   const loginAsClientBtn = $('loginAsClientBtn');
@@ -160,6 +161,13 @@
 
     loginAsClientBtn?.classList.toggle('active', role === 'client');
     loginAsEmployeeBtn?.classList.toggle('active', role === 'employee');
+
+    // Self-registration is for clients only — staff accounts are created by an admin.
+    if (registerCta) registerCta.style.display = role === 'employee' ? 'none' : '';
+    if (loginUsername) {
+      loginUsername.placeholder = role === 'employee' ? 'staff@docbenz.com' : 'you@example.com';
+    }
+    setStatus('');
   };
 
   // --- Events: switch views ---

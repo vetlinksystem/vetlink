@@ -161,18 +161,17 @@
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
       ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 
-    // Staff work the queue from the pages themselves, so the bell only needs to say
-    // "there is something new" — a dot, not a number. (The client apps keep the
-    // count badge; an owner cares how many messages are waiting for them.)
+    // A bare dot was too easy to miss, so the bell carries the unread count — the
+    // same indicator the client portal and the Android app use.
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:relative;margin-right:.5rem';
     wrap.innerHTML = `
       <button id="empNotifBtn" type="button" title="Notifications"
         style="position:relative;background:transparent;border:none;cursor:pointer;font-size:1.15rem;padding:.35rem .5rem">
         🔔
-        <span id="empNotifDot" aria-hidden="true"
-          style="display:none;position:absolute;top:2px;right:4px;width:9px;height:9px;border-radius:999px;background:#C0563B;box-shadow:0 0 0 2px #fff"></span>
-        <span id="empNotifCount"
+        <span id="empNotifCount" aria-hidden="true"
+          style="display:none;position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#C0563B;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;box-shadow:0 0 0 2px #fff">0</span>
+        <span id="empNotifSr"
           style="position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">0 unread notifications</span>
       </button>
       <div id="empNotifMenu" style="display:none;position:absolute;right:0;top:40px;z-index:80;min-width:300px;max-width:340px;max-height:380px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 12px 30px rgba(16,24,40,.18);padding:.4rem"></div>
@@ -182,13 +181,13 @@
     const btn = document.getElementById('empNotifBtn');
     const menu = document.getElementById('empNotifMenu');
     const countEl = document.getElementById('empNotifCount');
-    const dotEl = document.getElementById('empNotifDot');
+    const srEl = document.getElementById('empNotifSr');
 
     const render = (items) => {
       const unread = items.filter(n => !n.read).length;
-      dotEl.style.display = unread ? 'block' : 'none';
-      // Sighted staff get the dot; the count still reaches screen readers.
-      countEl.textContent = `${unread} unread notification${unread === 1 ? '' : 's'}`;
+      countEl.style.display = unread ? 'inline-block' : 'none';
+      countEl.textContent = unread > 99 ? '99+' : String(unread);
+      srEl.textContent = `${unread} unread notification${unread === 1 ? '' : 's'}`;
       btn.setAttribute('title', unread ? `Notifications — ${unread} unread` : 'Notifications');
 
       if (!items.length) {

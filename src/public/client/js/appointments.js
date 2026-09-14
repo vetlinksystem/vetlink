@@ -360,6 +360,12 @@
       PETS = Array.isArray(petsRes.body.pets) ? petsRes.body.pets : [];
     }
 
+    // Arriving from the dashboard's "Book appointment" quick action.
+    if (new URLSearchParams(location.search).get('book') === '1') {
+      openBooking();
+      history.replaceState(null, '', location.pathname);
+    }
+
     // Load appointments
     const apRes = await fetchJSON(API_MY_APPTS, { method: 'GET' });
     if (!apRes.ok || !apRes.body || apRes.body.success === false) {

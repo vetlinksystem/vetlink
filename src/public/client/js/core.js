@@ -398,6 +398,9 @@ window.API = (function(){
 
   const refresh = async () => {
     const r = await fetchJSON('/notifications/my', { method:'GET' });
+    // A failed poll (offline, or an expired session) is not "nothing new" — keep the
+    // badge as it is instead of silently clearing the indicator.
+    if (!r.ok) return;
     const items = Array.isArray(r.body?.notifications) ? r.body.notifications : [];
     render(items);
   };

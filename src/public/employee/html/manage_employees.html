@@ -86,33 +86,78 @@
     </div>
     <form id="empForm" class="modal-body">
       <input type="hidden" id="empId"/>
+
+      <!-- Same account details a client supplies when registering (1NF name + address). -->
+      <div class="form-section">Personal Information</div>
       <div class="form-grid">
         <label>
-          <span>Name</span>
-          <input id="empName" type="text" required placeholder="Full name"/>
+          <span>Last Name <b class="req">*</b></span>
+          <input id="empLastName" type="text" required placeholder="Dela Cruz"/>
         </label>
         <label>
-          <span>Email</span>
+          <span>First Name <b class="req">*</b></span>
+          <input id="empFirstName" type="text" required placeholder="Maria"/>
+        </label>
+        <label>
+          <span>Middle Name</span>
+          <input id="empMiddleName" type="text" placeholder="Santos"/>
+        </label>
+        <label>
+          <span>Date of Birth</span>
+          <input id="empDateOfBirth" type="date"/>
+        </label>
+        <label>
+          <span>Sex</span>
+          <select id="empSex">
+            <option value="">—</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-section">Contact Information</div>
+      <div class="form-grid">
+        <label>
+          <span>Email <b class="req">*</b></span>
           <input id="empEmail" type="email" required placeholder="name@company.com"/>
         </label>
         <label>
-          <span>Contact No.</span>
+          <span>Contact No. <b class="req">*</b></span>
           <input id="empPhone" type="tel" required placeholder="09xx-xxx-xxxx"/>
         </label>
+      </div>
+
+      <div class="form-section">Address</div>
+      <div class="form-grid">
         <label>
-          <span>Password</span>
-          <input id="empPassword" type="password" minlength="6" placeholder="••••••"/>
+          <span>House No. / Street <b class="req">*</b></span>
+          <input id="empStreet" type="text" placeholder="123 Rizal St."/>
         </label>
         <label>
-          <span>Role</span>
-          <select id="empRole">
+          <span>Barangay <b class="req">*</b></span>
+          <input id="empBarangay" type="text" placeholder="Poblacion"/>
+        </label>
+        <label>
+          <span>City / Municipality <b class="req">*</b></span>
+          <input id="empCity" type="text" placeholder="Tagum City"/>
+        </label>
+        <label>
+          <span>Province <b class="req">*</b></span>
+          <input id="empProvince" type="text" placeholder="Davao del Norte"/>
+        </label>
+      </div>
+
+      <div class="form-section">Employment</div>
+      <div class="form-grid">
+        <label>
+          <span>Role <b class="req">*</b></span>
+          <select id="empRole" required>
+            <option value="">—</option>
             <option value="Staff">Staff</option>
             <option value="Veterinarian">Veterinarian</option>
             <option value="Admin">Admin</option>
           </select>
-        </label>
-        <label class="checkbox">
-          <input id="empIsAdmin" type="checkbox"/> <span>Is Admin?</span>
         </label>
         <label>
           <span>Status</span>
@@ -122,7 +167,32 @@
             <option value="Inactive">Inactive</option>
           </select>
         </label>
+        <label>
+          <span>Date Hired</span>
+          <input id="empDateHired" type="date"/>
+        </label>
+        <label class="checkbox">
+          <input id="empIsAdmin" type="checkbox"/> <span>Is Admin?</span>
+        </label>
       </div>
+
+      <div class="form-section">Account Access</div>
+      <div class="form-grid">
+        <label>
+          <span>Password <b class="req" id="empPwReq">*</b></span>
+          <input id="empPassword" type="password" placeholder="••••••••••"/>
+        </label>
+        <label>
+          <span>Confirm Password</span>
+          <input id="empConfirm" type="password" placeholder="••••••••••"/>
+        </label>
+      </div>
+      <p class="form-hint" id="empPwHint">
+        At least 11 characters, with one uppercase letter, one lowercase letter, one number,
+        and one special character. Leave both boxes empty when editing to keep the current password.
+      </p>
+
+      <div class="form-error" id="empFormError" role="alert" hidden></div>
 
       <div class="modal-actions">
         <button type="button" class="btn-ghost" data-close-modal>Cancel</button>

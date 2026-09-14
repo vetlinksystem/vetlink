@@ -15,7 +15,9 @@ const getAllEmployee = async (req_body) => {
 
     try {
         const response = await firestoreManager.getAllData('employees', {});
-        return response;
+        // Passwords are stored in plain text; they must not reach the browser.
+        // The edit form treats a blank password box as "leave it unchanged".
+        return (response || []).map(({ password, ...employee }) => employee);
     } catch (error) {
         throw error;
     }
