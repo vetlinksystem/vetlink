@@ -1,6 +1,7 @@
 const firestoreManager = require('../../../fb/firestore_manager');
 const { generateAppointmentId } = require('../../../utilities/idGenerator');
-const { checkSlotAvailable } = require('../../../utilities/appointmentSlots');
+const { checkSlotAvailable, dayOf, timeOf, formatTime } = require('../../../utilities/appointmentSlots');
+const addNotification = require('../../notifications/add');
 
 // The clinic accepts over-the-counter payment only — no online payment is processed.
 const PAYMENT_METHOD = 'over_the_counter';
@@ -9,6 +10,37 @@ const isPastDateTime = (date, time) => {
   const dt = new Date(`${date}T${time}:00`);
   if (isNaN(dt)) return true;
   return dt < new Date();
+};
+
+/**
+ * Put a "new appointment request" in every active employee's notification inbox —
+ * admin, staff and veterinarian. The vet has to confirm it; staff and admin manage
+ * the schedule.
+ */
+const notifyClinic = async (appointment) => {
+  const [employees, client, pet] = await Promise.all([
+    firestoreManager.getAllData('employees', {}),
+    firestoreManager.getData('clients', String(appointment.clientId)),
+    firestoreManager.getData('pets', String(appointment.petId))
+  ]);
+
+  const active = (employees || []).filter(e =>
+    String(e?.status || 'Active').toLowerCase() !== 'inactive');
+
+  const time = formatTime(timeOf(appointment.dateTime));
+  const message =
+    `${client?.name || 'A client'} requested ${appointment.purpose} for ` +
+    `${pet?.name || 'their pet'} on ${dayOf(appointment.dateTime)} at ${time}.`;
+
+  await Promise.all(active.map(e =>
+    addNotification({
+      clientId: String(e.id),   // recipient id — the employee inbox reads the same collection
+      type: 'appointment_request',
+      title: 'New appointment request',
+      message,
+      payload: { appointmentId: appointment.id }
+    }).catch(() => {})
+  ));
 };
 
 const addClientAppointment = async (clientId, body) => {
@@ -75,6 +107,11 @@ const addClientAppointment = async (clientId, body) => {
     if (!ok) {
       return { success: false, message: 'Failed to save appointment.' };
     }
+
+    // Tell the clinic. A failed notification must never fail the booking itself.
+    notifyClinic(appointmentData).catch(err =>
+      console.warn('client appointment notification warning:', err?.message || err));
+
     return { success: true, appointment: appointmentData };
   } catch (error) {
     throw error;

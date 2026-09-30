@@ -47,6 +47,27 @@
   flex-wrap:wrap;
 }
 
+/* Clinic information card */
+.clinic-info{
+  margin-top:1.25rem;
+  padding:1rem 1.25rem;
+}
+.clinic-info-grid{
+  margin-top:.75rem;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:1rem;
+  font-size:.9rem;
+}
+.clinic-info-grid small{
+  display:block;
+  color:var(--muted);
+  margin-bottom:.15rem;
+}
+.clinic-info-grid a{
+  font-weight:600;
+}
+
 @media(max-width:720px){
   .quick-actions{
     flex-direction:column;

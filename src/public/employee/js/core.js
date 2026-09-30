@@ -213,8 +213,17 @@
             headers:{ 'Accept':'application/json','Content-Type':'application/json' },
             body: JSON.stringify({ id })
           });
-          if ((card.getAttribute('data-type') || '').startsWith('breeding')) {
+          const type = card.getAttribute('data-type') || '';
+          if (type.startsWith('breeding')) {
             window.location.href = '/employee/breeding';
+            return;
+          }
+          if (type.startsWith('appointment')) {
+            window.location.href = '/employee/reservation';
+            return;
+          }
+          if (type === 'chat_message') {
+            window.location.href = '/employee/messages';
             return;
           }
           refresh();

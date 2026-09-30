@@ -100,6 +100,14 @@ loginRouters.post('/login', async (req, res) => {
       });
     }
 
+    // A deactivated employee account keeps its record but can no longer sign in.
+    if (type === 'employee' && String(userDoc.status || '').toLowerCase() === 'inactive') {
+      return res.status(403).json({
+        success: false,
+        message: 'This account has been deactivated. Please contact the clinic administrator.'
+      });
+    }
+
     // Build token payload (keep small)
     const tokenUser = {
       id: userDoc.id,

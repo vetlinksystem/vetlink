@@ -46,6 +46,7 @@
       </header>
 
       <main>
+        <div id="apptListView">
         <div style="display:flex;justify-content:space-between;align-items:end;gap:.75rem;flex-wrap:wrap">
           <div>
             <h2 style="margin:0">Appointments</h2>
@@ -99,61 +100,108 @@
             </div>
           </div>
         </div>
-      </main>
-    </div>
-  </div>
+        </div>
 
-  <!-- Book Appointment Modal -->
-  <div class="modal" id="apptModal" role="dialog" aria-modal="true">
-    <div class="panel">
-      <header>
-        <strong id="apptModalTitle">Book Appointment</strong>
-        <button class="btn ghost" data-close>✖</button>
-      </header>
-      <div class="content">
-        <div class="form-grid" style="display:grid;gap:1rem;grid-template-columns:repeat(2,1fr)">
-          <label style="grid-column:span 2">
-            <span>Pet</span>
+        <!-- Book an Appointment: service + date/time, then pet details, then confirmation -->
+        <section id="bookView" class="hidden">
+          <div class="book-head">
+            <button class="btn ghost book-back" id="bookBack" type="button" aria-label="Back to appointments">←</button>
+            <div>
+              <h2 style="margin:0">Book an Appointment</h2>
+              <small style="color:var(--muted)">Schedule a visit for your pet. Select a service, date, and available time.</small>
+            </div>
+          </div>
+
+          <ol class="steps" id="bookSteps">
+            <li data-step="1"><span>1</span>Service</li>
+            <li data-step="2"><span>2</span>Date &amp; Time</li>
+            <li data-step="3"><span>3</span>Pet Details</li>
+            <li data-step="4"><span>4</span>Confirmation</li>
+          </ol>
+
+          <!-- Steps 1–2: service, date and time -->
+          <div class="book-grid" data-screen="1">
+            <div class="card book-card">
+              <label class="book-label" for="aService">1. Select Service</label>
+              <select class="input" id="aService">
+                <option value="Check-up">General Check-up</option>
+                <option value="Vaccination">Vaccination</option>
+                <option value="Grooming">Grooming</option>
+                <option value="Deworming">Deworming</option>
+                <option value="Consultation">Consultation</option>
+                <option value="Other">Other</option>
+              </select>
+
+              <div class="book-label" style="margin-top:1rem">2. Select Date</div>
+              <div class="cal">
+                <div class="cal-head">
+                  <button class="cal-nav" id="calPrev" type="button" aria-label="Previous month">‹</button>
+                  <strong id="calMonth"></strong>
+                  <button class="cal-nav" id="calNext" type="button" aria-label="Next month">›</button>
+                </div>
+                <div class="cal-grid cal-dow">
+                  <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
+                <div class="cal-grid" id="calDays"></div>
+                <div class="cal-legend">
+                  <span><i class="dot open"></i>Available</span>
+                  <span><i class="dot closed"></i>Closed / past</span>
+                  <span><i class="dot picked"></i>Selected date</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card book-card">
+              <div class="picked-date">
+                <div class="picked-icon">📅</div>
+                <div>
+                  <small>Selected Date</small>
+                  <strong id="pickedDateLabel">Choose a date</strong>
+                  <small id="pickedDayLabel"></small>
+                </div>
+              </div>
+
+              <div class="book-label" style="margin-top:1rem">Available Time Slots</div>
+              <small class="hint" id="aSlotHint">Clinic hours: Monday–Saturday, 8:00 AM–5:00 PM.</small>
+              <div class="slots" id="slotList" role="radiogroup" aria-label="Available time slots"></div>
+
+              <button class="btn book-next" id="toPetBtn" type="button" disabled>Continue →</button>
+            </div>
+          </div>
+
+          <!-- Step 3: pet details -->
+          <div class="card book-card book-narrow hidden" data-screen="3">
+            <label class="book-label" for="aPet">Pet</label>
             <select class="input" id="aPet"></select>
-          </label>
-          <label>
-            <span>Date</span>
-            <input class="input" id="aDate" type="date"/>
-          </label>
-          <label>
-            <span>Time</span>
-            <input class="input" id="aTime" type="time"/>
-            <small class="hint" id="aSlotHint"></small>
-          </label>
-          <label style="grid-column:span 2">
-            <span>Service</span>
-            <select class="input" id="aService">
-              <option value="Check-up">Check-up</option>
-              <option value="Vaccination">Vaccination</option>
-              <option value="Grooming">Grooming</option>
-              <option value="Deworming">Deworming</option>
-              <option value="Consultation">Consultation</option>
-              <option value="Other">Other</option>
-            </select>
-          </label>
-          <label style="grid-column:span 2">
-            <span>Payment Method</span>
+
+            <label class="book-label" for="aPaymentMethod" style="margin-top:1rem">Payment Method</label>
             <select class="input" id="aPaymentMethod" disabled>
               <option value="over_the_counter" selected>Over the counter (pay at the clinic)</option>
             </select>
             <small class="hint">The service fee is settled at the clinic. No online payment is processed.</small>
-          </label>
-          <label style="grid-column:span 2">
-            <span>Notes (optional)</span>
-            <textarea class="input" id="aNotes" rows="3" placeholder="Add any details the clinic should know…"></textarea>
-          </label>
 
-          <div class="col-2" style="grid-column:span 2;display:flex;gap:.5rem;justify-content:flex-end">
-            <button class="btn ghost" data-close>Cancel</button>
-            <button class="btn" id="aSubmit">Save</button>
+            <label class="book-label" for="aNotes" style="margin-top:1rem">Notes (optional)</label>
+            <textarea class="input" id="aNotes" rows="3" placeholder="Add any details the clinic should know…"></textarea>
+
+            <div class="book-actions">
+              <button class="btn ghost" type="button" data-goto="1">← Back</button>
+              <button class="btn" type="button" id="toConfirmBtn">Continue →</button>
+            </div>
           </div>
-        </div>
-      </div>
+
+          <!-- Step 4: confirmation -->
+          <div class="card book-card book-narrow hidden" data-screen="4">
+            <div class="book-label">Review your appointment</div>
+            <dl class="summary" id="bookSummary"></dl>
+            <small class="hint">Your request stays Pending until the clinic confirms it.</small>
+
+            <div class="book-actions">
+              <button class="btn ghost" type="button" data-goto="3">← Back</button>
+              <button class="btn" id="aSubmit" type="button">Confirm Booking</button>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 

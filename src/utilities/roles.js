@@ -64,6 +64,7 @@ const MATRIX = {
   // Pets
   'pets.view':             [ROLES.ADMIN, ROLES.STAFF, ROLES.VET],
   'pets.manage':           [ROLES.ADMIN, ROLES.STAFF, ROLES.VET],
+  'pets.delete':           [ROLES.ADMIN],
 
   // Schedule (calendar)
   'schedule.view':         [ROLES.ADMIN, ROLES.STAFF, ROLES.VET],

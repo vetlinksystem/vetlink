@@ -20,6 +20,11 @@ const loadEmployeeRole = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'Employee record not found.' });
     }
 
+    // Deactivating an account takes effect at once, not when the token expires.
+    if (String(emp.status || '').toLowerCase() === 'inactive') {
+      return res.status(403).json({ success: false, error: 'This account has been deactivated.' });
+    }
+
     req.employee = emp;
     req.role = resolveRole(emp);
     req.permissions = permissionsFor(req.role);

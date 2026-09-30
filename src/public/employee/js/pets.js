@@ -93,6 +93,25 @@ const syncFilters = () => {
 };
 
 // ===== Pets table =====
+// Delete is admin only (pets.delete); the server enforces it, this just hides the button.
+const canDeletePet = () => !!(window.vetlinkCan && window.vetlinkCan('pets.delete'));
+
+const deletePet = async (id) => {
+  const pet = PETS.find(p => String(p.id) === String(id));
+  if (!confirm(`Delete pet "${pet?.name || id}"? This cannot be undone.`)) return;
+
+  const r = await fetchJSON('/pets/delete', { method: 'DELETE', body: JSON.stringify({ id }) });
+  if (!r.ok || r.body?.success === false) {
+    alert(r.body?.message || 'Failed to delete pet.');
+    return;
+  }
+  PETS = PETS.filter(p => String(p.id) !== String(id));
+  renderPets();
+};
+
+// core.js resolves the role asynchronously; redraw once it lands so Delete appears.
+document.addEventListener('vetlink:role-ready', () => { if (PETS.length) renderPets(); });
+
 const petRow = (p) => `
   <tr>
     <td>${p.id}</td>
@@ -106,6 +125,7 @@ const petRow = (p) => `
     <td>
       <div class="row-actions">
         <button class="btn btn-view" data-view="${p.id}">View</button>
+        ${canDeletePet() ? `<button class="btn btn-cancel" data-del="${p.id}">Delete</button>` : ''}
       </div>
     </td>
   </tr>
@@ -140,6 +160,9 @@ const renderPets = () => {
 
   petsTbody.querySelectorAll('[data-view]').forEach(btn => {
     btn.addEventListener('click', () => location.href = `/employee/pet?id=${btn.dataset.view}`);
+  });
+  petsTbody.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => deletePet(btn.dataset.del));
   });
 
   // Pager footer

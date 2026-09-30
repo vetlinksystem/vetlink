@@ -301,6 +301,8 @@ svg{ fill: currentColor; }
 }
 .info-item h3{ margin: 0 0 4px; font-size: 17px; color: var(--brand-ink); }
 .info-item p{ margin: 0; font-size: 14px; color: var(--muted); }
+.info-item a{ color: var(--brand-ink); font-weight: 600; text-decoration: none; }
+.info-item a:hover{ text-decoration: underline; }
 .info-help{ margin-top: 40px; }
 .info-help ul{ margin: 0; padding-left: 20px; color: var(--text); }
 .info-help li{ margin: 6px 0; }

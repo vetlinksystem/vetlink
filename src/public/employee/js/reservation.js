@@ -473,6 +473,8 @@ function renderMiniCal() {
     day.className = 'day' + (inMonth ? '' : ' other');
     // Disallow scheduling in the past
     if (iso < todayISO) day.classList.add('disabled');
+    // The clinic is closed on Sundays
+    if (cur.getDay() === 0) day.classList.add('disabled');
     if (pickedDate && iso === toISO(pickedDate)) day.classList.add('selected');
     if (RES.some(r => r.date === iso)) day.classList.add('marked');
 
@@ -488,14 +490,14 @@ function renderMiniCal() {
   }
 }
 
-// Time slots 08:00–17:00 every 30 minutes
+// Clinic hours: 30-minute slots from 08:00, the last one ending at 17:00
 function renderSlots() {
   slotList.innerHTML = '';
   if (!pickedDate) return;
   const now = new Date();
   const pickedISO = toISO(pickedDate);
   const isToday = pickedISO === toISO(now);
-  for (let h=8; h<=17; h++){
+  for (let h=8; h<17; h++){
     for (let m of [0,30]) {
       const t = `${pad2(h)}:${pad2(m)}`;
       const btn = document.createElement('button');

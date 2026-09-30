@@ -57,3 +57,11 @@
 @media (max-width:700px){
   .form-grid{ grid-template-columns:1fr; }
 }
+
+/* Deactivate action + read-only "View" mode of the employee form */
+.action.danger{ border-color:#E9C4B9; background:#FBF1EE; color:var(--danger); }
+.action.danger:hover{ background:#F6E4DE; }
+#empForm.read-only .req,
+#empForm.read-only #empSaveBtn,
+#empForm.read-only #empPwHint,
+#empForm.read-only .account-access{ display:none; }

@@ -1,4 +1,4 @@
-const { takenTimesOn, MAX_PER_DAY } = require('../../utilities/appointmentSlots');
+const { slotsOn, MAX_PER_DAY, HOURS_LABEL, CLOSED_WEEKDAYS } = require('../../utilities/appointmentSlots');
 
 /**
  * GET /appointments/availability?date=YYYY-MM-DD[&ignoreId=a1001]
@@ -16,14 +16,19 @@ const availabilityController = async (req, res) => {
     }
 
     const ignoreId = req.query.ignoreId ? String(req.query.ignoreId) : undefined;
-    const taken = await takenTimesOn(date, ignoreId);
+    const { open, taken, full, slots } = await slotsOn(date, ignoreId);
 
     return res.json({
       success: true,
       date,
       taken,
       maxPerDay: MAX_PER_DAY,
-      full: taken.length >= MAX_PER_DAY
+      full,
+      // Clinic hours: closed days have no slots at all.
+      open,
+      hours: HOURS_LABEL,
+      closedWeekdays: CLOSED_WEEKDAYS,
+      slots
     });
   } catch (error) {
     console.error('Error reading appointment availability:', error);

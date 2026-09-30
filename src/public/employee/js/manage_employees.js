@@ -5,7 +5,8 @@
 // =====================
 // Bodies: { id?, firstName, middleName, lastName, dateOfBirth, sex, email, number,
 //            street, barangay, city, province, password?, position, isAdmin, status, dateHired }
-const API_LIST   = '/employees/get-all';   // GET  → [ {id,name,email,number,position,isAdmin,status?} ]
+const API_STATUS = '/employees/status';    // PUT  { id, status } → deactivate / activate
+const API_LIST   = '/employees/get-all';  // GET  → [ {id,name,email,number,position,isAdmin,status?} ]
 const API_CREATE = '/employees/add';       // POST → { success, id? }
 const API_UPDATE = '/employees/update';    // PUT  → { success }
 
@@ -133,7 +134,11 @@ const rowHTML = e => `
     </td>
     <td>
       <div class="row-actions">
+        <button class="action" data-view="${esc(e.id)}">View</button>
         <button class="action" data-edit="${esc(e.id)}">Edit</button>
+        ${e.status === 'Inactive'
+          ? `<button class="action" data-status="Active" data-id="${esc(e.id)}">Activate</button>`
+          : `<button class="action danger" data-status="Inactive" data-id="${esc(e.id)}">Deactivate</button>`}
       </div>
     </td>
   </tr>
@@ -147,8 +152,35 @@ const renderTable = list => {
   tbody.innerHTML = list.map(rowHTML).join('');
 };
 
-// event delegation for Edit
+// Deactivate keeps the record but blocks sign-in; Activate restores it.
+const setStatus = async (id, status) => {
+  const emp = EMPLOYEES.find(x => String(x.id) === String(id));
+  const name = emp?.name || id;
+  const question = status === 'Inactive'
+    ? `Deactivate "${name}"? They will no longer be able to sign in.`
+    : `Activate "${name}" again?`;
+  if (!confirm(question)) return;
+
+  const { ok, body } = await fetchJSON(API_STATUS, {
+    method: 'PUT',
+    body: JSON.stringify({ id, status })
+  });
+  if (!ok || body?.success === false) {
+    alert(body?.message || 'Failed to update the employee status.');
+    return;
+  }
+  EMPLOYEES = EMPLOYEES.map(e => String(e.id) === String(id) ? { ...e, status } : e);
+  renderTable(EMPLOYEES);
+};
+
+// event delegation for View / Edit / Deactivate
 tbody.addEventListener('click', e => {
+  const statusBtn = e.target.closest('button[data-status]');
+  if (statusBtn) { setStatus(statusBtn.dataset.id, statusBtn.dataset.status); return; }
+
+  const viewBtn = e.target.closest('button[data-view]');
+  if (viewBtn) { openEdit(viewBtn.dataset.view, true); return; }
+
   const btn = e.target.closest('button[data-edit]');
   if (!btn) return;
   const id = btn.dataset.edit;            // keep as string
@@ -158,6 +190,12 @@ tbody.addEventListener('click', e => {
 // =====================
 // MODAL HELPERS
 // =====================
+// View mode: the same form, read-only, without the password section or Save.
+const setReadOnly = (readOnly) => {
+  form.querySelectorAll('input, select').forEach(el => { el.disabled = readOnly; });
+  form.classList.toggle('read-only', readOnly);
+};
+
 const openModal = () => {
   modal.classList.add('show');
   modal.setAttribute('aria-hidden', 'false');
@@ -166,6 +204,7 @@ const closeModal = () => {
   modal.classList.remove('show');
   modal.setAttribute('aria-hidden', 'true');
   form.reset();
+  setReadOnly(false);
   fId.value = '';
   fPass.value = '';
   fConfirm.value = '';
@@ -193,10 +232,11 @@ addBtn.addEventListener('click', () => {
   openModal();
 });
 
-const openEdit = id => {
+const openEdit = (id, readOnly = false) => {
   const emp = EMPLOYEES.find(x => String(x.id) === String(id));
   if (!emp) return;
-  modalTitle.textContent = 'Edit Employee';
+  modalTitle.textContent = readOnly ? 'Employee Details' : 'Edit Employee';
+  setReadOnly(readOnly);
   showError('');
 
   const nm = (emp.firstName || emp.lastName)
