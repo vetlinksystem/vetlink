@@ -5,7 +5,8 @@
 // =====================
 // Bodies: { id?, firstName, middleName, lastName, dateOfBirth, sex, email, number,
 //            street, barangay, city, province, password?, position, isAdmin, status, dateHired }
-const API_STATUS = '/employees/status';    // PUT  { id, status } → deactivate / activate
+const API_DELETE = '/employees/delete';    // DELETE { id } → permanent delete
+const API_RESET  = '/employees/reset-data'; // POST { confirm: 'RESET' } → wipe all but admins
 const API_LIST   = '/employees/get-all';  // GET  → [ {id,name,email,number,position,isAdmin,status?} ]
 const API_CREATE = '/employees/add';       // POST → { success, id? }
 const API_UPDATE = '/employees/update';    // PUT  → { success }
@@ -81,7 +82,7 @@ const isValidMobile = (value) => {
 };
 
 const showError = (msg) => {
-  if (!errBox) { if (msg) alert(msg); return; }
+  if (!errBox) { if (msg) vetlinkDialog.alert(msg); return; }
   errBox.textContent = msg || '';
   errBox.hidden = !msg;
 };
@@ -136,9 +137,9 @@ const rowHTML = e => `
       <div class="row-actions">
         <button class="action" data-view="${esc(e.id)}">View</button>
         <button class="action" data-edit="${esc(e.id)}">Edit</button>
-        ${e.status === 'Inactive'
-          ? `<button class="action" data-status="Active" data-id="${esc(e.id)}">Activate</button>`
-          : `<button class="action danger" data-status="Inactive" data-id="${esc(e.id)}">Deactivate</button>`}
+        ${String(e.id) === String(window.VETLINK_EMPLOYEE?.id)
+          ? ''
+          : `<button class="action danger" data-delete="${esc(e.id)}">Delete</button>`}
       </div>
     </td>
   </tr>
@@ -152,31 +153,68 @@ const renderTable = list => {
   tbody.innerHTML = list.map(rowHTML).join('');
 };
 
-// Deactivate keeps the record but blocks sign-in; Activate restores it.
-const setStatus = async (id, status) => {
+// Permanently removes the employee account. An admin cannot delete their own account.
+const deleteEmployee = async (id) => {
   const emp = EMPLOYEES.find(x => String(x.id) === String(id));
   const name = emp?.name || id;
-  const question = status === 'Inactive'
-    ? `Deactivate "${name}"? They will no longer be able to sign in.`
-    : `Activate "${name}" again?`;
-  if (!confirm(question)) return;
-
-  const { ok, body } = await fetchJSON(API_STATUS, {
-    method: 'PUT',
-    body: JSON.stringify({ id, status })
+  const ok = await vetlinkDialog.confirm({
+    title: `Delete "${name}"?`,
+    message: 'Their account will be removed permanently and they will no longer be able to sign in. This cannot be undone.',
+    confirmLabel: 'Delete',
+    danger: true
   });
-  if (!ok || body?.success === false) {
-    alert(body?.message || 'Failed to update the employee status.');
+  if (!ok) return;
+
+  const { ok: httpOk, body } = await fetchJSON(API_DELETE, {
+    method: 'DELETE',
+    body: JSON.stringify({ id })
+  });
+  if (!httpOk || body?.success === false) {
+    vetlinkDialog.alert(body?.message || 'Failed to delete the employee.', { variant: 'error' });
     return;
   }
-  EMPLOYEES = EMPLOYEES.map(e => String(e.id) === String(id) ? { ...e, status } : e);
+  EMPLOYEES = EMPLOYEES.filter(e => String(e.id) !== String(id));
   renderTable(EMPLOYEES);
 };
 
-// event delegation for View / Edit / Deactivate
+// Reset all data — wipes everything except admin accounts. The server checks the
+// role (system.reset) and the confirmation word again.
+const resetBtn = document.getElementById('resetDataBtn');
+resetBtn?.addEventListener('click', async () => {
+  const ok = await vetlinkDialog.confirm({
+    title: 'Reset all data?',
+    message: 'This permanently deletes every client, pet, appointment, medical record, breeding request, chat and notification, all staff and veterinarian accounts, and all uploaded photos and files.\n\nOnly admin accounts are kept. This cannot be undone.',
+    confirmLabel: 'Reset everything',
+    confirmText: 'RESET',
+    danger: true
+  });
+  if (!ok) return;
+
+  resetBtn.disabled = true;
+  resetBtn.textContent = 'Resetting…';
+  const { ok: httpOk, body } = await fetchJSON(API_RESET, {
+    method: 'POST',
+    body: JSON.stringify({ confirm: 'RESET' })
+  }, 120000);
+  resetBtn.disabled = false;
+  resetBtn.textContent = 'Reset all data';
+
+  if (!httpOk || body?.success === false) {
+    vetlinkDialog.alert(body?.message || 'Failed to reset data.', { variant: 'error' });
+    return;
+  }
+  const d = body.deleted || {};
+  const summary = `Removed ${d.clients || 0} clients, ${d.pets || 0} pets, ${d.appointments || 0} appointments, ` +
+    `${d.records || 0} records, ${d.employees || 0} employees and ${d.files || 0} files.`;
+  const partial = /could not/i.test(body.message || '');
+  vetlinkDialog.alert(`${body.message}\n\n${summary}`, { variant: partial ? 'warning' : 'success', title: 'Data reset' });
+  loadEmployees();
+});
+
+// event delegation for View / Edit / Delete
 tbody.addEventListener('click', e => {
-  const statusBtn = e.target.closest('button[data-status]');
-  if (statusBtn) { setStatus(statusBtn.dataset.id, statusBtn.dataset.status); return; }
+  const delBtn = e.target.closest('button[data-delete]');
+  if (delBtn) { deleteEmployee(delBtn.dataset.delete); return; }
 
   const viewBtn = e.target.closest('button[data-view]');
   if (viewBtn) { openEdit(viewBtn.dataset.view, true); return; }

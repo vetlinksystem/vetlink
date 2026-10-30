@@ -45,7 +45,7 @@ const saveBtn       = document.getElementById('profileSaveBtn');
 
 const setStatus = (msg, type = 'info') => {
   if (!statusBox) {
-    if (msg) alert(msg);
+    if (msg) vetlinkDialog.alert(msg);
     return;
   }
   statusBox.textContent = msg || '';

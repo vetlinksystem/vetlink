@@ -2,7 +2,12 @@ const deleteAppointmentModel = require('../../models/appointments/delete');
 
 const deleteAppointmentController = async (req, res) => {
     try {
-        const result = await deleteAppointmentModel(req.body);
+        const id = String(req.body?.id || '').trim();
+        if (!id) {
+            return res.status(400).json({ success: false, message: 'Appointment id is required.' });
+        }
+
+        const result = await deleteAppointmentModel({ id });
         const ok = result && (typeof result === 'object' ? result.success !== false : true);
 
         if (!ok) {

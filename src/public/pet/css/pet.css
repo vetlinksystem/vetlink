@@ -3,16 +3,20 @@
 #petInfo a:hover { text-decoration: underline; }
 
 /* ---------- Medical records ---------- */
-.rec-toolbar{
+.rec-form{
   display:flex;
-  flex-wrap:wrap;
+  flex-direction:column;
   gap:14px;
-  align-items:flex-end;
   padding:16px;
   border:1px solid var(--border);
   border-radius:14px;
   background:var(--bg);
   margin-bottom:18px;
+}
+.rec-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:14px;
 }
 .rec-field{
   display:flex;
@@ -22,24 +26,63 @@
   font-weight:600;
   color:var(--muted);
 }
-.rec-field input{
+.rec-field input,
+.rec-field select,
+.rec-field textarea,
+.rx-type-fields .input{
   border:1px solid var(--border);
   border-radius:10px;
   padding:9px 11px;
+  font:inherit;
   font-size:14px;
   font-weight:400;
   color:var(--ink);
   background:#fff;
-  min-width:160px;
+  width:100%;
+  box-sizing:border-box;
 }
-.rec-field input:focus{
+.rec-field input:focus,
+.rec-field select:focus,
+.rec-field textarea:focus,
+.rx-type-fields .input:focus{
   outline:none;
   border-color:var(--brand);
   box-shadow:0 0 0 3px rgba(200,160,106,.22);
 }
-.rec-field--notes{ flex:1; }
-.rec-field--notes input{ min-width:220px; width:100%; }
-.rec-field--file input{ padding:7px; min-width:200px; }
+.rec-field textarea{ resize:vertical; }
+.rec-field--file input{ padding:7px; }
+.rec-actions{ display:flex; justify-content:flex-end; }
+.req{ color:#C0563B; font-weight:700; }
+
+/* Type-specific fields (built by employee/js/record_fields.js) */
+.rx-type-fields{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:14px;
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+}
+.rx-type-fields:empty{ display:none; }
+.rx-type-fields .rx-field{ display:flex; flex-direction:column; gap:6px; }
+.rx-type-fields .rx-field > span,
+.rx-checkgroup > span,
+.rx-screening > span{ font-size:13px; font-weight:600; color:var(--muted); }
+.rx-type-fields .rx-full,
+.rx-checkgroup,
+.rx-screening{ grid-column:1 / -1; }
+.rx-checkgroup > span,
+.rx-screening > span{ display:block; margin-bottom:6px; }
+.rx-checks{ display:flex; flex-wrap:wrap; gap:8px 16px; }
+.rx-checks label{ display:inline-flex; align-items:center; gap:6px; font-size:14px; cursor:pointer; }
+.rx-checks input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--brand); }
+.rx-screening-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
+  gap:10px;
+}
+.rec-sub{ display:block; font-weight:400; font-size:12px; color:var(--muted); margin-top:2px; }
 
 .rec-add-btn{
   height:40px;

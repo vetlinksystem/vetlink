@@ -1,4 +1,5 @@
 const firestoreManager = require('../../../fb/firestore_manager');
+const { deleteAppointmentsFor } = require('../../../utilities/appointmentCleanup');
 
 // DELETE /client/pets/:id
 // Only the owning client can delete their pet.
@@ -22,6 +23,7 @@ module.exports = async (req, res) => {
     if (!ok) {
       return res.status(500).json({ success: false, message: 'Failed to delete pet.' });
     }
+    await deleteAppointmentsFor({ petId: id });
 
     return res.json({ success: true, message: 'Pet deleted.' });
   } catch (err) {

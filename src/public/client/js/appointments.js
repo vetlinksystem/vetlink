@@ -92,7 +92,7 @@
 
   // Toast helper
   const showToast = (msg) => {
-    if (!toast) { alert(msg); return; }
+    if (!toast) { vetlinkDialog.alert(msg); return; }
     toast.textContent = msg;
     toast.classList.add('show');
     setTimeout(()=> toast.classList.remove('show'), 2200);

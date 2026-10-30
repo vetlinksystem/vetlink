@@ -15,13 +15,15 @@ const availabilityController = require('../controllers/appointments/availability
 
 // Staff may add/edit appointments; only a veterinarian may confirm/cancel/complete.
 const appointmentWriteAccess = require('../middlewares/appointment_action_access');
+const { requirePermission } = require('../middlewares/require_permission');
 
 
 appointmentRouters.post('/add', addAppointmentController);
 appointmentRouters.put('/get', getAppointmentController);
 appointmentRouters.put('/get_all', getAllAppointmentController);
 appointmentRouters.put('/update', updateAppointmentController);
-appointmentRouters.delete('/delete', deleteAppointmentController);
+// Permanent delete — admin only.
+appointmentRouters.delete('/delete', requirePermission('appointments.delete'), deleteAppointmentController);
 
 // ===== REST endpoints =====
 // GET /appointments/availability?date=YYYY-MM-DD — taken time slots for that day.

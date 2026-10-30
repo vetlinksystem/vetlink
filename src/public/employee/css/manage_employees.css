@@ -58,6 +58,15 @@
   .form-grid{ grid-template-columns:1fr; }
 }
 
+/* Reset all data (admin) */
+.page-head-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.btn-reset{
+  border:1px solid #fecaca; background:#fff; color:#b42318;
+  border-radius:10px; padding:8px 12px; font:inherit; font-weight:600; cursor:pointer;
+}
+.btn-reset:hover{ background:#fef2f2; }
+.btn-reset:disabled{ opacity:.6; cursor:default; }
+
 /* Deactivate action + read-only "View" mode of the employee form */
 .action.danger{ border-color:#E9C4B9; background:#FBF1EE; color:var(--danger); }
 .action.danger:hover{ background:#F6E4DE; }

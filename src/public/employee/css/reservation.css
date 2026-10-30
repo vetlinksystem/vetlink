@@ -30,11 +30,20 @@
 .badge.cancelled{ background:#fef2f2; border-color:#fecaca; color:#991b1b; }
 
 /* ========= Table actions ========= */
-.reservation .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+/* The flex wrapper sits inside the <td>; putting display:flex on the cell itself
+   takes it out of the table row, which misaligns the borders and buttons. */
+#resTable td{ vertical-align:middle; }
+/* Keep the short columns (#, date, time, badges) on one line instead of wrapping "Sep 25, / 2026". */
+#resTable td:nth-child(-n+3),
+#resTable td:nth-child(7),
+#resTable td:nth-child(8){ white-space:nowrap; }
+#resTable td:nth-child(9){ min-width:180px; max-width:280px; }
+#resTable td.actions-cell{ white-space:nowrap; }
+.reservation .actions{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 
 .reservation .btn{
-  font-weight:700; border-radius:12px; padding:7px 14px; line-height:1;
-  border:1.5px solid transparent; cursor:pointer;
+  font-weight:600; font-size:13px; border-radius:8px; padding:6px 12px; line-height:1.2;
+  border:1px solid transparent; cursor:pointer;
   transition:transform .12s, box-shadow .12s, background .12s;
   white-space:nowrap;
 }
@@ -52,6 +61,11 @@
 /* Edit */
 .reservation .btn--edit{ background:#f8fafc; border-color:#cbd5e1; color:#334155; }
 .reservation .btn--edit:hover{ background:#f1f5f9; box-shadow:0 2px 8px rgba(148,163,184,.25); }
+/* Owner / pet that has since been deleted */
+.missing-ref{ color:#9A8F80; font-style:italic; }
+/* Delete (admin only) */
+.reservation .btn--delete{ background:#fff; border-color:#fecaca; color:#b42318; }
+.reservation .btn--delete:hover{ background:#fef2f2; box-shadow:0 2px 8px rgba(239,68,68,.18); }
 
 /* ========= Modal & picker ========= */
 .modal{ position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; z-index:10000; }

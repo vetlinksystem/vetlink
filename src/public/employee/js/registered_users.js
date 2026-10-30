@@ -231,12 +231,17 @@
       const id = delBtn.getAttribute('data-del');
       const u = USERS.find(x => String(x.id) === String(id));
       const name = u?.name || id;
-      const ok = confirm(`Delete user "${name}"? This cannot be undone.`);
+      const ok = await vetlinkDialog.confirm({
+        title: `Delete user "${name}"?`,
+        message: 'This cannot be undone.',
+        confirmLabel: 'Delete',
+        danger: true
+      });
       if (!ok) return;
 
       const r = await fetchJSON(API_DELETE(id), { method: 'DELETE' });
       if (!r.ok || r.body?.success === false) {
-        alert(r.body?.message || 'Failed to delete user.');
+        vetlinkDialog.alert(r.body?.message || 'Failed to delete user.', { variant: 'error' });
         return;
       }
       USERS = USERS.filter(x => String(x.id) !== String(id));
@@ -261,15 +266,15 @@
     };
 
     if (!payload.id || !payload.firstName || !payload.lastName || !payload.email) {
-      alert('ID, First Name, Last Name, and Email are required.');
+      vetlinkDialog.alert('ID, First Name, Last Name, and Email are required.', { variant: 'warning' });
       return;
     }
     if (!isValidMobile(payload.number)) {
-      alert('Please enter a valid contact number (e.g. 09171234567).');
+      vetlinkDialog.alert('Please enter a valid contact number (e.g. 09171234567).', { variant: 'warning' });
       return;
     }
     if (!payload.address) {
-      alert('Complete address is required.');
+      vetlinkDialog.alert('Complete address is required.', { variant: 'warning' });
       return;
     }
 
@@ -282,7 +287,7 @@
     });
 
     if (!r.ok || r.body?.success === false) {
-      alert(r.body?.message || 'Update failed.');
+      vetlinkDialog.alert(r.body?.message || 'Update failed.', { variant: 'error' });
       return;
     }
 

@@ -8,6 +8,7 @@ const API_PETS    = '/pets/get-all';
 const API_LIST    = '/appointments?limit=100&offset=0';
 const API_CREATE  = '/appointments';
 const API_UPDATE  = (id) => `/appointments/${encodeURIComponent(id)}`;
+const API_DELETE  = '/appointments/delete';   // DELETE { id } — admin only
 
 // ===== State =====
 let CLIENTS = [];
@@ -40,6 +41,10 @@ const fetchJSON = async (url, options = {}, timeoutMs = 15000) => {
 
 // ===== Helpers =====
 const byId = (arr, id) => arr.find(x => String(x.id) === String(id));
+// An appointment can outlive its client or pet (deleted before the cleanup existed).
+const ownerName = (r) => byId(CLIENTS, r.ownerId)?.name || 'Deleted client';
+const petName   = (r) => byId(PETS, r.petId)?.name || 'Deleted pet';
+const missingCell = (label, id) => `<span class="missing-ref" title="${label} ${id} no longer exists">${label}</span>`;
 const fmtDate = (iso) =>
   new Date(iso + 'T00:00:00').toLocaleDateString('en-PH', {
     month:'short', day:'2-digit', year:'numeric'
@@ -50,8 +55,8 @@ const toCSV = (rows) => {
   const header = 'id,date,time,purpose,owner,pet,status,payment,reason_type,reason,notes';
   if (!rows.length) return header;
   const lines = rows.map(r => {
-    const owner = byId(CLIENTS, r.ownerId)?.name || `#${r.ownerId}`;
-    const pet   = byId(PETS, r.petId)?.name || `#${r.petId}`;
+    const owner = ownerName(r);
+    const pet   = petName(r);
     const esc = (v) => {
       const s = String(v ?? '');
       return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
@@ -109,6 +114,7 @@ let pickedTime   = null; // "HH:MM"
 // only a veterinarian can. core.js publishes the permission list from the server, which
 // enforces the same rule, so this only decides which buttons to draw.
 const canAct = () => !!(window.vetlinkCan && window.vetlinkCan('appointments.act'));
+const canDelete = () => !!(window.vetlinkCan && window.vetlinkCan('appointments.delete'));
 
 const statusBadge = (s) =>
   `<span class="badge ${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
@@ -128,8 +134,8 @@ const reasonCell = (r) => {
 };
 
 const rowHTML = r => {
-  const owner = byId(CLIENTS, r.ownerId)?.name || `#${r.ownerId}`;
-  const pet   = byId(PETS, r.petId)?.name || `#${r.petId}`;
+  const owner = byId(CLIENTS, r.ownerId)?.name || missingCell('Deleted client', r.ownerId);
+  const pet   = byId(PETS, r.petId)?.name || missingCell('Deleted pet', r.petId);
 
   const isPaid = String(r.paymentStatus || 'unpaid').toLowerCase() === 'paid';
   const payBtn = (r.status === 'confirmed' || r.status === 'completed') && !isPaid
@@ -147,7 +153,12 @@ const rowHTML = r => {
          <button class="btn btn--cancel"   data-act="cancel"   data-id="${r.id}">Cancel</button>`
       : '';
 
-  const actions = `${actBtns} ${editBtn} ${payBtn}`.trim();
+  // Permanent delete is admin only (appointments.delete).
+  const delBtn = canDelete()
+    ? `<button class="btn btn--delete" data-act="delete" data-id="${r.id}">Delete</button>`
+    : '';
+
+  const actions = `${actBtns} ${editBtn} ${payBtn} ${delBtn}`.trim();
 
   return `
     <tr>
@@ -160,8 +171,8 @@ const rowHTML = r => {
       <td>${statusBadge(r.status)}</td>
       <td>${paymentBadge(r)}</td>
       <td>${reasonCell(r)}</td>
-      <td class="actions">
-        ${actions}
+      <td class="actions-cell">
+        <div class="actions">${actions}</div>
       </td>
     </tr>
   `;
@@ -253,7 +264,7 @@ const updateReservationStatus = async (id, newStatus, extra = {}) => {
   });
 
   if (!res.ok || !res.body || res.body.success === false) {
-    alert(res.body?.message || 'Failed to update appointment.');
+    vetlinkDialog.alert(res.body?.message || 'Failed to update appointment.', { variant: 'error' });
     return;
   }
 
@@ -316,7 +327,7 @@ document.addEventListener('click', (e) => {
 reasonConfirmBtn?.addEventListener('click', async () => {
   const reason = (reasonTextInput.value || '').trim();
   if (!reason) {
-    alert('Please provide a reason. The client is notified with it.');
+    vetlinkDialog.alert('Please provide a reason. The client is notified with it.', { variant: 'warning' });
     reasonTextInput.focus();
     return;
   }
@@ -336,7 +347,7 @@ reasonConfirmBtn?.addEventListener('click', async () => {
         body: JSON.stringify({ date, time, reasonType, statusReason: reason })
       });
       if (!res.ok || res.body?.success === false) {
-        alert(res.body?.message || 'Failed to reschedule appointment.');
+        vetlinkDialog.alert(res.body?.message || 'Failed to reschedule appointment.', { variant: 'error' });
         return;
       }
       const updated = res.body.appointment || res.body.reservation || null;
@@ -352,6 +363,27 @@ reasonConfirmBtn?.addEventListener('click', async () => {
   }
 });
 
+const deleteReservation = async (id) => {
+  const r = RES.find(x => String(x.id) === String(id));
+  const pet = r ? (byId(PETS, r.petId)?.name || '') : '';
+  const ok = await vetlinkDialog.confirm({
+    title: `Delete appointment ${id}?`,
+    message: `${pet ? `The appointment for ${pet} ` : 'This appointment '}will be removed permanently. This cannot be undone.`,
+    confirmLabel: 'Delete',
+    danger: true
+  });
+  if (!ok) return;
+
+  const res = await fetchJSON(API_DELETE, { method: 'DELETE', body: JSON.stringify({ id }) });
+  if (!res.ok || res.body?.success === false) {
+    vetlinkDialog.alert(res.body?.message || 'Failed to delete appointment.', { variant: 'error' });
+    return;
+  }
+  RES = RES.filter(x => String(x.id) !== String(id));
+  renderList();
+  renderMiniCal();
+};
+
 document.getElementById('resTable').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-act]');
   if (!btn) return;
@@ -362,11 +394,12 @@ document.getElementById('resTable').addEventListener('click', (e) => {
   if (act === 'complete') return updateReservationStatus(id, 'completed');
   if (act === 'markpaid') return updateReservationStatus(id, undefined, { paymentStatus: 'paid' });
   if (act === 'edit')     return openEdit(id);
+  if (act === 'delete')   return deleteReservation(id);
 
   // Cancelling always asks for a reason, which is then sent to the client.
   if (act === 'cancel') {
     const r = RES.find(x => String(x.id) === String(id));
-    const pet = r ? (byId(PETS, r.petId)?.name || `#${r.petId}`) : '';
+    const pet = r ? (byId(PETS, r.petId)?.name || '') : '';
     return openReasonModal({
       id,
       action: 'cancel',
@@ -571,7 +604,7 @@ const openEdit = (id) => {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!ownerSelect.value || !petSelect.value || !dateInput.value || !timeInput.value) {
-    alert('Please complete owner, pet, date, and time.');
+    vetlinkDialog.alert('Please complete owner, pet, date, and time.', { variant: 'warning' });
     return;
   }
 
@@ -587,7 +620,7 @@ form.addEventListener('submit', async (e) => {
   // Client-side guard: no past date/time
   const dt = new Date(`${payload.date}T${payload.time}:00`);
   if (isNaN(dt) || dt < new Date()) {
-    alert('You cannot schedule an appointment in the past.');
+    vetlinkDialog.alert('You cannot schedule an appointment in the past.', { variant: 'warning' });
     return;
   }
 
@@ -600,7 +633,7 @@ form.addEventListener('submit', async (e) => {
     });
 
     if (!res.ok || !res.body || res.body.success === false) {
-      alert(res.body?.message || 'Failed to create appointment.');
+      vetlinkDialog.alert(res.body?.message || 'Failed to create appointment.', { variant: 'error' });
       return;
     }
 
@@ -623,7 +656,7 @@ form.addEventListener('submit', async (e) => {
       const { date, time, ...rest } = payload;
       const pre = await fetchJSON(API_UPDATE(id), { method: 'PUT', body: JSON.stringify(rest) });
       if (!pre.ok || pre.body?.success === false) {
-        alert(pre.body?.message || 'Failed to update appointment.');
+        vetlinkDialog.alert(pre.body?.message || 'Failed to update appointment.', { variant: 'error' });
         return;
       }
 
@@ -645,7 +678,7 @@ form.addEventListener('submit', async (e) => {
     });
 
     if (!res.ok || !res.body || res.body.success === false) {
-    alert(res.body?.message || 'Failed to update appointment.');
+    vetlinkDialog.alert(res.body?.message || 'Failed to update appointment.', { variant: 'error' });
       return;
     }
 

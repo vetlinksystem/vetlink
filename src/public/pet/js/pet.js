@@ -59,6 +59,24 @@ const renderPet = (p, owner) => {
 };
 
 // ---------- Records ----------
+// Record types and their vocabularies come from the server (utilities/catalogs.js);
+// the type-specific inputs are the same ones the Pet Records page uses (record_fields.js).
+let CATALOG = null;
+
+const loadCatalog = async () => {
+  const { ok, body } = await fetchJSON('/catalogs/medical');
+  if (ok && body && body.success !== false) CATALOG = body;
+};
+
+// The one detail that best identifies the record, shown under its type.
+const PRIMARY_DETAIL = {
+  vaccination: (d) => d.vaccineName,
+  checkup: (d) => d.reasonForVisit,
+  general_checkup: (d) => d.overallAssessment,
+  grooming: (d) => (d.groomingTypes || []).join(', '),
+  surgery: (d) => d.procedure
+};
+
 const recordRow = (r) => {
   const fileCell = r.url
     ? (isImageUrl(r.url)
@@ -66,10 +84,12 @@ const recordRow = (r) => {
         : `<a class="rec-file-link" href="${esc(r.url)}" target="_blank" rel="noopener">View file</a>`)
     : '<span class="rec-none">—</span>';
 
+  const primary = PRIMARY_DETAIL[r.recordType]?.(r.details || {});
+
   return `
     <tr>
       <td>${esc(r.date || '')}</td>
-      <td class="rec-type">${esc(r.type || '')}</td>
+      <td class="rec-type">${esc(r.type || '')}${primary ? `<small class="rec-sub">${esc(primary)}</small>` : ''}</td>
       <td>${r.notes ? esc(r.notes) : '<span class="rec-none">—</span>'}</td>
       <td style="text-align:right">${fileCell}</td>
     </tr>
@@ -82,26 +102,34 @@ const renderRecords = (records) => {
     ? records.map(recordRow).join('')
     : `<tr><td colspan="4" class="rec-empty"><em>No records yet.</em></td></tr>`;
 
+  const types = Array.isArray(CATALOG?.recordTypes) ? CATALOG.recordTypes : [];
+
   recEl.innerHTML = `
-    <form id="recForm" class="rec-toolbar">
-      <label class="rec-field">Type
-        <input id="recType" list="recTypes" placeholder="Vaccination" />
-        <datalist id="recTypes">
-          <option value="Vaccination"></option><option value="Lab Result"></option>
-          <option value="Prescription"></option><option value="Visit Summary"></option>
-          <option value="Surgery"></option><option value="Deworming"></option>
-        </datalist>
-      </label>
-      <label class="rec-field">Date
-        <input id="recDate" type="date" value="${today}" />
-      </label>
+    <form id="recForm" class="rec-form" novalidate>
+      <div class="rec-row">
+        <label class="rec-field"><span>Record type <b class="req">*</b></span>
+          <select id="recType" required>
+            <option value="">Select type…</option>
+            ${types.map(t => `<option value="${esc(t.key)}">${esc(t.label)}</option>`).join('')}
+          </select>
+        </label>
+        <label class="rec-field">Date
+          <input id="recDate" type="date" value="${today}" />
+        </label>
+        <label class="rec-field rec-field--file">File (image/PDF)
+          <input id="recFile" type="file" accept="image/*,application/pdf" />
+        </label>
+      </div>
+
+      <div id="recTypeFields" class="rx-type-fields"></div>
+
       <label class="rec-field rec-field--notes">Notes
-        <input id="recNotes" placeholder="Optional notes" />
+        <textarea id="recNotes" rows="2" placeholder="Optional notes"></textarea>
       </label>
-      <label class="rec-field rec-field--file">File (image/PDF)
-        <input id="recFile" type="file" accept="image/*,application/pdf" />
-      </label>
-      <button class="rec-add-btn" type="submit" id="recSubmit">+ Add record</button>
+
+      <div class="rec-actions">
+        <button class="rec-add-btn" type="submit" id="recSubmit">+ Add record</button>
+      </div>
     </form>
 
     <div class="table rec-table">
@@ -117,13 +145,36 @@ const renderRecords = (records) => {
   `;
 
   const form = document.getElementById('recForm');
+  const typeSelect = document.getElementById('recType');
+  const typeFields = document.getElementById('recTypeFields');
+
+  typeSelect.addEventListener('change', () => {
+    typeFields.innerHTML = window.vetlinkRecordFields.build(typeSelect.value, CATALOG);
+  });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (!typeSelect.value) {
+      vetlinkDialog.alert('Choose a record type first.', { variant: 'warning' });
+      typeSelect.focus();
+      return;
+    }
+    // Required type-specific fields (e.g. Vaccine name) — name the first one missing.
+    const missing = Array.from(typeFields.querySelectorAll('[required]')).find(el => !String(el.value).trim());
+    if (missing) {
+      const label = missing.closest('label')?.querySelector('span')?.textContent.replace('*', '').trim() || 'This field';
+      vetlinkDialog.alert(`${label} is required.`, { variant: 'warning' });
+      missing.focus();
+      return;
+    }
+
     const submit = document.getElementById('recSubmit');
     const fd = new FormData();
-    fd.append('type', document.getElementById('recType').value.trim());
+    fd.append('recordType', typeSelect.value);
     fd.append('date', document.getElementById('recDate').value);
     fd.append('notes', document.getElementById('recNotes').value.trim());
+    window.vetlinkRecordFields.appendTo(fd, typeFields);
     const f = document.getElementById('recFile').files[0];
     if (f) fd.append('file', f);
 
@@ -138,7 +189,7 @@ const renderRecords = (records) => {
     if (ok && body && body.success) {
       await loadRecords();
     } else {
-      alert((body && body.message) ? body.message : 'Failed to add record.');
+      vetlinkDialog.alert((body && body.message) ? body.message : 'Failed to add record.', { variant: 'error' });
     }
   });
 };
@@ -169,5 +220,6 @@ const loadRecords = async () => {
   }
 
   renderPet(r.body.pet, r.body.owner);
+  await loadCatalog();
   await loadRecords();
 })();

@@ -98,11 +98,17 @@ const canDeletePet = () => !!(window.vetlinkCan && window.vetlinkCan('pets.delet
 
 const deletePet = async (id) => {
   const pet = PETS.find(p => String(p.id) === String(id));
-  if (!confirm(`Delete pet "${pet?.name || id}"? This cannot be undone.`)) return;
+  const ok = await vetlinkDialog.confirm({
+    title: `Delete pet "${pet?.name || id}"?`,
+    message: 'This cannot be undone.',
+    confirmLabel: 'Delete',
+    danger: true
+  });
+  if (!ok) return;
 
   const r = await fetchJSON('/pets/delete', { method: 'DELETE', body: JSON.stringify({ id }) });
   if (!r.ok || r.body?.success === false) {
-    alert(r.body?.message || 'Failed to delete pet.');
+    vetlinkDialog.alert(r.body?.message || 'Failed to delete pet.', { variant: 'error' });
     return;
   }
   PETS = PETS.filter(p => String(p.id) !== String(id));

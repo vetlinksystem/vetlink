@@ -61,6 +61,9 @@ const MATRIX = {
   'employees.view':        [ROLES.ADMIN],
   'employees.manage':      [ROLES.ADMIN],
 
+  // Wipe all clinic data (Manage Employees → Reset all data) — admin only
+  'system.reset':          [ROLES.ADMIN],
+
   // Pets
   'pets.view':             [ROLES.ADMIN, ROLES.STAFF, ROLES.VET],
   'pets.manage':           [ROLES.ADMIN, ROLES.STAFF, ROLES.VET],
@@ -73,6 +76,7 @@ const MATRIX = {
   'appointments.view':     [ROLES.ADMIN, ROLES.STAFF, ROLES.VET],
   'appointments.edit':     [ROLES.STAFF, ROLES.VET],
   'appointments.act':      [ROLES.VET],
+  'appointments.delete':   [ROLES.ADMIN],
 
   // Medical records — veterinarian/admin write, staff view+print, owner views their own
   'records.view':          [ROLES.ADMIN, ROLES.STAFF, ROLES.VET],

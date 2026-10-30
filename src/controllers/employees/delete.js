@@ -2,7 +2,15 @@ const deleteEmployeeModel = require('../../models/employees/delete');
 
 const deleteEmployeeController = async (req, res) => {
     try {
-        const result = await deleteEmployeeModel(req.body);
+        const id = String(req.body?.id || '').trim();
+        if (!id) {
+            return res.status(400).json({ success: false, message: 'Employee id is required.' });
+        }
+        if (String(req.user?.id) === id) {
+            return res.status(400).json({ success: false, message: 'You cannot delete your own account.' });
+        }
+
+        const result = await deleteEmployeeModel({ id });
         const ok = result && (typeof result === 'object' ? result.success !== false : true);
 
         if (!ok) {

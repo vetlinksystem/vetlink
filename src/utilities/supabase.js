@@ -87,4 +87,4 @@ const uploadBuffer = async (folder, buffer, opts = {}) => {
   return { success: true, url: data.publicUrl, path: objectPath };
 };
 
-module.exports = { uploadBuffer, isConfigured, BUCKET };
+module.exports = { uploadBuffer, isConfigured, getClient, BUCKET };

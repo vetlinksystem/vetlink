@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -53,7 +53,10 @@
     <section class="view active">
       <div class="page-head">
         <h1 class="page-title">Manage Employees</h1>
-        <button id="addEmployeeBtn" class="btn-primary">＋ Add Employee</button>
+        <div class="page-head-actions">
+          <button id="resetDataBtn" class="btn-reset" type="button" title="Delete all clinic data except admin accounts">Reset all data</button>
+          <button id="addEmployeeBtn" class="btn-primary">＋ Add Employee</button>
+        </div>
       </div>
 
       <div class="card table">
@@ -202,6 +205,7 @@
   </div>
 </div>
 
+<script src="/shared/js/dialog.js"></script>
 <script src="/employee/js/core.js"></script>
 <script src="/employee/js/manage_employees.js"></script>
 </body>

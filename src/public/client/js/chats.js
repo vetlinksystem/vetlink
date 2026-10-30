@@ -34,7 +34,7 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[c]));
 
-  const showToast = (msg) => window.theToast ? window.theToast(msg) : alert(msg);
+  const showToast = (msg) => window.theToast ? window.theToast(msg) : vetlinkDialog.alert(msg);
 
   // Elements
   const chatList = document.getElementById('chatList');

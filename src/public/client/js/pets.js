@@ -73,7 +73,7 @@
 
   const showToast = (msg) => {
     if (window.theToast) return window.theToast(msg);
-    if (!toastEl) return alert(msg);
+    if (!toastEl) return vetlinkDialog.alert(msg);
     toastEl.textContent = msg || 'Saved!';
     toastEl.classList.add('show');
     setTimeout(() => toastEl.classList.remove('show'), 1800);
@@ -471,9 +471,14 @@
       e.preventDefault();
       const id = delBtn.getAttribute('data-del');
       const pet = PETS.find(p => String(p.id) === String(id));
-      const ok = confirm(`Delete ${pet?.name || 'this pet'}?`);
-      if (!ok) return;
       (async () => {
+        const ok = await vetlinkDialog.confirm({
+          title: `Delete ${pet?.name || 'this pet'}?`,
+          message: 'This pet and its details will be removed from your account.',
+          confirmLabel: 'Delete',
+          danger: true
+        });
+        if (!ok) return;
         const { ok: httpOk, body } = await fetchJSON(API_PET_BY_ID(id), { method:'DELETE' });
         if (!httpOk || body?.success === false) {
           showToast(body?.message || 'Failed to delete pet.');

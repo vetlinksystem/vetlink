@@ -56,7 +56,7 @@
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const toast = (msg) => {
-    if (!toastEl) { alert(msg); return; }
+    if (!toastEl) { vetlinkDialog.alert(msg); return; }
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     setTimeout(() => toastEl.classList.remove('show'), 2400);
